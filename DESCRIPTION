@@ -1,9 +1,18 @@
 Package: cracle
-Title: What the Package Does (one line, title case)
-Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-Depends: R (>= 3.3.1)
-License: What license is it under?
+Type: Package
+Title: Climate Reconstruction Analysis using Coexistence Likelihood Estimation
+    (CRACLE)
+Version: 0.0.1
+Date: 2016-08-08
+Author: Robert S. Harbert
+Maintainer: R Harbert <rharbert@amnh.org>
+Depends:
+    R(>= 3.1.0),
+    raster
+Description: This is an R package with functions that perform the maximum
+    likelihood estimation of climate given local (plant) species coexistence under
+    the CRACLE method as described by Harbert and Nixon, 2015.
+License: GPL-2 | GPL-3
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 5.0.1.9000
