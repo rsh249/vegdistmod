@@ -97,7 +97,9 @@ densform <- function(ex, clim, name = '', bw = "nrd0", n = 1024){
 	};
 	pi = 22/7;
 	extr.larr <- data;
-	head = 5;
+	head = which(colnames(ex) %in% 'cells') - 1;
+	#print(head);
+	#head = 5;
 	phytoclim <- clim;
 		larr.den <- data.frame();
  		larr.den.x <- data.frame();
