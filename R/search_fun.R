@@ -124,10 +124,10 @@ multiv_likelihood <- function(x, clim, dens, type) {
 #' ext.abies = extraction(abies, climondbioclim, schema='raw');
 #' dens.abies = densform(ext.abies, climondbioclim);
 #' f <- 
-#'  filter(ext.abies, dens.abies, climondbioclim, alpha = 0.01, type = '.kde')
+#'  filter_dist(ext.abies, dens.abies, climondbioclim, alpha = 0.01, type = '.kde')
 #' 
 
-filter <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.kde') {
+filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.kde') {
     
     if (type == '') {
       type = '.kde'
@@ -501,7 +501,7 @@ findlocal <- function(ext_ob, clim, type, maxiter = 50, searchrep = 3, manip = '
   porig = plast
   print(origmin)
   last <- currdist
-  f = filter(currdist, dens, r, min = origmin, type = type); 
+  f = filter_dist(currdist, dens, r, min = origmin, type = type); 
   currdist <- f
   if(class(ext) == 'list'){
     dens = list();
@@ -595,7 +595,7 @@ findlocal <- function(ext_ob, clim, type, maxiter = 50, searchrep = 3, manip = '
       }
     }
     origmin <- min(vporig); print(origmin)
-    f = filter(currdist, dens, r, min = origmin, type = type)
+    f = filter_dist(currdist, dens, r, min = origmin, type = type)
     currdist <- f
     p <- vector()
     if(class(currdist)=='list'){
