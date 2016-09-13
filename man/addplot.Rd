@@ -7,7 +7,7 @@
 addplot(dens.ob, var, col = sample(grDevices::colours()), type = ".kde")
 }
 \arguments{
-\item{dens.ob}{An object derived from the cracle::densform() or cracle::and_fun() or cracle::or_fun() functions.}
+\item{dens.ob}{An object derived from the vegdistmod::densform() or vegdistmod::and_fun() or vegdistmod::or_fun() functions.}
 
 \item{var}{A character string that matches one of the layer names in the source raster object.}
 
@@ -16,12 +16,11 @@ addplot(dens.ob, var, col = sample(grDevices::colours()), type = ".kde")
 \item{type}{A character string of value either ".kde" for a Kernel Density Estimator curve, or ".gauss" for a Gaussian (normal) curve. All other values will result in errors.}
 }
 \description{
-Using an object from the cracle::densform() or cracle::and_fun() or cracle::or_fun() functions, add a PDF over the existing plot. Useful for visualizing joint likelihood curves.
+Using an object from the vegdistmod::densform() or vegdistmod::and_fun() or vegdistmod::or_fun() functions, add a PDF over the existing plot. Useful for visualizing joint likelihood curves.
 }
 \examples{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");
 #OR:
-library(cracle);
 data(distr); data(climondbioclim);
 #extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
 #dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024);

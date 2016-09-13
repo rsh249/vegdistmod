@@ -3,7 +3,7 @@
 \docType{data}
 \name{distrgen}
 \alias{distrgen}
-\title{A sample of genera data}
+\title{A sample of genera data from one plot}
 \format{A data.frame with 5 columns
 'distrgen'}
 \usage{

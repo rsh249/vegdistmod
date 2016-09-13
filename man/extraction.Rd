@@ -4,7 +4,7 @@
 \alias{extraction}
 \title{Extract environmental data}
 \usage{
-extraction(data, clim, schema = "raw")
+extraction(data, clim, schema = "raw", factor = 0)
 }
 \arguments{
 \item{data}{Distribution data. A data.frame that should include (at least) a column for species/taxon name named 'tax', latitude named 'lat', longitude named 'lon', and an optional column 'sub' if it is necessary to define subgroups (i.e., if 'tax' corresponds to genera but sampling needs to know which records belong to which species. See param 'schema' below).}
@@ -12,6 +12,8 @@ extraction(data, clim, schema = "raw")
 \item{clim}{A raster object (see raster::raster() and raster::stack() documentation for reading raster files into R).}
 
 \item{schema}{A string of value "raw", "flat", or "species" to define the sampling protocol. In "raw", all records are counted (including duplicate exact localities). In "flat", all unique localities will be counted where a unique locality is defined as a raster grid cell. Under the "flat" sampling strategy two records in the same raster grid cell will be counted as one. The option "species", only applies when taxa are identified as genera and species identities are represented in the "sub" column of the data object. In "species", each unique locality is counted for each species within the group (taxon). This weighs more diverse localities higher. Default is "raw".}
+
+\item{factor}{An integer value for the methods "flat" and "spec" to increase the systematic sampling grid size to courser resolutions than the given climate grid. The value of factor corresponds to the number of rows and columns to aggregate into each courser grid cell. Default is 0 which will not be processed.}
 }
 \description{
 This function is a feature-added wrapper for raster::extract();

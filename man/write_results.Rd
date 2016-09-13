@@ -7,11 +7,11 @@
 write_results(optima, siteval = "", clim, method, filename, append = F)
 }
 \arguments{
-\item{optima}{A results object from cracle::get_optim() or cracle::cracboot().}
+\item{optima}{A results object from vegdistmod::get_optim() or vegdistmod::cracboot().}
 
 \item{siteval}{A vector of site values for envirnomental parameters (See example for generating).}
 
-\item{clim}{The original raster object used in the cracle::extraction() step.}
+\item{clim}{The original raster object used in the vegdistmod::extraction() step.}
 
 \item{method}{The result summary method. Supported methods are "conintkde", "conintgauss", "origg", "origk", "dirconint" for the "get_optim()" type objects and "conintkde" and "conintgauss" for the "cracboot()" type objects.}
 
@@ -20,7 +20,7 @@ write_results(optima, siteval = "", clim, method, filename, append = F)
 \item{append}{Should this be appended to an existing file. Default is FALSE.}
 }
 \description{
-Write results from a results object from either cracle::get_optim() or cracle::cracboot() to a tab delimited table in a text file. This is done one 'method' at a time. Supported methods are "conintkde", "conintgauss", "origg", "origk", "dirconint" for the "get_optim()" type objects and "conintkde" and "conintgauss" for the "cracboot()" type objects.
+Write results from a results object from either vegdistmod::get_optim() or vegdistmod::cracboot() to a tab delimited table in a text file. This is done one 'method' at a time. Supported methods are "conintkde", "conintgauss", "origg", "origk", "dirconint" for the "get_optim()" type objects and "conintkde" and "conintgauss" for the "cracboot()" type objects.
 }
 \examples{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");

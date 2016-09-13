@@ -7,14 +7,14 @@
 cracboot(dens.oblist, clim, n = 100)
 }
 \arguments{
-\item{dens.oblist}{A density list object derived from the cracle::dens_obj() function.}
+\item{dens.oblist}{A density list object derived from the vegdistmod::dens_obj() function.}
 
 \item{clim}{A raster file containing environmental data. MUST be the same one used to create the density list object.}
 
 \item{n}{Number of bootstrap iterations. Default is 100.}
 }
 \description{
-Using an density list object (cracle::dens_obj()) draw incomplete samples of taxa from the list of taxa and run CRACLE. The Gaussian and KDE derived maximum likelihood values are kept and summarized as confidence intervals and bootstrap mean and standard deviation for each variable.
+Using an density list object (vegdistmod::dens_obj()) draw incomplete samples of taxa from the list of taxa and run CRACLE. The Gaussian and KDE derived maximum likelihood values are kept and summarized as confidence intervals and bootstrap mean and standard deviation for each variable.
 }
 \examples{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");

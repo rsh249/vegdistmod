@@ -7,10 +7,10 @@
 or_fun(dens.oblist)
 }
 \arguments{
-\item{dens.oblist}{An object derived from the cracle::dens_ob() function.}
+\item{dens.oblist}{An object derived from the vegdistmod::dens_ob() function.}
 }
 \description{
-Using an object from the cracle::dens_obj() function. Create a single density object (i.e., like that produced by cracle::densform()) where the probability curves correspond to the probability density function of any one taxon/species from the original set occurring. This is not actually used in the implementation of finding the maximum joint likelihood in a CRACLE analysis, but is a good companion to the cracle::and_fun() function.
+Using an object from the vegdistmod::dens_obj() function. Create a single density object (i.e., like that produced by vegdistmod::densform()) where the probability curves correspond to the probability density function of any one taxon/species from the original set occurring. This is not actually used in the implementation of finding the maximum joint likelihood in a CRACLE analysis, but is a good companion to the vegdistmod::and_fun() function.
 }
 \examples{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");

@@ -1,17 +1,18 @@
-Package: cracle
+Package: vegdistmod
 Type: Package
-Title: Climate Reconstruction Analysis using Coexistence Likelihood Estimation
-    (CRACLE)
-Version: 0.0.1
+Title: Vegetation distribution modeling and spatial informatics
+Version: 0.0.2
 Date: 2016-08-08
 Author: Robert S. Harbert
 Maintainer: R Harbert <rharbert@amnh.org>
 Depends:
     R(>= 3.1.0),
-    raster
+    raster,
+    dismo, 
+    classInt
 Description: This is an R package with functions that perform the maximum
     likelihood estimation of climate given local (plant) species coexistence under
-    the CRACLE method as described by Harbert and Nixon, 2015.
+    the CRACLE method as described by Harbert and Nixon, 2015 and related methods 	    including the Mutual Climate Range technique of Thompson et al., 2012. Related spatial modeling methods are available here as well.
 License: GPL-2 | GPL-3
 Encoding: UTF-8
 LazyData: true

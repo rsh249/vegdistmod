@@ -8,7 +8,7 @@ multiplot(dens.oblist, var, col = grDevices::heat.colors(length(dens.oblist)),
   type = ".kde")
 }
 \arguments{
-\item{dens.oblist}{An object derived from the cracle::dens_obj() function.}
+\item{dens.oblist}{An object derived from the vegdistmod::dens_obj() function.}
 
 \item{var}{A character string that matches one of the layer names in the source raster object.}
 
@@ -17,7 +17,7 @@ multiplot(dens.oblist, var, col = grDevices::heat.colors(length(dens.oblist)),
 \item{type}{A character string of value either ".kde" for a Kernel Density Estimator curve, or ".gauss" for a Gaussian (normal) curve. All other values will result in errors.}
 }
 \description{
-Using an object from the cracle::dens_obj() function. Plot a series PDF curves in a new plot window.
+Using an object from the vegdistmod::dens_obj() function. Plot a series PDF curves in a new plot window.
 }
 \examples{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");

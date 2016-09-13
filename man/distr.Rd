@@ -3,7 +3,7 @@
 \docType{data}
 \name{distr}
 \alias{distr}
-\title{A sample of species data}
+\title{A sample of species data from one plot}
 \format{A data.frame with 5 columns
 'distr'}
 \usage{

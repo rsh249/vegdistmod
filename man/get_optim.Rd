@@ -7,10 +7,10 @@
 get_optim(dens.ob)
 }
 \arguments{
-\item{dens.ob}{An object derived from the cracle::dens_ob() function.}
+\item{dens.ob}{An object derived from the vegdistmod::dens_ob() function.}
 }
 \description{
-Using an object from the cracle::dens_obj() function. Create a single density object (i.e., like that produced by cracle::densform()) where the probability curves correspond to the probability density function of ALL taxa/species from the original set occurring.
+Using an object from the vegdistmod::dens_obj() function. Create a single density object (i.e., like that produced by vegdistmod::densform()) where the probability curves correspond to the probability density function of ALL taxa/species from the original set occurring.
 }
 \examples{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");

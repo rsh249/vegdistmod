@@ -7,7 +7,7 @@
 densplot(dens.ob, var, col = sample(grDevices::colours()), type = ".kde")
 }
 \arguments{
-\item{dens.ob}{An object derived from the cracle::dens_ob() function.}
+\item{dens.ob}{An object derived from the vegdistmod::dens_ob() function.}
 
 \item{var}{A character string that matches one of the layer names in the source raster object.}
 

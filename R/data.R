@@ -1,4 +1,4 @@
-#' A sample of species data
+#' A sample of species data from one plot
 #' 
 #' A sample of GBIF point locality occurrence data for species co-occurring at a vegetation plot in SW Virginia
 #' 
@@ -10,7 +10,7 @@
 #' 'distr'
 NULL
 
-#' A sample of genera data
+#' A sample of genera data from one plot
 #' 
 #' A sample of GBIF point locality occurrence data for the genera co-occurring at a vegetation plot in SW Virginia
 #' 
@@ -22,6 +22,17 @@ NULL
 #' 'distrgen'
 NULL
 
+#' Global distribution of Abies
+#' 
+#' A sample of GBIF point locality occurrence data for the genus Abies for illustrating findlocal and geo_findlocal routines
+#' 
+#' @docType data
+#' @keywords datasests
+#' @name abies
+#' @usage data(abies)
+#' @format A data.frame with 4 columns
+#' 'abies'
+NULL
 
 #' Raster grid for 19 Bioclimatic Variables from the CLIMOND project
 #' 

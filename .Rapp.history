@@ -1,0 +1,286 @@
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext.ab)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext.ab)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext.ab)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext.ab)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext.ab)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext.ab)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext.ab)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext.ab)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext.ab)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext.ab)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext.ab)
+warnings()
+MCR(ext.ab)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext.ab)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext.ab)
+pin.stro <- get_gbif_cloud('Pinus_strobus')
+tsu.can <- get_gbif_cloud('Tsuga_canadensis')
+dist <- rbind(pin.stro, tsu.can)
+ext <- extraction(dist, clim, schema='raw')
+ext <- extraction(dist, clim, schema='flat', factor = 4)
+ext <- extraction(dist, clim, schema='flat')
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+warnings()
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+ls()
+library(cracle)
+pin.stro <- get_gbif_cloud('pinus_strobus')
+get_gbif_cloud <- function(taxon) {#
+  curl_string = "curl --user rsh249:Roanoke1999 http://cloud.diversityoflife.org/cgi-div/tmp_mat_get.pl?taxon=";#
+  curl_string = paste(curl_string, taxon, sep='');#
+  s = system(curl_string, intern = TRUE); #
+  splithdr <- strsplit(s[1], split = '\t')#
+  df <- matrix(ncol = length(splithdr[[1]]), nrow = length(s)-1)#
+  colnames(df) = rbind(unlist(splithdr[[1]]));#
+  for (i in 2:length(s)) {#
+    split <- strsplit(s[i], split = '\t')#
+    n = length(split[[1]])#
+    new = rbind(unlist(split[[1]]))#
+    df[i-1, ] = new#
+  }#
+  df <- data.frame(df);#
+  df$lon <- as.numeric(as.character(df$lon));#
+  df$lat <- as.numeric(as.character(df$lat));#
+  return(df);#
+}
+get_gbif_cloud <- function(taxon) {#
+  curl_string = "curl --user rsh249:Roanoke1999 http://cloud.diversityoflife.org/cgi-div/tmp_mat_get.pl?taxon=";#
+  curl_string = paste(curl_string, taxon, sep='');#
+  s = system(curl_string, intern = TRUE); #
+  splithdr <- strsplit(s[1], split = '\t')#
+  df <- matrix(ncol = length(splithdr[[1]]), nrow = length(s)-1)#
+  colnames(df) = rbind(unlist(splithdr[[1]]));#
+  for (i in 2:length(s)) {#
+    split <- strsplit(s[i], split = '\t')#
+    n = length(split[[1]])#
+    new = rbind(unlist(split[[1]]))#
+    df[i-1, ] = new#
+  }#
+  df <- data.frame(df);#
+  df$lon <- as.numeric(as.character(df$lon));#
+  df$lat <- as.numeric(as.character(df$lat));#
+  return(df);#
+}
+pin.stro <- get_gbif_cloud('pinus_strobus')
+tsu.can <- get_gbif_cloud('tsuga_canadensis')
+ext<-extraction(rbind(pin.stro, tsu.can), climondbioclim, schema='raw')
+ext
+head(ext)
+source('FUNCTIONS_TO_ADD.R')
+MCR(ext)
+out<-MCR(ext)
+out
+length(out)
+out[[1]]
+plot(out[[1]])
+source('FUNCTIONS_TO_ADD.R')
+out<-MCR(ext)
+plot(out[[1]])
+plot(out[[1]], type ='l')
+source('FUNCTIONS_TO_ADD.R')
+out<-MCR(ext)
+plot(out[[1]], type ='l')
+plot(out[[2]], type ='l')
+plot(out[[3]], type ='l')
+plot(out[[4]], type ='l')
+plot(out[[5]], type ='l')
+plot(out[[6]], type ='l')
+plot(out[[7]], type ='l')
+que.prin <- get_gbif_cloud('Quercus_prinus')
+--:--:-- --:--:--     0#
+#
+>
+ext<-extraction(rbind(pin.stro, tsu.can, que.prin), climondbioclim, schema='raw')
+out<-MCR(ext)
+plot(out[[7]], type ='l')
+plot(out[[1]], type ='l')
+plot(out[[2]], type ='l')
+source('FUNCTIONS_TO_ADD.R')
+out<-MCR(ext)
+plot(out[[2]], type ='l')
+out<-MCR(ext, method='weight')
+plot(out[[2]], type ='l')
+plot(out[[3]], type ='l')
+plot(out[[1]], type ='l')
+source('FUNCTIONS_TO_ADD.R')
+source('FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method='weight')
+plot(out[[1]], type = 'l')
+plot(out[[12]], type = 'l')
+summary(ext)
+out[[1]]
+source('FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method='weight')
+source('FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method='weight')
+out[[1]]
+plot(out[[1]], type='l')
+plot(out[[2]], type='l')
+plot(out[[3]], type='l')
+plot(out[[12]], type='l')
+source('FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method='weight')
+plot(out[[12]], type='l')
+dev.off9)
+dev.off()
+source('FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method='weight')
+out[[1]]
+source('FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method='weight')
+out[[1]]
+out[[2]]
+out
+unlist(out)
+rbind(out)
+cbind(out)
+cbind(unlist(out)
+)
+out.u<-MCR(ext, method='unweight')
+out[[1]]
+out.u[[1]]
+dens <- dens_ob(ext, climondbioclim)
+?dens_obj
+dens <- dens_obj(ext, climondbioclim)
+head(ext)
+dens <- dens_obj(ext, climondbioclim)
+climondbioclim
+clim
+dens <- densform(ext, climondbioclim)
+getwd()
+setwd('/Users/rharbert/Desktop/cracle_testing/cracle')
+library(devtools)
+check()
+library(cracle)
+dens <- dens_obj(ext, climondbioclim)
+and <- and_fun(dens);
+optima <- get_optim(and);
+optima
+optima$origg
+out[[1]]
+optima$origk
+optima$conintkde
+optima$conintgauss
+optima$dirconint
+optima$means
+out[[12]]
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method = 'weight')
+out<-MCR(ext, method = 'weight')
+out
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method = 'weight')
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method = 'weight')
+length(ext[1,])
+colnames(ext[,6:24])
+head = which(colnames(ext) %in% 'cells') - 1;
+head
+colnames(ext[,head:ncols(ext)])
+colnames(ext[,head:ncol(ext)])
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method = 'weight')
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method = 'weight')
+colnames(ext[,head+1:ncol(ext)])
+colnames(ext[,(head+1):ncol(ext)])
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method = 'weight')
+out
+optim$conintkde
+optima$conintkde
+out
+out
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method = 'weight')
+out
+plot(out)
+plot(out, type = 'l')
+png('test.png', height=3, width = 3, res=300, unit=in)
+png('test.png', height=3, width = 3, res=300, unit='in')
+plot(out, type = 'l')
+dev.off()
+getwd()
+wd
+setwd('~/Desktop/cracle_testing')
+getwd()
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method = 'weight')
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method = 'weight')
+out
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+out
+out<-MCR(ext, method = 'weight')
+out
+out<-MCR(ext, method = 'weight', plot=T)
+?mai
+?par
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method = 'weight', plot=T)
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method = 'weight', plot=T)
+colnames(ext[,2])
+colnames(ext)
+colnames(ext)[2]
+source('~/Desktop/cracle_testing/FUNCTIONS_TO_ADD.R')
+out<-MCR(ext, method = 'weight', plot=T)
+out<-MCR(ext, method = 'weight', plot=F)
+getwd()
+setwd('~/Desktop/cracle_testing/cracle')
+library(devtools)
+check()
+?png
+?par
+?plot
+?dev.off9)
+?dev.off()
+check()
+check()
+check()
+library(cracle)
+?MCR
+plot(climondbioclim[[1]])
+dev.off()
+dev.off()
+plot(climondbioclim[[1]])
