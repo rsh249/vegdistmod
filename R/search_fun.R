@@ -305,7 +305,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
     count = length(cells);
     newrecord = matrix(nrow = 100 * nrow(cells), ncol = ncol(cells))
   }
-  maxdist = 500; #FIXED MAXIMUM DISTANCE
+  #maxdist = 500; #FIXED MAXIMUM DISTANCE
   #dist.v <- (seq(2, as.integer(0.3 * maxdist))); #print(maxdist);
   dist.v <- seq(5, maxdist);
   #dist.p <- (1 / sqrt(dist.v)); #print(dist.p);
