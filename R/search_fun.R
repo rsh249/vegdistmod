@@ -567,10 +567,13 @@ findlocal <- function(ext_ob, clim, type, maxiter = 50, searchrep = 3, manip = '
 
   if(class(ext) == 'list'){
       dens = list();
-      
+    
+    
       vporig = matrix(nrow=length(currdist[[1]][,1]), ncol = length(currdist))
       for(a in 1:length(currdist)){
         currdist[[a]] <- stats::na.omit(currdist[[a]])
+        ext.curr = extraction(currdist[[a]][,1:(which(colnames(currdist[[a]])=='cells')-1)], clim[[a]], schema = 'flat', factor=4)
+        currdist[[a]] = ext.curr;
         sub <- subset(currdist[[a]], currdist[[a]][,1] != "0000")
         for (i in 1:length(currdist[[a]][, 1])) {
           vporig[i,a] <-
@@ -585,6 +588,9 @@ findlocal <- function(ext_ob, clim, type, maxiter = 50, searchrep = 3, manip = '
     } else {
       vporig <- vector()
       currdist <- stats::na.omit(currdist)
+    
+     ext.curr <- extraction(currdist[,1:(which(colnames(currdist)=='cells')-1)], clim, schema='flat', factor = 4);
+
       sub <- subset(currdist, currdist[,1] != '0000')
       for (i in 1:length(currdist[, 1])) {
         vporig[i] <-
@@ -595,7 +601,9 @@ findlocal <- function(ext_ob, clim, type, maxiter = 50, searchrep = 3, manip = '
       }
     }
     origmin <- min(vporig); print(origmin)
-    f = filter_dist(currdist, dens, r, min = origmin, type = type)
+    f = filter_dist(currdist, dens, r, min = origmin, type = type);
+    ##add spthin procedure here?
+
     currdist <- f
     p <- vector()
     if(class(currdist)=='list'){
@@ -690,7 +698,7 @@ findlocal <- function(ext_ob, clim, type, maxiter = 50, searchrep = 3, manip = '
 #' @export
 #' @examples
 #' data(abies);
-#' ext.abies = extraction(abies, climondbioclim, schema='raw');
+#' ext.abies = extraction(abies, climondbioclim, schema='flat', factor = 4);
 #' dens.abies = densform(ext.abies, climondbioclim);
 #' sea <- geo_findlocal(ext.abies, climondbioclim, 
 #'  type = '.kde', maxiter = 5, 

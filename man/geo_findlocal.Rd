@@ -32,7 +32,7 @@ the effect of applying more locally relevant probability functions to the data.
 }
 \examples{
 data(abies);
-ext.abies = extraction(abies, climondbioclim, schema='raw');
+ext.abies = extraction(abies, climondbioclim, schema='flat', factor = 4);
 dens.abies = densform(ext.abies, climondbioclim);
 sea <- geo_findlocal(ext.abies, climondbioclim, 
  type = '.kde', maxiter = 5, 
