@@ -761,7 +761,7 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red') {
   breaks <- round((maxValue(clim) - minValue(clim))/nclr, 0)
   plotclr = ( grDevices::topo.colors(1000));
   plotvar <- seq(minValue(clim), maxValue(clim), by = breaks);
-  class <- classInt::classIntervals(plotvar, nclr, style = 'fixed', fixedBreaks = round(seq(minValue(clim), maxValue(clim), breaks), 1))
+  class <- classInt::classIntervals(plotvar, nclr, style = 'fixed', fixedBreaks = plotvar, 1)
   colcode <- classInt::findColours(class, plotclr);
 
   if(file != ''){
