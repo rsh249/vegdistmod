@@ -19,6 +19,7 @@ NULL
   curl_string = "curl --user rsh249:Roanoke1999 http://cloud.diversityoflife.org/cgi-div/tmp_mat_get.pl?taxon="
   curl_string = paste(curl_string, taxon, sep = '')
   s = system(curl_string, intern = TRUE)
+  if(length(s) < 2){return();}
   splithdr <- strsplit(s[1], split = '\t')
   df <- matrix(ncol = length(splithdr[[1]]), nrow = length(s) - 1)
   colnames(df) = rbind(unlist(splithdr[[1]]))
@@ -294,7 +295,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
       newrecord[[a]] <-
         matrix(nrow = nrow(cells[[a]]),
                ncol = ncol(cells[[a]]))
-      count = length(cells[[a]]);
+      count = length(cells[[a]][,1]);
     }
   } else {
     minc <- cells[grep(min(cells$cells), cells$cells), ]
@@ -302,7 +303,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
       cells[grep(max(cells$cells), cells$cells), ]
     maxdist <-
       .distance(minc[1, 'lon'], minc[1, 'lat'], maxc[1, 'lon'], maxc[1, 'lat'])
-    count = length(cells);
+    count = length(cells[,1]);
     newrecord = matrix(nrow = 100 * nrow(cells), ncol = ncol(cells))
   }
   #maxdist = 500; #FIXED MAXIMUM DISTANCE
@@ -313,7 +314,9 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
   j = 1;
   
   #dist.p <- dist.p/max(dist.p); 
-  for (it in 1:count) {
+  it = 1;
+  origl = count;
+  while(it <= count) {
     dir <- as.integer(stats::runif(1, min = 0, max = 360)); #get random bearing
     dist <- sample(dist.v,
                    size = 1,
@@ -352,7 +355,14 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
         if (pnew >= (pold)) { 
           newer[[b]] = stats::na.omit(newer[[b]]);
           if(is.na(newer[[b]])){next}
-          newrecord[[b]][it, 1:ncol(cells[[b]])] = as.matrix(newer[[b]])
+          newrecord[[b]][j, 1:ncol(cells[[b]])] = (newer[[b]])
+          count = count+1;
+          newrecord[[b]][j, 'lat'] = as.numeric(as.character(newrecord[[b]][j, 'lat']));
+          newrecord[[b]][j, 'lon'] = as.numeric(as.character(newrecord[[b]][j, 'lon']));
+          
+          cells[[b]][count,] = newrecord[[b]][j,];
+          j = j+1;
+          
         } else {
           
         }
@@ -374,14 +384,33 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
       pnew <-
         (multiv_likelihood(newer[1, 6:length(newer[1, ])], ras, dens, type = type))[[1]]
       if (pnew >= (pold)) {
-        newrecord[j, 1:ncol(newer)] = as.matrix(newer)
+       # newrecord[j, 1:ncol(newer)] = (newer); 
+       # print(newer);
+        #colnames(newrecord) = colnames(cells);
+
+        count = count+1; 
+       # newrecord[j, 3] = as.numeric(as.character(newrecord[j, 3]))
+      #  newrecord[j, 4] = as.numeric(as.character(newrecord[j, 4]))
+        newer[1] = as.factor(as.character('0000'));
+        newer[2] = name;
+     #   cells[count,] = newrecord[j,];
+        
+        cells[count,] = newer;
+        #print(cells[count,]);
+        cells[count,1] = '0000'
+        #print(cells[count,])
+        
+        #cat('number of records is:', length(cells[,1]), "vs.", origl, "\n")
         j = j + 1
       } else {
         
       }
     }
+    it = it + 1;
     
   }
+  return(cells);
+  
   if (class(cells) == 'list') {
     returnob = list();
     for(c in 1:length(cells)){
@@ -572,8 +601,10 @@ findlocal <- function(ext_ob, clim, type, maxiter = 50, searchrep = 3, manip = '
       vporig = matrix(nrow=length(currdist[[1]][,1]), ncol = length(currdist))
       for(a in 1:length(currdist)){
         currdist[[a]] <- stats::na.omit(currdist[[a]])
-        ext.curr = extraction(currdist[[a]][,1:(which(colnames(currdist[[a]])=='cells')-1)], clim[[a]], schema = 'flat', factor=4)
-        currdist[[a]] = ext.curr;
+        if(length(currdist[[a]][,1])>10){
+          ext.curr = extraction(currdist[[a]][,1:(which(colnames(currdist[[a]])=='cells')-1)], clim[[a]], schema = 'flat', factor=4)
+          currdist[[a]] = ext.curr;
+        }
         sub <- subset(currdist[[a]], currdist[[a]][,1] != "0000")
         for (i in 1:length(currdist[[a]][, 1])) {
           vporig[i,a] <-
@@ -588,9 +619,14 @@ findlocal <- function(ext_ob, clim, type, maxiter = 50, searchrep = 3, manip = '
     } else {
       vporig <- vector()
       currdist <- stats::na.omit(currdist)
-    
-     ext.curr <- extraction(currdist[,1:(which(colnames(currdist)=='cells')-1)], clim, schema='flat', factor = 4);
-
+      sim <- subset(currdist, currdist[,1] == "0000");
+      if(length(sim[,1])>20){
+          #  print("PROBLEM ZONE:")
+          # print(length(currdist[,1]));
+          ext.sim <- extraction(sim[,1:(which(colnames(sim)=='cells')-1)], clim, schema='flat', factor = 4);
+          sim <- ext.sim;
+      }
+      
       sub <- subset(currdist, currdist[,1] != '0000')
       for (i in 1:length(currdist[, 1])) {
         vporig[i] <-
@@ -599,6 +635,7 @@ findlocal <- function(ext_ob, clim, type, maxiter = 50, searchrep = 3, manip = '
                              dens, 
                              type = type))[[1]]
       }
+      currdist <- rbind(sub, sim);
     }
     origmin <- min(vporig); print(origmin)
     f = filter_dist(currdist, dens, r, min = origmin, type = type);
@@ -707,7 +744,7 @@ findlocal <- function(ext_ob, clim, type, maxiter = 50, searchrep = 3, manip = '
 
  
 
-geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, searchrep = 5, manip = 'bayes', divisions = 5){
+geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, searchrep = 1, manip = 'condi', divisions = 10){
   ext = ext_ob;
   
   search = list();

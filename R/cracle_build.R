@@ -20,18 +20,19 @@ NULL
 #' extr.spec = extraction(data=distr, clim= climondbioclim, schema='species');
 extraction <- function(data, clim, schema = "raw", factor = 0){
 
-	
+	if(length(data[,1]) < 5){cat('ERR: Too few records\n'); return()}
 
 	mat.larr <- data;
 	phytoclim <- clim;
-
+  #nclat <- which(colnames(mat.larr)=='lat');
+	#nclon <- which(colnames(mat.larr)=='lon');
 		
-	extr.larr <- raster::extract(phytoclim, mat.larr[,4:3], cellnumbers=T);
+	extr.larr <- raster::extract(phytoclim, cbind(mat.larr$lon, mat.larr$lat), cellnumbers=T);
 	extr.larr <- cbind(mat.larr, extr.larr);
 	if(schema != 'raw'){
 		if(factor == 0){} else {
 			r2 <- aggregate(phytoclim, fact = factor, fun=mean);
-			tmp.ext <- raster::extract(r2, mat.larr[,4:3], cellnumbers=T);
+			tmp.ext <- raster::extract(r2, cbind(mat.larr$lon, mat.larr$lat), cellnumbers=T);
 			extr.larr[,(ncol(extr.larr)+1)] = extr.larr[,'cells'];
 			extr.larr[,'cells'] = tmp.ext[,'cells'];
 			
@@ -46,9 +47,11 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 		for(i in 1:length(tlist)){
 			set <- subset(extr.larr, extr.larr$tax == tlist[i]);
 		
-			if(length(set[,1])>=5){
+			#if(length(set[,1])>=5){
 				holder <- rbind(holder, set);
-			}			
+				print(length(holder[,1]))
+				
+			#}			
 		}
 		extr.larr = holder;
 	} else {
@@ -59,9 +62,9 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 			if(schema == "flat"){
 				sub = set
 				sub <- sub[!duplicated(sub[,"cells"]),];
-				if(length(sub[,1])>=5){
+				#if(length(sub[,1])>=5){
 					holder <- rbind(holder, sub);
-				}	
+			#	}	
 			}
 			if(schema == "species"){
 				glist <- unique(set$sub);
@@ -74,13 +77,21 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 				}		
 			}
 		}
-	
 		extr.larr <- holder; 
 	}
 	if(schema != 'raw'){
+
 		extr.larr[,'cells'] = extr.larr[,ncol(extr.larr)];
+
 		extr.larr = extr.larr[,-ncol(extr.larr)];
 	}
+  print("EXTRACTION MONITOR:")
+	#  print(length(holder[,1]));
+	
+	print(length(extr.larr[,1]));
+  
+  extr.larr[,1] = as.numeric(as.character(extr.larr[,1]))
+	
 	return(extr.larr);
 };
 
@@ -219,7 +230,7 @@ densform <- function(ex, clim, name = '', bw = "nrd0", manip = 'reg', n = 1024){
 #' dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024);
 #' multiplot(dens.list.raw, names(climondbioclim[[1]]));
 
-dens_obj <- function(ex, clim, bw = "nrd0", n = 1024) {
+dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", n = 1024) {
 	rawbioclim = clim;
 	ex <- data.frame(ex);
 	
@@ -256,7 +267,7 @@ dens_obj <- function(ex, clim, bw = "nrd0", n = 1024) {
 		
 		nlist[[i]] <- length(s.ex[,1])
 
-		dens.list[[i]] <- (densform(s.ex, rawbioclim, name = tax.list[[i]], bw = bw, n=n));
+		dens.list[[i]] <- (densform(s.ex, rawbioclim, name = tax.list[[i]], manip = manip, bw = bw, n=n));
 
 	 	len <- length(dens.list[[i]]);
 		if(len <= 1) {
