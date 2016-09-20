@@ -765,14 +765,19 @@ findlocal <-
         ##DEFAULT TO BE SET?
         #Spatial filter is to be done on the first environmental data layer set.
         #User should have the choice, or this behavior needs to be documented
+        
         sim <- subset(currdist[[1]], currdist[[1]][, 1] == "0000")
+        if(length(sim[,1])>5){
         ext.sim <-
           extraction(sim[, 1:(which(colnames(sim) == 'cells') - 1)], clim[[1]], schema = 'flat', factor = factor)
         
         sim = ext.sim
         
         sim[, 1] = rep("0000", length(sim[, 1]))
-        
+        } else {
+          sim = sim[!duplicated(sim[,"cells"]),];
+
+        }        
         sub = subset(currdist[[1]], currdist[[1]][, 1] != '0000')
         
         currdist[[1]] = rbind(sub, sim)
@@ -780,6 +785,7 @@ findlocal <-
         
         
         for (z in 2:length(clim)) {
+          #problem here if there are fewer than 5 new records the extraction() function returns nothing.
           ext.this = extraction(sim[, 1:(which(colnames(sim) == 'cells') - 1)], clim[[z]], schema = 'raw')
           
           ext.this[, 1] = rep("0000", length(ext.this[, 1]))
@@ -818,7 +824,8 @@ findlocal <-
         currdist <- stats::na.omit(currdist)
         sim <- subset(currdist, currdist[, 1] == "0000")
         
-        if (length(sim[, 1]) > 20) {
+        if (length(sim[, 1]) > 5) {
+          print("spThin");
           ext.sim <-
             extraction(sim[, 1:(which(colnames(sim) == 'cells') - 1)], clim, schema =
                          'flat', factor = factor)
@@ -826,6 +833,9 @@ findlocal <-
           sim <- ext.sim
           
           sim[, 1] = rep("0000", length(sim[, 1]))
+          
+        } else {
+          sim <- sim[!duplicated(sim[,"cells"]),];
           
         }
         
@@ -843,7 +853,7 @@ findlocal <-
                                dens,
                                type = type))[[1]]
         }
-      }
+      } 
       origmin <- min(vporig)
       print(origmin)
       f = filter_dist(currdist, dens, r, min = origmin, type = type)

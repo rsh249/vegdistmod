@@ -20,7 +20,7 @@ NULL
 #' extr.spec = extraction(data=distr, clim= climondbioclim, schema='species');
 extraction <- function(data, clim, schema = "raw", factor = 0){
 
-	if(length(data[,1]) < 5){cat('ERR: Too few records\n'); return()}
+	if(length(data[,1]) < 5){cat('ERR: Too few records\n'); return();}
 
 	mat.larr <- data;
 	phytoclim <- clim;
