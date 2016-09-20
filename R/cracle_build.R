@@ -49,7 +49,7 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 		
 			#if(length(set[,1])>=5){
 				holder <- rbind(holder, set);
-				print(length(holder[,1]))
+				#print(length(holder[,1]))
 				
 			#}			
 		}
@@ -85,10 +85,10 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 
 		extr.larr = extr.larr[,-ncol(extr.larr)];
 	}
-  print("EXTRACTION MONITOR:")
+  #print("EXTRACTION MONITOR:")
 	#  print(length(holder[,1]));
 	
-	print(length(extr.larr[,1]));
+	#print(length(extr.larr[,1]));
   
   extr.larr[,1] = as.numeric(as.character(extr.larr[,1]))
 	
@@ -106,6 +106,8 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 #' @param bw A bandwidth compatible with stats::density(). Options include "nrd", "nrd0", "ucv", "bcv", etc.. Default (and recommended) value is "nrd0".
 #' @param n Number of equally spaced points at which the probability density is to be estimated. Defaults to 1024. A lower number increases speed but decreases resolution in the function. A higher number increases resolution at the cost of speed. Recommended values: 512, 1024, 2048, ....
 #' @param manip Character string of 'reg' for straight likelihood, 'condi' for conditional likelihood, or 'bayes' for a Bayesian style likelihood statement.
+#' @param bg An object of background point climate data matching the 
+#'  output of extraction(). Generate random backround points and then use extraction().
 #' @export
 #' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
@@ -116,9 +118,10 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 #' dens.sub = densform(extr.sub, clim = climondbioclim, bw = 'nrd0', n = 512);
 #' densplot(dens.sub, names(climondbioclim[[1]]));
 
-densform <- function(ex, clim, name = '', bw = "nrd0", manip = 'reg', n = 1024){
+densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n = 1024){
   condi = FALSE;
   bayes = FALSE;
+  
   if(manip == 'condi') {
     condi = TRUE; #print("Conditional Likelihood")
   }
@@ -143,6 +146,7 @@ densform <- function(ex, clim, name = '', bw = "nrd0", manip = 'reg', n = 1024){
 		eval <- data.frame();
 		bg.eval = data.frame();
 		if(condi == TRUE | bayes == TRUE){
+		  if(length(bg)<2){
   		bgn = 3000;
 	  	bg <- dismo::randomPoints(clim, bgn);
 	  	bgn = length(bg[,1]);
@@ -152,6 +156,9 @@ densform <- function(ex, clim, name = '', bw = "nrd0", manip = 'reg', n = 1024){
 		  bg[,4] = as.numeric(as.character(bg[,4]));
   		colnames(bg) <- c("ind_id", "tax", "lat", "lon")
   		bg.ex <- extraction(bg, clim, schema='raw');
+		  } else {
+		    bg.ex = bg;
+		  }
 		}
 		for(i in 1:length(names(phytoclim))){	
 			from <- raster::minValue(phytoclim[[i]]);
@@ -220,6 +227,7 @@ densform <- function(ex, clim, name = '', bw = "nrd0", manip = 'reg', n = 1024){
 #' @param clim A raster object (see raster::raster() and raster::stack() documentation for reading raster files into R).
 #' @param bw A bandwidth compatible with stats::density(). Options include "nrd", "nrd0", "ucv", "bcv", etc.. Default (and recommended) value is "nrd0".
 #' @param n Number of equally spaced points at which the probability density is to be estimated. Defaults to 1024. A lower number increases speed but decreases resolution in the function. A higher number increases resolution at the cost of speed. Recommended values: 512, 1024, 2048, ....
+#' @param manip Character string of 'reg' for straight likelihood, 'condi' for conditional likelihood, or 'bayes' for a Bayesian style likelihood statement.
 #' @export
 #' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");

@@ -37,6 +37,41 @@ NULL
 
 
 
+##Hidden function that is called under several others to get background data points.
+# call with .get_bg()
+
+.get_bg <- function(clim, n = 5000){
+  r = clim;
+  if(class(clim) == 'list'){
+    bg.l
+    #dim <- dim(clim[[1]]);
+    #n = dim[1]*dim[2];
+    for(a in 1:length(clim)){
+      
+      bg <- randomPoints(r[[a]], n)
+      bg <- cbind(rep('0000', length(bg[,1])), rep('bg', length(bg[,1])), bg[,2], bg[,1])
+      colnames(bg) <- c('ind_id', 'tax', 'lat', 'lon');
+      bg = as.data.frame(bg);
+      bg$lon <- as.numeric(as.character(bg$lon));
+      bg$lat <- as.numeric(as.character(bg$lat));
+      bg.l[[a]] = bg;
+    }
+    ret = bg.l;
+  } else {
+    #   dim <- dim(clim);
+    #  n = dim[1]*dim[2];
+    bg <- randomPoints(r, n)
+    bg <- cbind(rep('0000', length(bg[,1])), rep('bg', length(bg[,1])), bg[,2], bg[,1])
+    colnames(bg) <- c('ind_id', 'tax', 'lat', 'lon');
+    bg = as.data.frame(bg);
+    bg$lon <- as.numeric(as.character(bg$lon));
+    bg$lat <- as.numeric(as.character(bg$lat));
+    ret = bg;
+  }
+  return(ret);
+}
+
+
 #' The multivariate likelihood (log-likelihood) for a given set of PDF climate functions and localities.
 #'
 #'  Returns a log-likelihood calculated from the climate data at one 
@@ -87,6 +122,7 @@ multiv_likelihood <- function(x, clim, dens, type) {
     num = length(dens.ob1[[varx]])
     by = (to - from) / num
     search = x[, j]
+    search = as.numeric(as.character(search));
     if (is.na(search)) {
       return(0)
     }
@@ -151,6 +187,7 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
       }
       isnow = 0
       probs = 0
+      #Sum likelihoods across data sets
       for (z in 1:length(ext.abies.filter)) {
         probs = probs + ext.abies.filter[[z]]$prob
       }
@@ -184,6 +221,10 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
 #HIdden function to find the distance between two points
 .distance <- function(lon1, lat1, lon2, lat2) {
   R = 6737
+  lon1 = as.numeric(as.character(lon1));
+  lon2 = as.numeric(as.character(lon2));
+  lat1 = as.numeric(as.character(lat1));
+  lat2 = as.numeric(as.character(lat2));
   
   lon1 = lon1 * pi / 180
   
@@ -211,7 +252,10 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
 #Hidden function to get coordinates given a direction and bearing from start point.
 .findcoord <- function(lon, lat, dist, brng) {
   R = 6737
-  
+  lon = as.numeric(as.character(lon));
+  lat = as.numeric(as.character(lat));
+  dist = as.numeric(as.character(dist));
+  brng = as.numeric(as.character(brng));
   # print(c(lon, lat));
   brng = brng * (pi / 180)
   #print(brng);
@@ -292,9 +336,9 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
     maxdist = 2*maxdist; #Consider calculating the actual distance matrix and selecting the maximum...
     newrecord= list();
     for(a in 1:length(cells)){
-      newrecord[[a]] <-
-        matrix(nrow = nrow(cells[[a]]),
-               ncol = ncol(cells[[a]]))
+      #newrecord[[a]] <-
+       # matrix(nrow = nrow(cells[[a]]),
+        #       ncol = ncol(cells[[a]]))
       count = length(cells[[a]][,1]);
     }
   } else {
@@ -304,7 +348,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
     maxdist <-
       .distance(minc[1, 'lon'], minc[1, 'lat'], maxc[1, 'lon'], maxc[1, 'lat'])
     count = length(cells[,1]);
-    newrecord = matrix(nrow = 100 * nrow(cells), ncol = ncol(cells))
+    #newrecord = matrix(nrow = 100 * nrow(cells), ncol = ncol(cells))
   }
   #maxdist = 500; #FIXED MAXIMUM DISTANCE
   #dist.v <- (seq(2, as.integer(0.3 * maxdist))); #print(maxdist);
@@ -326,23 +370,34 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
     if (class(cells) == "list") {
       new = .findcoord(cells[[1]][it, 'lon'], cells[[1]][it, 'lat'], dist =
                          dist, brng = dir)
-      if(is.na(new)){next}
       pold = vector();
       pnew = vector();
       newextr = list();
-      newer = list();
-      
+      newer = as.list(rep(NA, length(ras)));
+      #print(newer);
       for (a in 1:length(cells)) {
-        newextr[[a]] <-
-          extract(ras[[a]], cbind(new[1], new[2]), cellnumbers = T);
+        extr <- extract(ras[[a]], cbind(new[1], new[2]), cellnumbers = T); #print("JUST EXTRACTED");print(extr);
+        if(anyNA(extr) == FALSE){
+          newextr[[a]] <- extr;
+        } else {
+          #cat("NA RECORD RETURNED\n");
+          newextr[[a]] = 0;
+          break;
+        }
+        
+       #   
+        #if(is.na(newextr[[a]][,1])==TRUE | length(newextr[[a]][,1])<1){next;}
+       # if(length(newextr[[a]][,1]) <1){return(newextr);}
+       # print(newextr[[a]])
         newer[[a]] <-
-          cbind("0000", name, new[2], new[1], newextr[[a]])
-        newer[[a]] <- as.data.frame(newer[[a]])
+          cbind("0000", name, new[2], new[1], newextr[[a]]);
+        newer[[a]] <- as.data.frame(newer[[a]]); 
         for (i in 3:length(newer[[a]][1, ])) {
           newer[[a]][, i] <- as.numeric(as.character(newer[[a]][, i]))
         }
-        if (is.na(newer[[a]][, ncol(newer[[a]])])) {
-          next
+       
+        if (anyNA(newer[[a]])) {
+          break;
         }
         pold[[a]] <-
           (multiv_likelihood(cells[[a]][it, 6:length(cells[[a]][1, ])], ras[[a]],  dens[[a]], type = type))[[1]]
@@ -351,21 +406,56 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
       }
       pnew = sum(pnew)
       pold = sum(pold)
+      #return(newer);
+      if(anyNA(unlist(newer)) | length(newer) < 1){  } else {
       for (b in 1:length(cells)) {
         if (pnew >= (pold)) { 
-          newer[[b]] = stats::na.omit(newer[[b]]);
-          if(is.na(newer[[b]])){next}
-          newrecord[[b]][j, 1:ncol(cells[[b]])] = (newer[[b]])
-          count = count+1;
-          newrecord[[b]][j, 'lat'] = as.numeric(as.character(newrecord[[b]][j, 'lat']));
-          newrecord[[b]][j, 'lon'] = as.numeric(as.character(newrecord[[b]][j, 'lon']));
+          # newrecord[j, 1:ncol(newer)] = (newer); 
+          # print(newer);
+          #colnames(newrecord) = colnames(cells);
+          if(b == 1){
+            count = count+1; 
+          }
+          # newrecord[j, 3] = as.numeric(as.character(newrecord[j, 3]))
+          #  newrecord[j, 4] = as.numeric(as.character(newrecord[j, 4]))
+          newer[[b]][1] = as.numeric(as.character('0000'));
+          newer[[b]][2] = name;
+          #   cells[count,] = newrecord[j,];
           
-          cells[[b]][count,] = newrecord[[b]][j,];
-          j = j+1;
+          cells[[b]][count,] = newer[[b]];
+          #print(cells[count,]);
+          cells[[b]][count,1] = '0000'
+          #print(cells[count,])
+          
+          #cat('number of records is:', length(cells[,1]), "vs.", origl, "\n")
+          j = j + 1 #I dont think I'm using j anymore.
+          
+          #if(length(newer[[b]])<1){next;}
+         # if(anyNA(newer[[b]]) == TRUE){next;}
+         # print(newer[[b]]); cat("LENGTH OF NEWER IS: ", length(newer[[b]]), "for", j, "\n");
+#          newer[[b]] = stats::na.omit(newer[[b]]); #print(newer[[b]]); 
+          
+          #newrecord[j, 1:ncol(cells[[b]])] = (newer[[b]])
+#          count = count+1;
+          #return(newrecord)
+          #newrecord[j, 'lat'] = as.numeric(as.character(newrecord[[b]][j, 'lat']));
+          #newrecord[j, 'lon'] = as.numeric(as.character(newrecord[[b]][j, 'lon']));
+          #return(newer[[b]])
+          #newer[[b]]$lon = as.numeric(as.character(newer[[b]]$lon));
+          #newer[[b]]$lat = as.numeric(as.character(newer[[b]]$lat));
+        #  print(newer[[b]])
+#          cells[[b]][count,] = as.matrix(newer[[b]]);
+#         for(nex in 3:length(newer[[b]])){
+ #           cells[[b]][count, nex] = as.numeric(as.character(cells[[b]][count,nex]))
+            
+  #        }
+   #       print(j)
+          #j = j+1;
           
         } else {
           
         }
+      }
       }
     } else {
       new = .findcoord(cells[it, 'lon'], cells[it, 'lat'], dist =
@@ -391,7 +481,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
         count = count+1; 
        # newrecord[j, 3] = as.numeric(as.character(newrecord[j, 3]))
       #  newrecord[j, 4] = as.numeric(as.character(newrecord[j, 4]))
-        newer[1] = as.factor(as.character('0000'));
+        newer[1] = as.numeric(as.character('0000'));
         newer[2] = name;
      #   cells[count,] = newrecord[j,];
         
@@ -411,33 +501,33 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
   }
   return(cells);
   
-  if (class(cells) == 'list') {
-    returnob = list();
-    for(c in 1:length(cells)){
-      newrecord[[c]] <- stats::na.omit(newrecord[[c]])
-      newrecord[[c]] <- as.data.frame(newrecord[[c]])
-      colnames(newrecord[[c]]) <- colnames(cells[[c]])
-      returnob[[c]] <- rbind(cells[[c]], newrecord[[c]])
-      returnob[[c]]$lon <- as.numeric(as.character(returnob[[c]]$lon))
-      returnob[[c]]$lat <- as.numeric(as.character(returnob[[c]]$lat))
-      for (i in 4:length(returnob[[c]][1, ])) {
-        returnob[[c]][, i] <- as.numeric(as.character(returnob[[c]][, i]))
-      }
-    }
-    return(returnob)
-    
-  } else{
-    newrecord <- stats::na.omit(newrecord)
-    newrecord <- as.data.frame(newrecord)
-    colnames(newrecord) <- colnames(cells)
-    returnob <- rbind(cells, newrecord)
-    returnob$lon <- as.numeric(as.character(returnob$lon))
-    returnob$lat <- as.numeric(as.character(returnob$lat))
-    for (i in 4:length(returnob[1, ])) {
-      returnob[, i] <- as.numeric(as.character(returnob[, i]))
-    }
-    return(returnob)
-  }
+  # if (class(cells) == 'list') {
+  #   returnob = list();
+  #   for(c in 1:length(cells)){
+  #     newrecord[[c]] <- stats::na.omit(newrecord[[c]])
+  #     newrecord[[c]] <- as.data.frame(newrecord[[c]])
+  #     colnames(newrecord[[c]]) <- colnames(cells[[c]])
+  #     returnob[[c]] <- rbind(cells[[c]], newrecord[[c]])
+  #     returnob[[c]]$lon <- as.numeric(as.character(returnob[[c]]$lon))
+  #     returnob[[c]]$lat <- as.numeric(as.character(returnob[[c]]$lat))
+  #     for (i in 4:length(returnob[[c]][1, ])) {
+  #       returnob[[c]][, i] <- as.numeric(as.character(returnob[[c]][, i]))
+  #     }
+  #   }
+  #   return(returnob)
+  #   
+  # } else{
+  #   newrecord <- stats::na.omit(newrecord)
+  #   newrecord <- as.data.frame(newrecord)
+  #   colnames(newrecord) <- colnames(cells)
+  #   returnob <- rbind(cells, newrecord)
+  #   returnob$lon <- as.numeric(as.character(returnob$lon))
+  #   returnob$lat <- as.numeric(as.character(returnob$lat))
+  #   for (i in 4:length(returnob[1, ])) {
+  #     returnob[, i] <- as.numeric(as.character(returnob[, i]))
+  #   }
+  #   return(returnob)
+  # }
   
 }
 
@@ -459,8 +549,15 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
 #' @param manip Specify either 'reg', 'condi', or 'bayes. Default is 'condi'.
 #'  See documentation for densform() for descriptions of these.
 #' @param maxiter Maximum number of search iterations.
+#' @param alpha The value of alpha to be used to calculate the initial confidence interval 
+#'  for removing climatic outliers in the sample(s).
 #' @param searchrep How many times to search for simulated localities 
-#' (per parent occurrence) per iteration. Recommend 1, but feel free to tune this parameter.
+#'  (per parent occurrence) per iteration. Recommend 1, but feel free to tune this parameter.
+#' @param factor To be passed to the extraction() function for post search 
+#'  thinning of data to limit overfitting. Set to 1 to ignore.
+#' @param bg An object of background point climate data matching the 
+#'  output of extraction(). Generate random backround points and then use extraction().
+
 #'
 #' @export
 #' @examples
@@ -474,246 +571,329 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
 #'  maxiter = 5, searchrep = 1, 
 #'  manip = 'condi');
 
-findlocal <- function(ext_ob, clim, type, maxiter = 50, searchrep = 3, manip = 'condi') {
-  nrec <- 100000;
-  ext = ext_ob;
-  if(class(ext) == 'list'){best = list();} else { best = 0;}
-  bestp = vector();
-  searchp = vector();
-  bc = 1;
-  nlast <- 0;
-  samecount = 0;
-  currdist <- ext;
-  if(class(ext) == 'list'){
-    name = currdist[[1]][1,2];
-  } else{
-    name = currdist[1, 2]
-  }
-  iter = 1
-  pnew = 0
-  r = clim
-  if(class(ext) == 'list'){
-    dens = list();
-    vporig = matrix(nrow=length(ext[[1]][,1]), ncol = length(ext))
-    for(a in 1:length(ext)){
-      currdist[[a]] <- stats::na.omit(currdist[[a]])
-      dens[[a]] <- densform(currdist[[a]], r[[a]], manip = manip)
-      currdist[[a]] <- stats::na.omit(currdist[[a]])
-      for (i in 1:length(currdist[[a]][, 1])) {
-        vporig[i,a] <-
-          (multiv_likelihood(currdist[[a]][i, 6:length(currdist[[a]][1, ])],
-                             r[[a]],
-                             dens[[a]],
-                             type = type))[[1]]
-      }
-    }
-    vporig = apply(vporig, 1, sum);
-  } else {
-    dens <- densform(currdist, r, manip = manip)
-    vporig <- vector()
-    currdist <- stats::na.omit(currdist)
-    for (i in 1:length(currdist[, 1])) {
-      vporig[i] <-
-        (multiv_likelihood(currdist[i, 6:length(currdist[1, ])],
-                           r,
-                           dens, 
-                           type = type))[[1]]
-    }
-  }
-  plast <- mean(vporig);
-  if(length(vporig)>= 100){
-    vporig <- sort(vporig); 
-    origmin <- stats::quantile(vporig, probs = 0.025);
-  } else {
-    origmin <- plast + stats::qnorm(0.025) * (stats::sd(vporig)/sqrt(length(vporig)))
-  }
-  porig = plast
-  print(origmin)
-  last <- currdist
-  f = filter_dist(currdist, dens, r, min = origmin, type = type); 
-  currdist <- f
-  if(class(ext) == 'list'){
-    dens = list();
-    vporig = matrix(nrow=length(currdist[[1]][,1]), ncol = length(ext))
-    for(a in 1:length(ext)){
-      currdist[[a]] <- stats::na.omit(currdist[[a]])
-      dens[[a]] <- densform(currdist[[a]], r[[a]], manip = manip)
-      currdist[[a]] <- stats::na.omit(currdist[[a]])
-      for (i in 1:length(currdist[[a]][, 1])) {
-        vporig[i,a] <-
-          (multiv_likelihood(currdist[[a]][i, 6:length(currdist[[a]][1, ])],
-                             r[[a]],
-                             dens[[a]], 
-                             type = type))[[1]]
-      }
-    }
-    vporig <- stats::na.omit(vporig)
-    vporig = apply(vporig, 1, sum);
-    for(d in 1:length(currdist)){
-      currdist[[d]]$prob = vporig;
-    }
-  } else {
-    dens <- densform(currdist, r, manip = manip)
-    vporig <- vector()
-    currdist <- stats::na.omit(currdist)
-    for (i in 1:length(currdist[, 1])) {
-      vporig[i] <-
-        (multiv_likelihood(currdist[i, 6:length(currdist[1, ])],
-                           r,
-                           dens,
-                           type = type))[[1]]
-    }
-    currdist$prob = vporig;
-  }
-  plast <- mean(vporig)
-  porig = plast
-  origmin <- min(vporig);
-  print(origmin)
-  cat("porig is: ", porig, '\n')
-
-  last <- currdist
-  best = last;
-
-  if(class(currdist)=='list'){
-    orig_num = length(currdist[[1]][, 1])
-  } else {
-    orig_num = length(currdist[,1]);
-    
-  }
- 
-  bestp[bc] = porig;
-  searchp[bc] = porig;
-  bc = bc+1; print(bc)
-
-  while (porig < 0){ #Will run forever so control by managing the variable 'iter'
-    print(iter)
-    last <- currdist
-    currdist = best;
-
-    for (i in 1:searchrep) {
-      currdist <- near2(currdist, r, dens, name = name, type = type)
-    }
-
-  if(class(ext) == 'list'){
-      dens = list();
+findlocal <-
+  function(ext_ob,
+           clim,
+           bg = 0,
+           type,
+           maxiter = 50,
+           searchrep = 3,
+           manip = 'condi',
+           alpha = 0.05,
+           factor = 4) {
+    nrec <- 100000
     
     
-      vporig = matrix(nrow=length(currdist[[1]][,1]), ncol = length(currdist))
-      for(a in 1:length(currdist)){
-        currdist[[a]] <- stats::na.omit(currdist[[a]])
-        if(length(currdist[[a]][,1])>10){
-          ext.curr = extraction(currdist[[a]][,1:(which(colnames(currdist[[a]])=='cells')-1)], clim[[a]], schema = 'flat', factor=4)
-          currdist[[a]] = ext.curr;
+    ext = ext_ob
+    
+    if (length(bg) < 2) {
+      if (class(ext) == 'list') {
+        bg.hold = .get_bg(clim[[1]])
+        
+        bg = list()
+        
+        for (i in 1:length(clim)) {
+          bg[[i]] = extraction(bg.hold, clim[[i]], schema = 'raw')
+          
         }
-        sub <- subset(currdist[[a]], currdist[[a]][,1] != "0000")
+        
+        
+      } else {
+        bg.e = .get_bg(clim)
+        #bg.e = get_bg(clim)
+        
+        bg = extraction(bg.e, clim, schema = 'raw')
+        
+      }
+      
+    }
+    if (class(ext) == 'list') {
+      best = list()
+    } else {
+      best = 0
+    }
+    bestp = vector()
+    
+    searchp = vector()
+    
+    bc = 1
+    
+    nlast <- 0
+    
+    samecount = 0
+    
+    currdist <- ext
+    
+    if (class(ext) == 'list') {
+      name = currdist[[1]][1, 2]
+      
+    } else{
+      name = currdist[1, 2]
+    }
+    iter = 1
+    pnew = 0
+    r = clim
+    if (class(ext) == 'list') {
+      dens = list()
+      
+      vporig = matrix(nrow = length(ext[[1]][, 1]), ncol = length(ext))
+      for (a in 1:length(ext)) {
+        currdist[[a]] <- stats::na.omit(currdist[[a]])
+        dens[[a]] <-
+          densform(currdist[[a]], r[[a]], bg = bg[[a]], manip = manip)
+        currdist[[a]] <- stats::na.omit(currdist[[a]])
         for (i in 1:length(currdist[[a]][, 1])) {
-          vporig[i,a] <-
-            (multiv_likelihood(sub[i, 6:length(sub[1, ])],
+          vporig[i, a] <-
+            (multiv_likelihood(currdist[[a]][i, 6:length(currdist[[a]][1,])],
                                r[[a]],
                                dens[[a]],
                                type = type))[[1]]
-          
         }
       }
-      vporig = apply(vporig, 1, sum);
+      vporig = apply(vporig, 1, sum)
+      
     } else {
+      dens <- densform(currdist, r, bg = bg, manip = manip)
       vporig <- vector()
       currdist <- stats::na.omit(currdist)
-      sim <- subset(currdist, currdist[,1] == "0000");
-      if(length(sim[,1])>20){
-          #  print("PROBLEM ZONE:")
-          # print(length(currdist[,1]));
-          ext.sim <- extraction(sim[,1:(which(colnames(sim)=='cells')-1)], clim, schema='flat', factor = 4);
-          sim <- ext.sim;
-      }
-      
-      sub <- subset(currdist, currdist[,1] != '0000')
       for (i in 1:length(currdist[, 1])) {
         vporig[i] <-
-          (multiv_likelihood(sub[i, 6:length(sub[1, ])],
+          (multiv_likelihood(currdist[i, 6:length(currdist[1,])],
                              r,
-                             dens, 
+                             dens,
                              type = type))[[1]]
       }
-      currdist <- rbind(sub, sim);
     }
-    origmin <- min(vporig); print(origmin)
-    f = filter_dist(currdist, dens, r, min = origmin, type = type);
-    ##add spthin procedure here?
-
-    currdist <- f
-    p <- vector()
-    if(class(currdist)=='list'){
-      nrec = length(currdist[[1]][1, ])
-      pnew <- mean(currdist[[1]][, ncol(currdist[[1]])])
+    plast <- mean(vporig)
+    
+    if (length(vporig) >= 100) {
+      vporig <- sort(vporig)
+      
+      origmin <- stats::quantile(vporig, probs = alpha / 2)
+      
     } else {
-      nrec = length(currdist[1, ])
-      for (i in 1:nrec) {
-        p[i] <-
-          (multiv_likelihood(currdist[i, 6:length(currdist[1, ])], r, dens, type =
-                               '.gauss'))[[1]]
-        
-      }
-      sub <- subset(currdist, currdist[, 1] == '0000')
-      sub <- sub[!duplicated(sub[, 'cells']), ]
-      nex <- subset(currdist, currdist[, 1] != '0000')
-      if (length(sub[, 1]) > max(c(orig_num, 500))) {
-        probs <- sub[, ncol(sub)]
-        mprob <- max(stats::na.omit(probs))
-        pro <- 1 / (probs / mprob)
-        sam <-
-          sub[sample(
-            seq(1:length(sub[, 1])),
-            size = max(c(500, orig_num)),
-            replace = F,
-            prob = pro
-          ), ]
-        sub = sam
-      } else {
-        if (length(sub[, 1]) > 50) {
-          probs <- sub[, ncol(sub)]
-          probs <- 2.71828 ^ probs
-          mprob <- max(stats::na.omit(probs))
-          pro <- (probs / mprob)
-          sam <-
-            sub[sample(
-              seq(1:length(sub[, 1])),
-              size = 0.6 * length(sub[, 1]),
-              replace = F,
-              prob = 2.71828 ^ probs
-            ), ]
-          sub = sam
+      origmin <-
+        plast + stats::qnorm(alpha / 2) * (stats::sd(vporig) / sqrt(length(vporig)))
+    }
+    print(alpha)
+    
+    porig = plast
+    print(origmin)
+    last <- currdist
+    f = filter_dist(currdist, dens, r, min = origmin, type = type)
+    
+    currdist <- f
+    if (class(ext) == 'list') {
+      dens = list()
+      
+      vporig = matrix(nrow = length(currdist[[1]][, 1]), ncol = length(ext))
+      for (a in 1:length(ext)) {
+        currdist[[a]] <- stats::na.omit(currdist[[a]])
+        dens[[a]] <-
+          densform(currdist[[a]], r[[a]], bg = bg[[a]], manip = manip)
+        currdist[[a]] <- stats::na.omit(currdist[[a]])
+        for (i in 1:length(currdist[[a]][, 1])) {
+          vporig[i, a] <-
+            (multiv_likelihood(currdist[[a]][i, 6:length(currdist[[a]][1,])],
+                               r[[a]],
+                               dens[[a]],
+                               type = type))[[1]]
         }
       }
-      currdist <- rbind(nex, sub)
-      pnew <- mean(currdist[, ncol(currdist)])
-    }
-    iter = iter + 1
-    cat('Like: ', pnew, ' ', bestp[bc-1], '\n')
-    if (plast == pnew) {
-      samecount = samecount + 1
+      vporig <- stats::na.omit(vporig)
+      vporig = apply(vporig, 1, sum)
       
-    } 
-    if (bestp[[bc-1]] < pnew) {
-      best  <- currdist
-      bestp[bc] = pnew;
-      searchp[bc] = pnew;
-      bc = bc +1;
+      for (d in 1:length(currdist)) {
+        currdist[[d]]$prob = vporig
+        
+      }
     } else {
-      bestp[bc] = bestp[bc-1];
-      searchp[bc] = pnew;
-      bc  = bc+1;
+      dens <- densform(currdist, r, bg = bg, manip = manip)
+      vporig <- vector()
+      currdist <- stats::na.omit(currdist)
+      for (i in 1:length(currdist[, 1])) {
+        vporig[i] <-
+          (multiv_likelihood(currdist[i, 6:length(currdist[1,])],
+                             r,
+                             dens,
+                             type = type))[[1]]
+      }
+      currdist$prob = vporig
+      
     }
-    plast = pnew
-    print(iter);
-    if (iter >= maxiter) {
-      break
+    plast <- mean(vporig)
+    porig = plast
+    origmin <- min(vporig)
+    
+    print(origmin)
+    cat("porig is: ", porig, '\n')
+    
+    last <- currdist
+    best = last
+    
+    best.dens = dens
+    
+    if (class(currdist) == 'list') {
+      orig_num = length(currdist[[1]][, 1])
+    } else {
+      orig_num = length(currdist[, 1])
+      
+      
     }
+    
+    bestp[bc] = porig
+    
+    searchp[bc] = porig
+    
+    bc = bc + 1
+    print(bc)
+    
+    while (porig < 0) {
+      last <- currdist
+      currdist = best
+      
+      
+      for (i in 1:searchrep) {
+        currdist <- near2(currdist, r, dens, name = name, type = type)
+      }
+      
+      if (class(ext) == 'list') {
+        dens = list()
+        
+        
+        
+        ##DEFAULT TO BE SET?
+        #Spatial filter is to be done on the first environmental data layer set.
+        #User should have the choice, or this behavior needs to be documented
+        sim <- subset(currdist[[1]], currdist[[1]][, 1] == "0000")
+        ext.sim <-
+          extraction(sim[, 1:(which(colnames(sim) == 'cells') - 1)], clim[[1]], schema = 'flat', factor = factor)
+        
+        sim = ext.sim
+        
+        sim[, 1] = rep("0000", length(sim[, 1]))
+        
+        sub = subset(currdist[[1]], currdist[[1]][, 1] != '0000')
+        
+        currdist[[1]] = rbind(sub, sim)
+        
+        
+        
+        for (z in 2:length(clim)) {
+          ext.this = extraction(sim[, 1:(which(colnames(sim) == 'cells') - 1)], clim[[z]], schema = 'raw')
+          
+          ext.this[, 1] = rep("0000", length(ext.this[, 1]))
+          
+          sub = subset(currdist[[z]], currdist[[z]][, 1] != '0000')
+          #print(length(sub[,1]));
+          currdist[[z]] = rbind(sub, ext.this)
+          
+        }
+        sub = 0
+        
+        vporig = matrix(nrow = length(currdist[[1]][, 1]),
+                        ncol = length(currdist))
+        
+        for (a in 1:length(currdist)) {
+          currdist[[a]] <- stats::na.omit(currdist[[a]])
+          
+          sub <- subset(currdist[[a]], currdist[[a]][, 1] != "0000")
+          
+          dens[[a]] = densform(currdist[[a]], r[[a]], bg = bg[[a]], manip = manip)
+          
+          for (i in 1:length(currdist[[a]][, 1])) {
+            vporig[i, a] <-
+              (multiv_likelihood(sub[i, 6:length(sub[1,])],
+                                 r[[a]],
+                                 dens[[a]],
+                                 type = type))[[1]]
+            
+          }
+          
+        }
+        vporig = apply(vporig, 1, sum)
+        
+      } else {
+        vporig <- vector()
+        currdist <- stats::na.omit(currdist)
+        sim <- subset(currdist, currdist[, 1] == "0000")
+        
+        if (length(sim[, 1]) > 20) {
+          ext.sim <-
+            extraction(sim[, 1:(which(colnames(sim) == 'cells') - 1)], clim, schema =
+                         'flat', factor = factor)
+          
+          sim <- ext.sim
+          
+          sim[, 1] = rep("0000", length(sim[, 1]))
+          
+        }
+        
+        sub <- subset(currdist, currdist[, 1] != '0000')
+        
+        currdist <- rbind(sub, sim)
+        
+        
+        dens = densform(currdist, r, bg = bg, manip = manip)
+        
+        for (i in 1:length(currdist[, 1])) {
+          vporig[i] <-
+            (multiv_likelihood(sub[i, 6:length(sub[1,])],
+                               r,
+                               dens,
+                               type = type))[[1]]
+        }
+      }
+      origmin <- min(vporig)
+      print(origmin)
+      f = filter_dist(currdist, dens, r, min = origmin, type = type)
+      
+      
+      currdist <- f
+      p <- vector()
+      if (class(currdist) == 'list') {
+        nrec = length(currdist[[1]][1,])
+        pnew <- mean(currdist[[1]][, ncol(currdist[[1]])])
+      } else {
+        nrec = length(currdist[1,])
+        pnew <- mean(currdist[, ncol(currdist)])
+      }
+      iter = iter + 1
+      cat('Like: ', pnew, ' ', bestp[bc - 1], '\n')
+      if (plast == pnew) {
+        samecount = samecount + 1
+        
+      }
+      if (bestp[[bc - 1]] < pnew) {
+        best  <- currdist
+        best.dens <- dens
+        
+        bestp[bc] = pnew
+        
+        searchp[bc] = pnew
+        
+        bc = bc + 1
+        
+      } else {
+        bestp[bc] = bestp[bc - 1]
+        
+        currdist = best
+        
+        
+        searchp[bc] = pnew
+        
+        bc  = bc + 1
+        
+      }
+      plast = pnew
+      print(iter)
+      
+      if (iter >= maxiter) {
+        break
+      }
+    }
+    return(list(best, bestp, searchp))
   }
-  return(list(best, bestp, searchp ))
-}
-
-
 
 #' Search for likely simulated localities with geographic subsetting.
 #' 
@@ -729,8 +909,14 @@ findlocal <- function(ext_ob, clim, type, maxiter = 50, searchrep = 3, manip = '
 #' @param maxiter Maximum number of search iterations.
 #' @param searchrep How many times to search for simulated localities 
 #'  (per parent occurrence) per iteration. Recommend 1, but feel free to tune this parameter.
+#' @param alpha The value of alpha to be used to calculate the initial confidence interval 
+#'  for removing climatic outliers in the sample(s).
 #' @param divisions How many times should the data be split into quadrants? 
 #'  Default is 5 resulting in 20 (5x4quads) geographically oriented samples to be selected.
+#' @param factor To be passed to the extraction() function for post search 
+#'  thinning of data to limit overfitting. Set to 1 to ignore.
+#' @param bg An object of background point climate data matching the 
+#'  output of extraction(). Generate random backround points and then use extraction().
 #'
 #' @export
 #' @examples
@@ -744,30 +930,81 @@ findlocal <- function(ext_ob, clim, type, maxiter = 50, searchrep = 3, manip = '
 
  
 
-geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, searchrep = 1, manip = 'condi', divisions = 10){
+geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 1, manip = 'condi', alpha = 0.05, divisions = 10, factor = 4){
   ext = ext_ob;
+  if(length(bg)<2){
+    if(class(ext)=='list'){
+      bg.hold = .get_bg(clim[[1]]);
+      bg = list();
+      for(i in 1:length(clim)){
+        bg[[i]]= extraction(bg.hold, clim[[i]], schema='raw');
+      }
+      
+      
+    } else {
+      bg.e = .get_bg(clim)
+      #bg.e = get_bg(clim);
+      bg = extraction(bg.e, clim, schema='raw');
+    }
+    
+  }
   
   search = list();
   i=0;
   while(i<divisions){
       print(i)
-      sam.lat <- sample(ext$lat, 1);
-      sam.lon <- sample(ext$lon, 1);
-      sub.nw <- subset(ext, ext$lon <= sam.lon & ext$lat >= sam.lat);
-      sub.ne <- subset(ext, ext$lon >= sam.lon & ext$lat >= sam.lat)
-      sub.sw <- subset(ext, ext$lon <= sam.lon & ext$lat <= sam.lat);
-      sub.se <- subset(ext, ext$lon >= sam.lon & ext$lat <= sam.lat); 
-      if(length(sub.nw[,1])<= 5){next};
-      if(length(sub.sw[,1])<= 5){next};
-      if(length(sub.ne[,1])<=5){next};
-      if(length(sub.se[,1])<=5){next};
-      i=i+1;
-      search.ne <- findlocal(sub.ne, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip)
-      search.sw <- findlocal(sub.sw, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip)
-      search.nw <- findlocal(sub.nw, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip)
-      search.se <- findlocal(sub.se, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip)
-      
-      search[[i]] = rbind(search.nw, search.se, search.sw, search.ne);
+      if(class(ext)=='list'){
+       # for(zzz in 1:length(ext)){
+          sam.lat <- sample(ext[[1]]$lat, 1);
+          sam.lon <- sample(ext[[1]]$lon, 1);
+          search.nw.l <- list();
+          search.ne.l <- list();
+          search.sw.l <- list();
+          search.se.l <- list();
+        for(zzz in 1:length(ext)){
+          sub.nw <- subset(ext[[zzz]], ext[[zzz]]$lon <= sam.lon & ext[[zzz]]$lat >= sam.lat);
+          sub.ne <- subset(ext[[zzz]], ext[[zzz]]$lon >= sam.lon & ext[[zzz]]$lat >= sam.lat)
+          sub.sw <- subset(ext[[zzz]], ext[[zzz]]$lon <= sam.lon & ext[[zzz]]$lat <= sam.lat);
+          sub.se <- subset(ext[[zzz]], ext[[zzz]]$lon >= sam.lon & ext[[zzz]]$lat <= sam.lat); 
+          if(length(sub.nw[,1])<= 5){next};
+          if(length(sub.sw[,1])<= 5){next};
+          if(length(sub.ne[,1])<=5){next};
+          if(length(sub.se[,1])<=5){next};
+          search.ne.l[[zzz]] <- sub.nw;
+          search.nw.l[[zzz]] <- sub.ne;
+          search.se.l[[zzz]] <- sub.se;
+          search.sw.l[[zzz]] <- sub.sw;
+        }
+          i=i+1;
+          print(length(search.ne.l));
+          search.ne <- findlocal(search.ne.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
+          search.sw <- findlocal(search.sw.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
+          search.nw <- findlocal(search.nw.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
+          search.se <- findlocal(search.se.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
+        
+          search[[i]] = rbind(search.nw, search.se, search.sw, search.ne);
+        #}    
+      } else {
+        sam.lat <- sample(ext$lat, 1);
+        sam.lon <- sample(ext$lon, 1);
+        sub.nw <- subset(ext, ext$lon <= sam.lon & ext$lat >= sam.lat);
+        sub.ne <- subset(ext, ext$lon >= sam.lon & ext$lat >= sam.lat)
+        sub.sw <- subset(ext, ext$lon <= sam.lon & ext$lat <= sam.lat);
+        sub.se <- subset(ext, ext$lon >= sam.lon & ext$lat <= sam.lat); 
+        if(length(sub.nw[,1])<= 5){next};
+        if(length(sub.sw[,1])<= 5){next};
+        if(length(sub.ne[,1])<=5){next};
+        if(length(sub.se[,1])<=5){next};
+        i=i+1;
+        search.ne <- findlocal(sub.ne, clim, type, maxiter=maxiter, bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
+        search.sw <- findlocal(sub.sw, clim, type, maxiter=maxiter, bg=bg,  searchrep=searchrep, manip = manip, alpha = alpha)
+        search.nw <- findlocal(sub.nw, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
+        search.se <- findlocal(sub.se, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
+        
+        search[[i]] = rbind(search.nw, search.se, search.sw, search.ne);
+        
+      }
+
     
   } 
   hold = matrix(ncol = ncol(search[[1]]));

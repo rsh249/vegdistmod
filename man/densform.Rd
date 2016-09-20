@@ -4,12 +4,16 @@
 \alias{densform}
 \title{Generate standard probability density functions for each taxon/variable}
 \usage{
-densform(ex, clim, name = "", bw = "nrd0", manip = "reg", n = 1024)
+densform(ex, clim, bg = 0, name = "", bw = "nrd0", manip = "reg",
+  n = 1024)
 }
 \arguments{
 \item{ex}{An object derived from the extraction() function.}
 
 \item{clim}{A raster object (see raster::raster() and raster::stack() documentation for reading raster files into R).}
+
+\item{bg}{An object of background point climate data matching the 
+output of extraction(). Generate random backround points and then use extraction().}
 
 \item{name}{A character string describing (preferably) the group for which PDFs are being constructed (i.e., a species binomial). If none is supplied, a value of column "tax" is selected as a default.}
 

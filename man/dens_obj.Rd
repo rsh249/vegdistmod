@@ -4,12 +4,14 @@
 \alias{dens_obj}
 \title{A wrapper for vegdistmod::densform where a multi-taxon extraction object can be passed to densform one taxon at a time.}
 \usage{
-dens_obj(ex, clim, bw = "nrd0", n = 1024)
+dens_obj(ex, clim, manip = "condi", bw = "nrd0", n = 1024)
 }
 \arguments{
 \item{ex}{An object derived from the extraction() function.}
 
 \item{clim}{A raster object (see raster::raster() and raster::stack() documentation for reading raster files into R).}
+
+\item{manip}{Character string of 'reg' for straight likelihood, 'condi' for conditional likelihood, or 'bayes' for a Bayesian style likelihood statement.}
 
 \item{bw}{A bandwidth compatible with stats::density(). Options include "nrd", "nrd0", "ucv", "bcv", etc.. Default (and recommended) value is "nrd0".}
 

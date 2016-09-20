@@ -4,8 +4,8 @@
 \alias{geo_findlocal}
 \title{Search for likely simulated localities with geographic subsetting.}
 \usage{
-geo_findlocal(ext_ob, clim, type, maxiter = 10, searchrep = 5,
-  manip = "bayes", divisions = 5)
+geo_findlocal(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 1,
+  manip = "condi", alpha = 0.05, divisions = 10, factor = 4)
 }
 \arguments{
 \item{ext_ob}{A data.frame of climate values (i.e., extracted from the climate raster object). Will be passed to multiv_likelihood().}
@@ -16,14 +16,23 @@ geo_findlocal(ext_ob, clim, type, maxiter = 10, searchrep = 5,
 
 \item{maxiter}{Maximum number of search iterations.}
 
+\item{bg}{An object of background point climate data matching the 
+output of extraction(). Generate random backround points and then use extraction().}
+
 \item{searchrep}{How many times to search for simulated localities 
 (per parent occurrence) per iteration. Recommend 1, but feel free to tune this parameter.}
 
 \item{manip}{Specify either 'reg', 'condi', or 'bayes. Default is 'condi'.
 See documentation for densform() for descriptions of these.}
 
+\item{alpha}{The value of alpha to be used to calculate the initial confidence interval 
+for removing climatic outliers in the sample(s).}
+
 \item{divisions}{How many times should the data be split into quadrants? 
 Default is 5 resulting in 20 (5x4quads) geographically oriented samples to be selected.}
+
+\item{factor}{To be passed to the extraction() function for post search 
+thinning of data to limit overfitting. Set to 1 to ignore.}
 }
 \description{
 This wraps the search() function within a set of commands that randomly splits the distribution 

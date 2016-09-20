@@ -4,13 +4,16 @@
 \alias{findlocal}
 \title{Search for likely occurrences}
 \usage{
-findlocal(ext_ob, clim, type, maxiter = 50, searchrep = 3,
-  manip = "condi")
+findlocal(ext_ob, clim, bg = 0, type, maxiter = 50, searchrep = 3,
+  manip = "condi", alpha = 0.05, factor = 4)
 }
 \arguments{
 \item{ext_ob}{A data.frame of climate values (i.e., extracted from the climate raster object). Will be passed to multiv_likelihood().}
 
 \item{clim}{A raster object of climate data (matching x)}
+
+\item{bg}{An object of background point climate data matching the 
+output of extraction(). Generate random backround points and then use extraction().}
 
 \item{type}{Designate either ".gauss" or ".kde".}
 
@@ -21,6 +24,12 @@ findlocal(ext_ob, clim, type, maxiter = 50, searchrep = 3,
 
 \item{manip}{Specify either 'reg', 'condi', or 'bayes. Default is 'condi'.
 See documentation for densform() for descriptions of these.}
+
+\item{alpha}{The value of alpha to be used to calculate the initial confidence interval 
+for removing climatic outliers in the sample(s).}
+
+\item{factor}{To be passed to the extraction() function for post search 
+thinning of data to limit overfitting. Set to 1 to ignore.}
 }
 \description{
 This is a Markov Chain like search procedure to construct a set of likely occurrences 
