@@ -1017,19 +1017,21 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
         search.nw <- findlocal(sub.nw, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
         search.se <- findlocal(sub.se, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
         
-        search[[i]] = rbind(search.nw, search.se, search.sw, search.ne);
+        search[[i]] = rbind(search.nw[[1]], search.se[[1]], search.sw[[1]], search.ne[[1]]);
         
       }
 
     
   } 
+ # return(search);
   hold = matrix(ncol = ncol(search[[1]]));
-  for(n in 1:length(search)){
-    if(n == 1){
-      hold = search[[n]];
-    } else {
-      hold = rbind(hold, search[[n]])
-    }
+  hold = search[[1]];
+
+  for(n in 2:length(search)){
+    print(n)
+
+    hold = rbind(hold, search[[n]])
+    
   }
   return(hold);
 }
