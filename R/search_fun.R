@@ -495,7 +495,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
       } else {
         
       }
-      print(count); print(origl);
+      #print(count); print(origl);
       if(count > 2*origl){break;}
       
     }
