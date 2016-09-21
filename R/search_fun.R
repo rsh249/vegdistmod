@@ -297,7 +297,6 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
 #' n <- near2(ext.abies, climondbioclim, dens.abies, type = '.kde');
 
 near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
-  nmax = 5000; #Maximum number of new records possible
   cells = ext_ob;
   ras = clim;
   dens = dens_ob;
@@ -496,9 +495,10 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
       } else {
         
       }
+      if(count > 2*origl){break;}
+      
     }
     it = it + 1;
-    if(count > 2*origl){break;}
   }
   return(cells);
   
@@ -873,10 +873,7 @@ findlocal <-
       }
       iter = iter + 1
       cat('Like: ', pnew, ' ', bestp[bc - 1], '\n')
-      if (plast == pnew) {
-        samecount = samecount + 1
-        
-      }
+
       if (bestp[[bc - 1]] < pnew) {
         best  <- currdist
         best.dens <- dens
@@ -898,8 +895,13 @@ findlocal <-
         bc  = bc + 1
         
       }
+      if (bestp[[bc - 2]] == bestp[[bc-1]]) {
+        samecount = samecount + 1
+        
+      }
       plast = pnew
       print(iter)
+      if(samecount >10){break;}
       
       if (iter >= maxiter) {
         break
