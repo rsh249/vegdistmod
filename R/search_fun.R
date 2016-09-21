@@ -14,7 +14,6 @@ NULL
 # abies.fraseri <- get_gbif_cloud('abies_fraseri')
 
 
-
 .get_gbif_cloud <- function(taxon) {
   curl_string = "curl --user rsh249:Roanoke1999 http://cloud.diversityoflife.org/cgi-div/tmp_mat_get.pl?taxon="
   curl_string = paste(curl_string, taxon, sep = '')
@@ -418,7 +417,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
           }
           # newrecord[j, 3] = as.numeric(as.character(newrecord[j, 3]))
           #  newrecord[j, 4] = as.numeric(as.character(newrecord[j, 4]))
-          newer[[b]][1] = as.numeric(as.character('0000'));
+          newer[[b]][1] = '0000';
           newer[[b]][2] = name;
           #   cells[count,] = newrecord[j,];
           
@@ -481,13 +480,13 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
         count = count+1; 
        # newrecord[j, 3] = as.numeric(as.character(newrecord[j, 3]))
       #  newrecord[j, 4] = as.numeric(as.character(newrecord[j, 4]))
-        newer[1] = as.numeric(as.character('0000'));
+        newer[1] = '0000';
         newer[2] = name;
      #   cells[count,] = newrecord[j,];
         
         cells[count,] = newer;
         #print(cells[count,]);
-        cells[count,1] = '0000'
+        cells[count,1] = '0000';
         #print(cells[count,])
         
         #cat('number of records is:', length(cells[,1]), "vs.", origl, "\n")
@@ -638,6 +637,7 @@ findlocal <-
       
       vporig = matrix(nrow = length(ext[[1]][, 1]), ncol = length(ext))
       for (a in 1:length(ext)) {
+        currdist[[a]][,1] = as.numeric(as.character(currdist[[a]][,1]));
         currdist[[a]] <- stats::na.omit(currdist[[a]])
         dens[[a]] <-
           densform(currdist[[a]], r[[a]], bg = bg[[a]], manip = manip)
@@ -653,6 +653,7 @@ findlocal <-
       vporig = apply(vporig, 1, sum)
       
     } else {
+      currdist[,1] <- as.numeric(as.character(currdist[,1]));
       dens <- densform(currdist, r, bg = bg, manip = manip)
       vporig <- vector()
       currdist <- stats::na.omit(currdist)
