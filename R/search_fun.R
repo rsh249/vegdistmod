@@ -297,6 +297,7 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
 #' n <- near2(ext.abies, climondbioclim, dens.abies, type = '.kde');
 
 near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
+  nmax = 5000; #Maximum number of new records possible
   cells = ext_ob;
   ras = clim;
   dens = dens_ob;
@@ -325,6 +326,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
   maxc = 0
   maxdist = 0
   count = 0;
+  newcount = 0;
   if (class(cells) == "list") {
     minc <-
       cells[[1]][grep(min(cells[[1]]$cells), cells[[1]]$cells), ]
@@ -496,7 +498,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
       }
     }
     it = it + 1;
-    
+    if(count > 2*origl){break;}
   }
   return(cells);
   
@@ -653,7 +655,7 @@ findlocal <-
       vporig = apply(vporig, 1, sum)
       
     } else {
-      currdist[,1] <- as.numeric(as.character(currdist[,1]));
+      currdist[,1] <- as.numeric(as.character(currdist[,1])); 
       dens <- densform(currdist, r, bg = bg, manip = manip)
       vporig <- vector()
       currdist <- stats::na.omit(currdist)
