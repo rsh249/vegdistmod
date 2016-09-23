@@ -1,5 +1,6 @@
 #' @import classInt
 #' @import grDevices
+#' @import doParallel
 NULL
 
 # A function for retrieving data from cloud.diversityoflife.org
@@ -933,7 +934,13 @@ findlocal <-
 #'  thinning of data to limit overfitting. Set to 1 to ignore.
 #' @param bg An object of background point climate data matching the 
 #'  output of extraction(). Generate random backround points and then use extraction().
-#'
+#' @param parallel True or False to use parallel computing. This implements 
+#'  each division as embarassingly parallel processes. However,
+#'  note that this option changes the meaning of the divisions object 
+#'  to the maximum number of division iterations. Fewer iterations may 
+#'  be returned if too few occurrences are selected.
+#' @param nclus If parallel is TRUE then set the maximum number of cores 
+#'  to use in the compute cluster. Default is 2.
 #' @export
 #' @examples
 #' data(abies);
@@ -946,7 +953,7 @@ findlocal <-
 
  
 
-geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 1, manip = 'condi', alpha = 0.05, divisions = 10, factor = 4){
+geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 1, manip = 'condi', alpha = 0.05, divisions = 10, factor = 4, parallel = FALSE, nclus = 2){
   ext = ext_ob;
   if(length(bg)<2){
     if(class(ext)=='list'){
@@ -965,18 +972,227 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
     
   }
   
-  search = list();
-  i=0;
-  while(i<divisions){
+ # search = list();
+  if (parallel == TRUE) {
+    nn = 1
+    
+    cl <- parallel::makeCluster(nclus)
+    doParallel::registerDoParallel(cl)
+    search <-
+      foreach(i = 1:divisions,
+              .combine = 'rbind',
+              .packages = 'vegdistmod') %dopar% {
+                ##Try the "when()" function instead of while()
+                #when(nn <= divisions)
+                #while(i<divisions){
+                print(i)
+                if (class(ext) == 'list') {
+                  # for(zzz in 1:length(ext)){
+                  sam.lat <- sample(ext[[1]]$lat, 1)
+                  
+                  sam.lon <- sample(ext[[1]]$lon, 1)
+                  
+                  search.nw.l <- list()
+                  
+                  search.ne.l <- list()
+                  
+                  search.sw.l <- list()
+                  
+                  search.se.l <- list()
+                  
+                  for (zzz in 1:length(ext)) {
+                    sub.nw <-
+                      subset(ext[[zzz]], ext[[zzz]]$lon <= sam.lon &
+                               ext[[zzz]]$lat >= sam.lat)
+                    
+                    sub.ne <-
+                      subset(ext[[zzz]], ext[[zzz]]$lon >= sam.lon &
+                               ext[[zzz]]$lat >= sam.lat)
+                    sub.sw <-
+                      subset(ext[[zzz]], ext[[zzz]]$lon <= sam.lon &
+                               ext[[zzz]]$lat <= sam.lat)
+                    
+                    sub.se <-
+                      subset(ext[[zzz]], ext[[zzz]]$lon >= sam.lon &
+                               ext[[zzz]]$lat <= sam.lat)
+                    
+                    if (length(sub.nw[, 1]) <= 5) {
+                      next
+                    }
+                    
+                    if (length(sub.sw[, 1]) <= 5) {
+                      next
+                    }
+                    
+                    if (length(sub.ne[, 1]) <= 5) {
+                      next
+                    }
+                    
+                    if (length(sub.se[, 1]) <= 5) {
+                      next
+                    }
+                    
+                    search.ne.l[[zzz]] <- sub.nw
+                    
+                    search.nw.l[[zzz]] <- sub.ne
+                    
+                    search.se.l[[zzz]] <- sub.se
+                    
+                    search.sw.l[[zzz]] <- sub.sw
+                    
+                  }
+                  nn = nn + 1
+                  
+                  print(length(search.ne.l))
+                  
+                  search.ne <-
+                    findlocal(
+                      search.ne.l,
+                      clim,
+                      type,
+                      maxiter = maxiter,
+                      searchrep = searchrep,
+                      manip = manip,
+                      factor = factor
+                    )
+                  search.sw <-
+                    findlocal(
+                      search.sw.l,
+                      clim,
+                      type,
+                      maxiter = maxiter,
+                      searchrep = searchrep,
+                      manip = manip,
+                      factor = factor
+                    )
+                  search.nw <-
+                    findlocal(
+                      search.nw.l,
+                      clim,
+                      type,
+                      maxiter = maxiter,
+                      searchrep = searchrep,
+                      manip = manip,
+                      factor = factor
+                    )
+                  search.se <-
+                    findlocal(
+                      search.se.l,
+                      clim,
+                      type,
+                      maxiter = maxiter,
+                      searchrep = searchrep,
+                      manip = manip,
+                      factor = factor
+                    )
+                  
+                  to.search = rbind(search.nw, search.se, search.sw, search.ne)
+                  
+                  return(to.search)
+                  #}
+                } else {
+                  sam.lat <- sample(ext$lat, 1)
+                  
+                  sam.lon <- sample(ext$lon, 1)
+                  
+                  sub.nw <-
+                    subset(ext, ext$lon <= sam.lon & ext$lat >= sam.lat)
+                  
+                  sub.ne <-
+                    subset(ext, ext$lon >= sam.lon & ext$lat >= sam.lat)
+                  sub.sw <-
+                    subset(ext, ext$lon <= sam.lon & ext$lat <= sam.lat)
+                  
+                  sub.se <-
+                    subset(ext, ext$lon >= sam.lon & ext$lat <= sam.lat)
+                  
+                  if (length(sub.nw[, 1]) <= 5) {
+                    return(NA)
+                  }
+                  
+                  if (length(sub.sw[, 1]) <= 5) {
+                    return(NA)
+                  }
+                  
+                  if (length(sub.ne[, 1]) <= 5) {
+                    return(NA)
+                  }
+                  
+                  if (length(sub.se[, 1]) <= 5) {
+                    return(NA)
+                  }
+                  
+                  nn = nn + 1
+                  
+                  search.ne <-
+                    findlocal(
+                      sub.ne,
+                      clim,
+                      type,
+                      maxiter = maxiter,
+                      bg = bg,
+                      searchrep = searchrep,
+                      manip = manip,
+                      alpha = alpha
+                    )
+                  search.sw <-
+                    findlocal(
+                      sub.sw,
+                      clim,
+                      type,
+                      maxiter = maxiter,
+                      bg = bg,
+                      searchrep = searchrep,
+                      manip = manip,
+                      alpha = alpha
+                    )
+                  search.nw <-
+                    findlocal(
+                      sub.nw,
+                      clim,
+                      type,
+                      maxiter = maxiter,
+                      bg = bg,
+                      searchrep = searchrep,
+                      manip = manip,
+                      alpha = alpha
+                    )
+                  search.se <-
+                    findlocal(
+                      sub.se,
+                      clim,
+                      type,
+                      maxiter = maxiter,
+                      bg = bg,
+                      searchrep = searchrep,
+                      manip = manip,
+                      alpha = alpha
+                    )
+                  
+                  to.search = rbind(search.nw[[1]], search.se[[1]], search.sw[[1]], search.ne[[1]])
+                  
+                  return(to.search)
+                }
+                
+                
+              }
+    parallel::stopCluster(cl)
+    
+    return(search)
+    
+  } else {
+    search = list();
+    i=0;
+    while(i<divisions){
       print(i)
       if(class(ext)=='list'){
-       # for(zzz in 1:length(ext)){
-          sam.lat <- sample(ext[[1]]$lat, 1);
-          sam.lon <- sample(ext[[1]]$lon, 1);
-          search.nw.l <- list();
-          search.ne.l <- list();
-          search.sw.l <- list();
-          search.se.l <- list();
+        # for(zzz in 1:length(ext)){
+        sam.lat <- sample(ext[[1]]$lat, 1);
+        sam.lon <- sample(ext[[1]]$lon, 1);
+        search.nw.l <- list();
+        search.ne.l <- list();
+        search.sw.l <- list();
+        search.se.l <- list();
         for(zzz in 1:length(ext)){
           sub.nw <- subset(ext[[zzz]], ext[[zzz]]$lon <= sam.lon & ext[[zzz]]$lat >= sam.lat);
           sub.ne <- subset(ext[[zzz]], ext[[zzz]]$lon >= sam.lon & ext[[zzz]]$lat >= sam.lat)
@@ -991,15 +1207,14 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
           search.se.l[[zzz]] <- sub.se;
           search.sw.l[[zzz]] <- sub.sw;
         }
-          i=i+1;
-          print(length(search.ne.l));
-          search.ne <- findlocal(search.ne.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
-          search.sw <- findlocal(search.sw.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
-          search.nw <- findlocal(search.nw.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
-          search.se <- findlocal(search.se.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
+        i=i+1;
+        print(length(search.ne.l));
+        search.ne <- findlocal(search.ne.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
+        search.sw <- findlocal(search.sw.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
+        search.nw <- findlocal(search.nw.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
+        search.se <- findlocal(search.se.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
         
-          search[[i]] = rbind(search.nw, search.se, search.sw, search.ne);
-        #}    
+        search[[i]] = rbind(search.nw, search.se, search.sw, search.ne);
       } else {
         sam.lat <- sample(ext$lat, 1);
         sam.lon <- sample(ext$lon, 1);
@@ -1020,10 +1235,11 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
         search[[i]] = rbind(search.nw[[1]], search.se[[1]], search.sw[[1]], search.ne[[1]]);
         
       }
-
+      
+      
+    } 
     
-  } 
- # return(search);
+  }
   hold = matrix(ncol = ncol(search[[1]]));
   hold = search[[1]];
 

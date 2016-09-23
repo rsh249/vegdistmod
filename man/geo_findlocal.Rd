@@ -5,7 +5,8 @@
 \title{Search for likely simulated localities with geographic subsetting.}
 \usage{
 geo_findlocal(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 1,
-  manip = "condi", alpha = 0.05, divisions = 10, factor = 4)
+  manip = "condi", alpha = 0.05, divisions = 10, factor = 4,
+  parallel = FALSE, nclus = 2)
 }
 \arguments{
 \item{ext_ob}{A data.frame of climate values (i.e., extracted from the climate raster object). Will be passed to multiv_likelihood().}
@@ -33,6 +34,15 @@ Default is 5 resulting in 20 (5x4quads) geographically oriented samples to be se
 
 \item{factor}{To be passed to the extraction() function for post search 
 thinning of data to limit overfitting. Set to 1 to ignore.}
+
+\item{parallel}{True or False to use parallel computing. This implements 
+each division as embarassingly parallel processes. However,
+note that this option changes the meaning of the divisions object 
+to the maximum number of division iterations. Fewer iterations may 
+be returned if too few occurrences are selected.}
+
+\item{nclus}{If parallel is TRUE then set the maximum number of cores 
+to use in the compute cluster. Default is 2.}
 }
 \description{
 This wraps the search() function within a set of commands that randomly splits the distribution 

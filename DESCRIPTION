@@ -9,7 +9,8 @@ Depends:
     R(>= 3.1.0),
     raster,
     dismo, 
-    classInt
+    classInt,
+    doParallel
 Description: This is an R package with functions that perform the maximum
     likelihood estimation of climate given local (plant) species coexistence under
     the CRACLE method as described by Harbert and Nixon, 2015 and related methods 	    including the Mutual Climate Range technique of Thompson et al., 2012. Related spatial modeling methods are available here as well.
