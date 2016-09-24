@@ -976,16 +976,19 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
   if (parallel == TRUE) {
     nn = 1
     
-    cl <- parallel::makeCluster(nclus)
-    doParallel::registerDoParallel(cl)
+   # cl <- parallel::makeCluster(nclus)
+    doMC::registerDoMC(nclus)
+    
+    
     search <-
-      foreach(i = 1:divisions,
+      foreach(i = 1:(2*divisions),
               .combine = 'rbind',
-              .packages = 'vegdistmod') %dopar% {
+              .packages = 'vegdistmod') %:% when(nn <= divisions) %dopar% {
                 ##Try the "when()" function instead of while()
                 #when(nn <= divisions)
                 #while(i<divisions){
-                print(i)
+                #print(i)
+                #if (nn >= divisions) {return(NA)}
                 if (class(ext) == 'list') {
                   # for(zzz in 1:length(ext)){
                   sam.lat <- sample(ext[[1]]$lat, 1)
@@ -1017,21 +1020,20 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                                ext[[zzz]]$lat <= sam.lat)
                     
                     if (length(sub.nw[, 1]) <= 5) {
-                      next
+                      return(NA)
                     }
                     
                     if (length(sub.sw[, 1]) <= 5) {
-                      next
+                      return(NA)
                     }
                     
                     if (length(sub.ne[, 1]) <= 5) {
-                      next
+                      return(NA)
                     }
                     
                     if (length(sub.se[, 1]) <= 5) {
-                      next
+                      return(NA)
                     }
-                    
                     search.ne.l[[zzz]] <- sub.nw
                     
                     search.nw.l[[zzz]] <- sub.ne
@@ -1122,7 +1124,6 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                     return(NA)
                   }
                   
-                  nn = nn + 1
                   
                   search.ne <-
                     findlocal(
@@ -1168,6 +1169,8 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                       manip = manip,
                       alpha = alpha
                     )
+                  nn = nn + 1
+                  
                   
                   to.search = rbind(search.nw[[1]], search.se[[1]], search.sw[[1]], search.ne[[1]])
                   
@@ -1176,7 +1179,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                 
                 
               }
-    parallel::stopCluster(cl)
+    #parallel::stopCluster(cl)
     
     return(search)
     
