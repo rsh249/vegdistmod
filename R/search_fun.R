@@ -976,8 +976,8 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
   if (parallel == TRUE) {
     nn = 1
     
-   # cl <- parallel::makeCluster(nclus)
-    doMC::registerDoMC(nclus)
+    cl <- parallel::makeCluster(nclus)
+    doParallel::registerDoParallel(cl)
     
     
     search <-
@@ -1179,7 +1179,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                 
                 
               }
-    #parallel::stopCluster(cl)
+    parallel::stopCluster(cl)
     
     return(search)
     
