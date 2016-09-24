@@ -1,6 +1,6 @@
 #' @import classInt
 #' @import grDevices
-#' @import doParallel
+#' @import doMC
 NULL
 
 # A function for retrieving data from cloud.diversityoflife.org
