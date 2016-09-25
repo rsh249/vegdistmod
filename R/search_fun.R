@@ -1,6 +1,6 @@
 #' @import classInt
 #' @import grDevices
-#' @import doMC
+#' @import doParallel
 NULL
 
 # A function for retrieving data from cloud.diversityoflife.org
@@ -1107,68 +1107,71 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                   
                   sub.se <-
                     subset(ext, ext$lon >= sam.lon & ext$lat <= sam.lat)
-                  
-                  if (length(sub.nw[, 1]) <= 5) {
-                    return(NA)
+                  search.ne = NA
+                  search.se = NA
+                  search.sw = NA
+                  search.nw = NA
+                  if (length(sub.nw[, 1]) >= 5) {
+                    search.nw <-
+                      findlocal(
+                        sub.nw,
+                        clim,
+                        type,
+                        maxiter = maxiter,
+                        bg = bg,
+                        searchrep = searchrep,
+                        manip = manip,
+                        alpha = alpha
+                      )
                   }
                   
-                  if (length(sub.sw[, 1]) <= 5) {
-                    return(NA)
+                  if (length(sub.sw[, 1]) >= 5) {
+                    search.sw <-
+                      findlocal(
+                        sub.sw,
+                        clim,
+                        type,
+                        maxiter = maxiter,
+                        bg = bg,
+                        searchrep = searchrep,
+                        manip = manip,
+                        alpha = alpha
+                      )
                   }
                   
-                  if (length(sub.ne[, 1]) <= 5) {
-                    return(NA)
+                  if (length(sub.ne[, 1]) >= 5) {
+                    search.ne <-
+                      findlocal(
+                        sub.ne,
+                        clim,
+                        type,
+                        maxiter = maxiter,
+                        bg = bg,
+                        searchrep = searchrep,
+                        manip = manip,
+                        alpha = alpha
+                      )
                   }
                   
-                  if (length(sub.se[, 1]) <= 5) {
-                    return(NA)
+                  if (length(sub.se[, 1]) >= 5) {
+                    search.se <-
+                      findlocal(
+                        sub.se,
+                        clim,
+                        type,
+                        maxiter = maxiter,
+                        bg = bg,
+                        searchrep = searchrep,
+                        manip = manip,
+                        alpha = alpha
+                      )
                   }
                   
                   
-                  search.ne <-
-                    findlocal(
-                      sub.ne,
-                      clim,
-                      type,
-                      maxiter = maxiter,
-                      bg = bg,
-                      searchrep = searchrep,
-                      manip = manip,
-                      alpha = alpha
-                    )
-                  search.sw <-
-                    findlocal(
-                      sub.sw,
-                      clim,
-                      type,
-                      maxiter = maxiter,
-                      bg = bg,
-                      searchrep = searchrep,
-                      manip = manip,
-                      alpha = alpha
-                    )
-                  search.nw <-
-                    findlocal(
-                      sub.nw,
-                      clim,
-                      type,
-                      maxiter = maxiter,
-                      bg = bg,
-                      searchrep = searchrep,
-                      manip = manip,
-                      alpha = alpha
-                    )
-                  search.se <-
-                    findlocal(
-                      sub.se,
-                      clim,
-                      type,
-                      maxiter = maxiter,
-                      bg = bg,
-                      searchrep = searchrep,
-                      manip = manip,
-                      alpha = alpha
-                    )
+                
+                
+                 
+                
                   nn = nn + 1
                   
                   
@@ -1201,14 +1204,18 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
           sub.ne <- subset(ext[[zzz]], ext[[zzz]]$lon >= sam.lon & ext[[zzz]]$lat >= sam.lat)
           sub.sw <- subset(ext[[zzz]], ext[[zzz]]$lon <= sam.lon & ext[[zzz]]$lat <= sam.lat);
           sub.se <- subset(ext[[zzz]], ext[[zzz]]$lon >= sam.lon & ext[[zzz]]$lat <= sam.lat); 
-          if(length(sub.nw[,1])<= 5){next};
-          if(length(sub.sw[,1])<= 5){next};
-          if(length(sub.ne[,1])<=5){next};
-          if(length(sub.se[,1])<=5){next};
-          search.ne.l[[zzz]] <- sub.nw;
-          search.nw.l[[zzz]] <- sub.ne;
-          search.se.l[[zzz]] <- sub.se;
-          search.sw.l[[zzz]] <- sub.sw;
+          if(length(sub.nw[,1])>= 5){
+            search.nw.l[[zzz]] <- sub.ne;
+          };
+          if(length(sub.sw[,1])>= 5){
+            search.sw.l[[zzz]] <- sub.sw;
+          };
+          if(length(sub.ne[,1])>=5){
+            search.ne.l[[zzz]] <- sub.nw;
+          };
+          if(length(sub.se[,1])>=5){
+            search.se.l[[zzz]] <- sub.se;
+          };
         }
         i=i+1;
         print(length(search.ne.l));
@@ -1225,15 +1232,26 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
         sub.ne <- subset(ext, ext$lon >= sam.lon & ext$lat >= sam.lat)
         sub.sw <- subset(ext, ext$lon <= sam.lon & ext$lat <= sam.lat);
         sub.se <- subset(ext, ext$lon >= sam.lon & ext$lat <= sam.lat); 
-        if(length(sub.nw[,1])<= 5){next};
-        if(length(sub.sw[,1])<= 5){next};
-        if(length(sub.ne[,1])<=5){next};
-        if(length(sub.se[,1])<=5){next};
+        search.nw = NA;
+        search.sw = NA;
+        search.ne = NA;
+        search.se = NA;
+        if(length(sub.nw[,1])>= 5){
+          search.nw <- findlocal(sub.nw, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
+          
+        };
+        if(length(sub.sw[,1])>= 5){
+          search.sw <- findlocal(sub.sw, clim, type, maxiter=maxiter, bg=bg,  searchrep=searchrep, manip = manip, alpha = alpha)
+          
+        };
+        if(length(sub.ne[,1])>=5){
+          search.ne <- findlocal(sub.ne, clim, type, maxiter=maxiter, bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
+        };
+        if(length(sub.se[,1])>=5){
+          search.se <- findlocal(sub.se, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
+          
+        };
         i=i+1;
-        search.ne <- findlocal(sub.ne, clim, type, maxiter=maxiter, bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
-        search.sw <- findlocal(sub.sw, clim, type, maxiter=maxiter, bg=bg,  searchrep=searchrep, manip = manip, alpha = alpha)
-        search.nw <- findlocal(sub.nw, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
-        search.se <- findlocal(sub.se, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
         
         search[[i]] = rbind(search.nw[[1]], search.se[[1]], search.sw[[1]], search.ne[[1]]);
         
