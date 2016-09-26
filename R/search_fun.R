@@ -1,6 +1,6 @@
 #' @import classInt
 #' @import grDevices
-#' @import doParallel
+#' @import doSNOW
 NULL
 
 # A function for retrieving data from cloud.diversityoflife.org
@@ -976,14 +976,14 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
   if (parallel == TRUE) {
     nn = 1
     
-    cl <- parallel::makeCluster(nclus)
-    doParallel::registerDoParallel(cl)
-    
+    cl <- parallel::makeCluster(nclus, type = "SOCK")
+   # doParallel::registerDoParallel(cl)
+    doSNOW::registerDoSNOW(cl);
     
     search <-
-      foreach(i = 1:(2*divisions),
+      foreach(i = 1:divisions,
               .combine = 'rbind',
-              .packages = 'vegdistmod') %:% when(nn <= divisions) %dopar% {
+              .packages = 'vegdistmod') %dopar% {
                 ##Try the "when()" function instead of while()
                 #when(nn <= divisions)
                 #while(i<divisions){
