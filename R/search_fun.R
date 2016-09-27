@@ -1275,7 +1275,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
 
 #' Plot lat/long points on a raster map.
 #' 
-#' Plotting with fancy colors. Canned so you don't have to think to hard about it.
+#' Plotting with fancy colors. Canned so you don't have to think too hard about it.
 #' 
 #' @param ext_ob A data.frame of climate values (i.e., extracted from the climate raster object). MUST include columns named 'lon' and 'lat'.
 #' @param clim A raster object of climate data (matching ext_ob)

@@ -18,7 +18,7 @@ plot_clim(ext_ob, clim, boundaries = "", file = "", col = "red")
 \item{col}{Color of points to plot.}
 }
 \description{
-Plotting with fancy colors. Canned so you don't have to think to hard about it.
+Plotting with fancy colors. Canned so you don't have to think too hard about it.
 }
 \examples{
 data(abies);
