@@ -1331,7 +1331,7 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red') {
          poi$lat,
          col = col,
          pch = 15,
-         cex = 0.8)
+         cex = 0.5)
   if(boundaries!= ''){
     graphics::plot(usa, add = T)
   }
