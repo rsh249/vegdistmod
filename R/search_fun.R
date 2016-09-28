@@ -879,7 +879,7 @@ findlocal <-
       if (bestp[[bc - 1]] < pnew) {
         best  <- currdist
         best.dens <- dens
-        
+        samecount = 0;
         bestp[bc] = pnew
         
         searchp[bc] = pnew
@@ -949,7 +949,7 @@ findlocal <-
 #' sea <- geo_findlocal(ext.abies, climondbioclim, 
 #'  type = '.kde', maxiter = 5, 
 #'  searchrep = 1, manip = 'condi', 
-#'  divisions = 5)
+#'  divisions = 2)
 
  
 
