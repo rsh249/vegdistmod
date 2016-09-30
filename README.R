@@ -29,9 +29,7 @@ head(abies) #This is the standard occurrence data format for vegdistmod
             #in matrices with simulated data the ind_id = 0000.
 #View raw GBIF data
 plot_clim(abies, climondbioclim[[1]])
-ext.abies = extraction(abies, climondbioclim, schema = 'flat', factor = 4)
-      #extract climate data for 19 bioclim variables while reducing the 
-      # sample to include one record per 8x8 grid cell area (to reduce over-sampling bias)
+     # sample to include one record per 8x8 grid cell area (to reduce over-sampling bias)
 
 head(ext.abies)
 #View filtered distribution:
@@ -71,9 +69,9 @@ plot_clim(abies, climondbioclim[[1]])
 #NOTE if you have access to more than 4 cores now would be a good time to use them. 
 #  set nclus equal to the number of cores you can use.
 #
-#geofind.abies <- geo_findlocal(ext.abies, climondbioclim, bg = bg.ext, type = '.kde', 
- #                              maxiter = 50, searchrep = 1, manip = 'condi', 
-  #                             alpha = 0.05, factor = 4, divisions = 40, parallel = TRUE, nclus = 4)
+#geofind.abies <- geo_findlocal(ext.abies, climondbioclim, bg = bg.ext, type = #	'.kde', maxiter = 50, searchrep = 1,
+#	 manip = 'condi', alpha = 0.05, factor = 4, divisions = 80, parallel = TRUE, #	nclus = 80)
+
 #plot_clim(geofind.abies, climondbioclim[[1]])
 
 

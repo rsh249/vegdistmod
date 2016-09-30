@@ -1,3 +1,5 @@
+#' @import graphics
+#' @import grDevices
 #' @import raster
 #' @import dismo
 NULL

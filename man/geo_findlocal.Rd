@@ -56,6 +56,6 @@ dens.abies = densform(ext.abies, climondbioclim);
 sea <- geo_findlocal(ext.abies, climondbioclim, 
  type = '.kde', maxiter = 5, 
  searchrep = 1, manip = 'condi', 
- divisions = 5)
+ divisions = 2)
 }
 
