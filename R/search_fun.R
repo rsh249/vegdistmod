@@ -36,39 +36,91 @@ NULL
 }
 
 
+.latlonfromcell <- function(cells, clim){
+  #assumes square (in degrees) cells
+  #returns lat/lon coordinates from the center of each cell
+  d <- dim(clim)
+  e <- extent(clim)
+  uplon <- e[1]
+  uplat <- e[4]
+  nrow = d[1]
+  ncol = d[2]
+  xres = (e[2] - e[1])/ncol;
+  yres = (e[4] - e[3])/nrow;
+  
 
+  r <- res(clim)
+  m <- matrix(nrow = length(cells), ncol = 4);
+  for(i in 1:length(cells)){
+   # print(cells[[i]])
+    row = ceiling(cells[[i]]/ncol); #round up so it is 1 : nrow. not 0 : nrow-1
+    col = cells[[i]] - ((row-1)*ncol);
+    
+    lat = uplat - (row * yres) + (0.5 * yres)
+    lon = uplon + (col * xres) - (0.5 * xres)
+   # print(row); print(col); print(lat); print(lon);
+    m[i,] = c("1111", "bg", lat, lon)
+    
+  }
+  df = data.frame(m)
+  df[,1] = as.numeric(as.character(df[,1]))
+  df[,3] = as.numeric(as.character(df[,3]))
+  df[,4] = as.numeric(as.character(df[,4]))
+  
+  return(df)
+  
+}
 ##Hidden function that is called under several others to get background data points.
 # call with .get_bg()
 
-.get_bg <- function(clim, n = 5000){
-  r = clim;
+.get_bg <- function(clim){
+  n = 1000
+
   if(class(clim) == 'list'){
-    bg.l
     #dim <- dim(clim[[1]]);
     #n = dim[1]*dim[2];
+    m = list();
     for(a in 1:length(clim)){
-      
-      bg <- randomPoints(r[[a]], n)
-      bg <- cbind(rep('0000', length(bg[,1])), rep('bg', length(bg[,1])), bg[,2], bg[,1])
-      colnames(bg) <- c('ind_id', 'tax', 'lat', 'lon');
-      bg = as.data.frame(bg);
-      bg$lon <- as.numeric(as.character(bg$lon));
-      bg$lat <- as.numeric(as.character(bg$lat));
-      bg.l[[a]] = bg;
+      r = clim[[a]];
+      d = dim(r);
+      l = d[1] * d[2]
+      v = seq(1:l);
+      m[[a]] = .latlonfromcell(v, r);
+      colnames(m[[a]]) = c('ind_id', 'tax', 'lat','lon');
+      #bg <- randomPoints(r[[a]], n)
+   #   bg <- cbind(rep('0000', length(bg[,1])), rep('bg', length(bg[,1])), bg[,2], bg[,1])
+  #    colnames(bg) <- c('ind_id', 'tax', 'lat', 'lon');
+   #   bg = as.data.frame(bg);
+    #  bg$lon <- as.numeric(as.character(bg$lon));
+     # bg$lat <- as.numeric(as.character(bg$lat));
+    #  bg.l[[a]] = bg;
     }
-    ret = bg.l;
+    
+    ret = m;
+    return(ret);
   } else {
+    
+    r = clim;
+    d = dim(r);
+    l = d[1] * d[2]
+    v = seq(1:l);
+    m = .latlonfromcell(v, r);
+    colnames(m) = c('ind_id', 'tax', 'lat','lon');
+    
+    return(m)
+    
+    
     #   dim <- dim(clim);
     #  n = dim[1]*dim[2];
-    bg <- randomPoints(r, n)
-    bg <- cbind(rep('0000', length(bg[,1])), rep('bg', length(bg[,1])), bg[,2], bg[,1])
-    colnames(bg) <- c('ind_id', 'tax', 'lat', 'lon');
-    bg = as.data.frame(bg);
-    bg$lon <- as.numeric(as.character(bg$lon));
-    bg$lat <- as.numeric(as.character(bg$lat));
-    ret = bg;
+#    bg <- randomPoints(r, n)
+#    bg <- cbind(rep('0000', length(bg[,1])), rep('bg', length(bg[,1])), bg[,2], bg[,1])
+#    colnames(bg) <- c('ind_id', 'tax', 'lat', 'lon');
+#    bg = as.data.frame(bg);
+#   bg$lon <- as.numeric(as.character(bg$lon));
+#    bg$lat <- as.numeric(as.character(bg$lat));
+#    ret = bg;
   }
-  return(ret);
+  #return(ret);
 }
 
 
