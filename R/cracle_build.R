@@ -240,11 +240,24 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 #' dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024);
 #' multiplot(dens.list.raw, names(climondbioclim[[1]]));
 
-dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", n = 1024) {
+dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024) {
 	rawbioclim = clim;
 	ex <- data.frame(ex);
+	condi = FALSE;
+	bayes = FALSE;
 	
-	
+	if(manip == 'condi') {
+	  condi = TRUE; #print("Conditional Likelihood")
+	}
+	if(manip == 'bayes'){
+	  bayes = TRUE; #print("Bayesian-ish Likelihood")
+	}
+	if(condi == TRUE | bayes == TRUE){
+	  if(length(bg)<2){
+  	  bg <- vegdistmod:::.get_bg(clim);
+	    bg = extraction(bg, clim, schema='raw');
+	  } 
+	}
 	dens.list <- list();
 	nlist <- vector();
 	site.ex <- "NOSITE";
@@ -277,7 +290,7 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", n = 1024) {
 		
 		nlist[[i]] <- length(s.ex[,1])
 
-		dens.list[[i]] <- (densform(s.ex, rawbioclim, name = tax.list[[i]], manip = manip, bw = bw, n=n));
+		dens.list[[i]] <- (densform(s.ex, rawbioclim, name = tax.list[[i]], manip = manip, bw = bw, bg = bg, n=n));
 
 	 	len <- length(dens.list[[i]]);
 		if(len <= 1) {
