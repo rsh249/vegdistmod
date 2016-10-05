@@ -110,6 +110,8 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 #' @param manip Character string of 'reg' for straight likelihood, 'condi' for conditional likelihood, or 'bayes' for a Bayesian style likelihood statement.
 #' @param bg An object of background point climate data matching the 
 #'  output of extraction(). Generate random backround points and then use extraction().
+#' @param from vector of starting points by variable
+#' @param to vector of ending points by variable
 #' @export
 #' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
@@ -120,7 +122,7 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 #' dens.sub = densform(extr.sub, clim = climondbioclim, bw = 'nrd0', n = 512);
 #' densplot(dens.sub, names(climondbioclim[[1]]));
 
-densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n = 1024){
+densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n = 1024, from = 0, to = 0){
   condi = FALSE;
   bayes = FALSE;
   
@@ -149,34 +151,53 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 		bg.eval = data.frame();
 		if(condi == TRUE | bayes == TRUE){
 		  if(length(bg)<2){
-  		bgn = 3000;
-	  	bg <- dismo::randomPoints(clim, bgn);
-	  	bgn = length(bg[,1]);
-		  bg <- cbind(rep("0000", bgn), rep("bg", bgn), as.numeric(as.character(bg[,2])), as.numeric(as.character(bg[,1])));
-  		bg <- data.frame(bg)
-	  	bg[,3] = as.numeric(as.character(bg[,3]));
-		  bg[,4] = as.numeric(as.character(bg[,4]));
-  		colnames(bg) <- c("ind_id", "tax", "lat", "lon")
-  		bg.ex <- extraction(bg, clim, schema='raw');
-		  } else {
+		    bg <- vegdistmod:::.get_bg(clim);
+		    bg.ex = extraction(bg, clim, schema='raw');
+#   		bgn = 3000;
+# 	  	bg <- dismo::randomPoints(clim, bgn);
+# 	  	bgn = length(bg[,1]);
+# 		  bg <- cbind(rep("0000", bgn), rep("bg", bgn), as.numeric(as.character(bg[,2])), as.numeric(as.character(bg[,1])));
+#   		bg <- data.frame(bg)
+# 	  	bg[,3] = as.numeric(as.character(bg[,3]));
+# 		  bg[,4] = as.numeric(as.character(bg[,4]));
+#   		colnames(bg) <- c("ind_id", "tax", "lat", "lon")
+#   		bg.ex <- extraction(bg, clim, schema='raw');
+  		  } else {
 		    bg.ex = bg;
 		  }
 		}
 		for(i in 1:length(names(phytoclim))){	
-			from <- raster::minValue(phytoclim[[i]]);
-			to <- raster::maxValue(phytoclim[[i]]);
+		#	from <- raster::minValue(phytoclim[[i]]);
+		  if(length(from) ==1){
+		    #assumes no range has been passed
+		    so <- sort(bg.ex[,i+5]);
+		    ncells = length(so);
+		    fr = so[1];
+		    t = so[ncells]; 
+		    
+		  }else {
+		    fr = from[[i]];
+		    t = to[[i]];
+		  }
+		  #print(fr)
+		  #print(t)
 
-			den <- stats::density(as.numeric(extr.larr[,names(phytoclim[[i]])]), n = n, from = from, to = to, bw = bw);
+		#	to <- raster::maxValue(phytoclim[[i]]);
+
+			den <- stats::density(as.numeric(extr.larr[,names(phytoclim[[i]])]), n = n, from = fr, to = t, bw = bw, na.rm = TRUE);
 			if(condi == TRUE){
-  			bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, from = from, to = to, bw = bw); 
-	  		bg.den$y <- bg.den$y + min(subset(bg.den$y, bg.den$y > 0));
+  			bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, from = fr, to = t, bw = bw, na.rm = TRUE); 
+	  	#	bg.den$y <- bg.den$y + min(subset(bg.den$y, bg.den$y > 0));
+	  		bg.den$y <- bg.den$y;
+	  		
 		  	den$y <- (den$y/bg.den$y); ##Try also (dens$y/bg.dens$y)*dens$y ##Not sure what this represents but it tempers the effect of the background significantly
 		  	bg.mean <- mean(bg.ex[,names(phytoclim[[i]])]);
 		  	bg.sd <- sd(bg.ex[,names(phytoclim[[i]])]);
 			}
 			if(bayes == TRUE){
-			  bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, from = from, to = to, bw = bw); 
-			  bg.den$y <- bg.den$y + min(subset(bg.den$y, bg.den$y > 0));
+			  bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, from = fr, to = t, bw = bw); 
+			  #bg.den$y <- bg.den$y + min(subset(bg.den$y, bg.den$y > 0));
+			  bg.den$y <- bg.den$y;
 			  den$y <- (den$y/bg.den$y)*den$y;
 			  bg.mean <- mean(bg.ex[,names(phytoclim[[i]])]);
 			  bg.sd <- sd(bg.ex[,names(phytoclim[[i]])]);
@@ -245,6 +266,16 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024) {
 	ex <- data.frame(ex);
 	condi = FALSE;
 	bayes = FALSE;
+	head = which(colnames(ex) == 'cells');
+	#print(head)
+	
+	##Set up an option to use the entire extent or just the observed values for all taxa
+	from = apply(ex[,(head+1):length(ex[1,])], 2, min);
+	to = apply(ex[,(head+1):length(ex[1,])], 2, max);
+#  from = minValue(clim);
+#  to = maxValue(clim);
+	####
+	
 	
 	if(manip == 'condi') {
 	  condi = TRUE; #print("Conditional Likelihood")
@@ -291,7 +322,7 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024) {
 		
 		nlist[[i]] <- length(s.ex[,1])
 
-		dens.list[[i]] <- (densform(s.ex, rawbioclim, name = tax.list[[i]], manip = manip, bw = bw, bg = bg, n=n));
+		dens.list[[i]] <- (densform(s.ex, rawbioclim, name = tax.list[[i]], manip = manip, bw = bw, bg = bg, n=n, from = from, to = to));
 
 	 	len <- length(dens.list[[i]]);
 		if(len <= 1) {
