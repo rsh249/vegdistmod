@@ -274,9 +274,10 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024) {
 
 	trm.list <- vector();
 	for(j in 1:length(tax.list)){
-		if(length(subset(ex, ex$tax == tax.list[j])) >= 5){
+		if(length(subset(ex, ex$tax == tax.list[j])) >= 10){
 			trm.list <- c(trm.list, as.character(tax.list[j]))
 		} else {
+		    cat("TOO FEW RECORDS FOR", tax.list[j], "OMITTING it...\n")
 		}
 	}
 
