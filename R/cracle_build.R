@@ -262,7 +262,7 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "SJ", manip = 'reg', n = 
 #' dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024);
 #' multiplot(dens.list.raw, names(climondbioclim[[1]]));
 
-dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024) {
+dens_obj <- function(ex, clim, manip = 'condi', bw = "SJ", bg=0, n = 1024) {
 	rawbioclim = clim;
 	ex <- data.frame(ex);
 	condi = FALSE;
@@ -307,11 +307,18 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024) {
 
 	trm.list <- vector();
 	for(j in 1:length(tax.list)){
-		if(length(subset(ex, ex$tax == tax.list[j])) >= 10){
-			trm.list <- c(trm.list, as.character(tax.list[j]))
-		} else {
-		    cat("TOO FEW RECORDS FOR", tax.list[j], "OMITTING it...\n")
-		}
+	#  print(j)
+	  subit = subset(ex, ex$tax == tax.list[[j]])
+	  if(length(subit[,1])>=5){
+      lsub <- lapply(list(apply(subit[,(head+1):length(subit[1,])], 2, unique))[[1]],  length);
+      #print(lsub)
+		  if(min(unlist(lsub)) >= 10){
+			  trm.list <- c(trm.list, as.character(tax.list[[j]]))
+		  } else {
+		      
+		      #cat("TOO FEW RECORDS FOR", tax.list[[j]], "OMITTING it...\n")
+		  }
+	  }
 	}
 
 	tax.list <- trm.list;
