@@ -122,7 +122,8 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 #' dens.sub = densform(extr.sub, clim = climondbioclim, bw = 'nrd0', n = 512);
 #' densplot(dens.sub, names(climondbioclim[[1]]));
 
-densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n = 1024, from = 0, to = 0){
+densform <- function(ex, clim, bg = 0, name = '', bw = "SJ", manip = 'reg', n = 1024, from = 0, to = 0){
+  kern = 'epanechnikov'
   condi = FALSE;
   bayes = FALSE;
   
@@ -184,9 +185,9 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 
 		#	to <- raster::maxValue(phytoclim[[i]]);
 
-			den <- stats::density(as.numeric(extr.larr[,names(phytoclim[[i]])]), n = n, from = fr, to = t, bw = bw, na.rm = TRUE);
+			den <- stats::density(as.numeric(extr.larr[,names(phytoclim[[i]])]), n = n, kernel = kern, from = fr, to = t, bw = bw, na.rm = TRUE);
 			if(condi == TRUE){
-  			bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, from = fr, to = t, bw = bw, na.rm = TRUE); 
+  			bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 3, from = fr, to = t, bw = bw, na.rm = TRUE); 
 	  	#	bg.den$y <- bg.den$y + min(subset(bg.den$y, bg.den$y > 0));
 	  		bg.den$y <- bg.den$y;
 	  		
@@ -195,8 +196,8 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 		  	bg.sd <- sd(bg.ex[,names(phytoclim[[i]])]);
 			}
 			if(bayes == TRUE){
-			  bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, from = fr, to = t, bw = bw); 
-			  #bg.den$y <- bg.den$y + min(subset(bg.den$y, bg.den$y > 0));
+			  bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 3, from = fr, to = t, bw = bw); 
+			 # bg.den$y <- bg.den$y + min(subset(bg.den$y, bg.den$y > 0));
 			  bg.den$y <- bg.den$y;
 			  den$y <- (den$y/bg.den$y)*den$y;
 			  bg.mean <- mean(bg.ex[,names(phytoclim[[i]])]);
@@ -275,6 +276,7 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024) {
 #  from = minValue(clim);
 #  to = maxValue(clim);
 	####
+	
 	
 	
 	if(manip == 'condi') {
