@@ -567,6 +567,7 @@ get_optim <- function(dens.ob){
 		for (i in 1:length(dens.ob1[[varkde]])){
 			runkde = runkde + (dens.ob1[[varkde]][i]*by);
 			cumulkde[[i]] <- runkde;
+			if(is.na(cumulkde[[i]])){cumulkde[[i]] = 0;}
 			if(i==1){ 
 				if(cumulkde[[i]] >= 0.025){
 					cikde[[1]] <- dens.ob1[[varx]][i];
@@ -585,6 +586,8 @@ get_optim <- function(dens.ob){
 		};
 		rungauss = rungauss + (dens.ob1[[vargauss]][i]*by);
 		cumulgauss[[i]] <- rungauss;
+		if(is.na(cumulgauss[[i]])){cumulgauss[[i]] = 0;}
+		
 		if(i==1){ 
 			if(cumulgauss[[i]] >= 0.025){
 				cigauss[[1]] <- dens.ob1[[varx]][i];
