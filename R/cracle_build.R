@@ -97,7 +97,7 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 	return(extr.larr);
 };
 
-extraction = compiler::cmpfun(extraction);
+#extraction = compiler::cmpfun(extraction);
 
 
 
@@ -255,7 +255,7 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 	
 };
 
-densform = compiler::cmpfun(densform);
+#densform = compiler::cmpfun(densform);
 
 #' A wrapper for vegdistmod::densform where a multi-taxon extraction object can be passed to densform one taxon at a time.
 #' 
@@ -354,7 +354,7 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024) {
 	return(dens.list);
 }
 
-dens_obj <- compiler::cmpfun(dens_obj);
+#dens_obj <- compiler::cmpfun(dens_obj);
 
 #' P(A | B) = P(A) + P(B)
 #' 
@@ -445,7 +445,7 @@ or_fun <- function(dens.oblist){
 	return(fin);
 };
 
-and_fun = compiler::cmpfun(and_fun);
+#and_fun = compiler::cmpfun(and_fun);
 
 #' P(A | B) = P(A) * P(B)
 #' 
@@ -537,7 +537,7 @@ and_fun <- function(dens.oblist){
 	return(fin);
 };
 
-or_fun = compiler::cmpfun(or_fun);
+#or_fun = compiler::cmpfun(or_fun);
 
 #get_optim() takes an object output from the densform function or and_fun or or_fun and finds optimal values for each PDF
 #' Find PDF optim(a)um
@@ -661,7 +661,7 @@ get_optim <- function(dens.ob){
 	return(ret);
 };
 
-get_optim = compiler::cmpfun(get_optim);
+#get_optim = compiler::cmpfun(get_optim);
 
 
 #makes area under any PDF curve equal 1 (good for standardizing curves to be compared). HIDDEN!

@@ -123,7 +123,7 @@ NULL
   #return(ret);
 }
 
-.get_bg = compiler::cmpfun(.get_bg);
+#.get_bg = compiler::cmpfun(.get_bg);
 
 
 #' The multivariate likelihood (log-likelihood) for a given set of PDF climate functions and localities.
@@ -194,7 +194,7 @@ multiv_likelihood <- function(x, clim, dens, type) {
   return(list(sum(p), weight));
 }
 
-multiv_likelihood = compiler::cmpfun(multiv_likelihood);
+#multiv_likelihood = compiler::cmpfun(multiv_likelihood);
 
 #' Filter a set of occurrence data based on the multivariate likelihoods.
 #' 
@@ -272,7 +272,7 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
     return(filt)
   }
 
-filter_dist <- compiler::cmpfun(filter_dist);
+#filter_dist <- compiler::cmpfun(filter_dist);
 
 
 #HIdden function to find the distance between two points
@@ -305,7 +305,7 @@ filter_dist <- compiler::cmpfun(filter_dist);
   
 }
 
-.distance = compiler::cmpfun(.distance);
+#.distance = compiler::cmpfun(.distance);
 
 
 #Hidden function to get coordinates given a direction and bearing from start point.
@@ -333,7 +333,7 @@ filter_dist <- compiler::cmpfun(filter_dist);
   
 }
 
-.findcoord = compiler::cmpfun(.findcoord);
+#.findcoord = compiler::cmpfun(.findcoord);
 
 
 
@@ -594,7 +594,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
   
 }
 
-near2 <- compiler::cmpfun(near2);
+#near2 <- compiler::cmpfun(near2);
 
 #' Search for likely occurrences
 #' 
@@ -972,7 +972,7 @@ findlocal <-
     return(list(best, bestp, searchp))
   }
 
-findlocal <- compiler::cmpfun(findlocal);
+#findlocal <- compiler::cmpfun(findlocal);
 
 
 #' Search for likely simulated localities with geographic subsetting.
@@ -1336,7 +1336,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
   return(hold);
 }
 
-geo_findlocal = compiler::cmpfun(geo_findlocal);
+#geo_findlocal = compiler::cmpfun(geo_findlocal);
 
 #' Plot lat/long points on a raster map.
 #' 
