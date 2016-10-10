@@ -123,6 +123,8 @@ NULL
   #return(ret);
 }
 
+.get_bg = compiler::cmpfun(.get_bg);
+
 
 #' The multivariate likelihood (log-likelihood) for a given set of PDF climate functions and localities.
 #'
@@ -192,6 +194,7 @@ multiv_likelihood <- function(x, clim, dens, type) {
   return(list(sum(p), weight));
 }
 
+multiv_likelihood = compiler::cmpfun(multiv_likelihood);
 
 #' Filter a set of occurrence data based on the multivariate likelihoods.
 #' 
@@ -269,6 +272,8 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
     return(filt)
   }
 
+filter_dist <- compiler::cmpfun(filter_dist);
+
 
 #HIdden function to find the distance between two points
 .distance <- function(lon1, lat1, lon2, lat2) {
@@ -300,6 +305,8 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
   
 }
 
+.distance = compiler::cmpfun(.distance);
+
 
 #Hidden function to get coordinates given a direction and bearing from start point.
 .findcoord <- function(lon, lat, dist, brng) {
@@ -326,6 +333,7 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
   
 }
 
+.findcoord = compiler::cmpfun(.findcoord);
 
 
 
@@ -586,7 +594,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
   
 }
 
-
+near2 <- compiler::cmpfun(near2);
 
 #' Search for likely occurrences
 #' 
@@ -964,6 +972,9 @@ findlocal <-
     return(list(best, bestp, searchp))
   }
 
+findlocal <- compiler::cmpfun(findlocal);
+
+
 #' Search for likely simulated localities with geographic subsetting.
 #' 
 #' This wraps the search() function within a set of commands that randomly splits the distribution 
@@ -1324,6 +1335,8 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
   }
   return(hold);
 }
+
+geo_findlocal = compiler::cmpfun(geo_findlocal);
 
 #' Plot lat/long points on a raster map.
 #' 

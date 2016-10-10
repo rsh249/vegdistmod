@@ -97,6 +97,8 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 	return(extr.larr);
 };
 
+extraction = compiler::cmpfun(extraction);
+
 
 
 #' Generate standard probability density functions for each taxon/variable
@@ -122,7 +124,7 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 #' dens.sub = densform(extr.sub, clim = climondbioclim, bw = 'nrd0', n = 512);
 #' densplot(dens.sub, names(climondbioclim[[1]]));
 
-densform <- function(ex, clim, bg = 0, name = '', bw = "SJ", manip = 'reg', n = 1024, from = 0, to = 0){
+densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n = 1024, from = 0, to = 0){
   kern = 'epanechnikov'
   condi = FALSE;
   bayes = FALSE;
@@ -150,10 +152,10 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "SJ", manip = 'reg', n = 
 		larr.sd <- data.frame();
 		eval <- data.frame();
 		bg.eval = data.frame();
-		if(condi == TRUE | bayes == TRUE){
-		  if(length(bg)<2){
-		    bg <- vegdistmod:::.get_bg(clim);
-		    bg.ex = extraction(bg, clim, schema='raw');
+	#	if(condi == TRUE | bayes == TRUE){
+	#	  if(length(bg)<2){
+		      bg <- vegdistmod:::.get_bg(clim);
+		      bg.ex = extraction(bg, clim, schema='raw');
 #   		bgn = 3000;
 # 	  	bg <- dismo::randomPoints(clim, bgn);
 # 	  	bgn = length(bg[,1]);
@@ -163,10 +165,11 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "SJ", manip = 'reg', n = 
 # 		  bg[,4] = as.numeric(as.character(bg[,4]));
 #   		colnames(bg) <- c("ind_id", "tax", "lat", "lon")
 #   		bg.ex <- extraction(bg, clim, schema='raw');
-  		  } else {
-		    bg.ex = bg;
-		  }
-		}
+		      
+  	#	  } else {
+		#      bg.ex = bg;
+  	#	  } 
+	#	}
 		for(i in 1:length(names(phytoclim))){	
 		#	from <- raster::minValue(phytoclim[[i]]);
 		  if(length(from) ==1){
@@ -185,21 +188,24 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "SJ", manip = 'reg', n = 
 
 		#	to <- raster::maxValue(phytoclim[[i]]);
 
-			den <- stats::density(as.numeric(extr.larr[,names(phytoclim[[i]])]), n = n, kernel = kern, from = fr, to = t, bw = bw, na.rm = TRUE);
+			den <- stats::density(as.numeric(extr.larr[,names(phytoclim[[i]])]), n = n, kernel = kern, from = fr, adjust = 1, to = t, bw = bw, na.rm = TRUE);
 			if(condi == TRUE){
   			bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 3, from = fr, to = t, bw = bw, na.rm = TRUE); 
 	  	#	bg.den$y <- bg.den$y + min(subset(bg.den$y, bg.den$y > 0));
-	  		bg.den$y <- bg.den$y;
+	 # 		bg.den$y <- bg.den$y;
 	  		
-		  	den$y <- (den$y/bg.den$y); ##Try also (dens$y/bg.dens$y)*dens$y ##Not sure what this represents but it tempers the effect of the background significantly
+		  	den$y <- (den$y/bg.den$y); 
+		  	#try conditional that is P(clim | occ) = P(clim and occ)/p(occ)
+	  	#	den$y = bg.den$y/den$y;
 		  	bg.mean <- mean(bg.ex[,names(phytoclim[[i]])]);
 		  	bg.sd <- sd(bg.ex[,names(phytoclim[[i]])]);
 			}
 			if(bayes == TRUE){
-			  bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 3, from = fr, to = t, bw = bw); 
+			  bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 3, from = fr, to = t, bw = bw, na.rm = TRUE); 
 			 # bg.den$y <- bg.den$y + min(subset(bg.den$y, bg.den$y > 0));
 			  bg.den$y <- bg.den$y;
 			  den$y <- (den$y/bg.den$y)*den$y;
+			 # den$y = bg.den$y/den$y;
 			  bg.mean <- mean(bg.ex[,names(phytoclim[[i]])]);
 			  bg.sd <- sd(bg.ex[,names(phytoclim[[i]])]);
 			}
@@ -214,16 +220,21 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "SJ", manip = 'reg', n = 
 			for(num in 1:length(den$x)){
 				eval[num,1] <- ((1/(sqrt(2*pi)*sd)*(2.71828^(-1*((den$x[num] - mean)^2)/(2*sd^2)))));
 				if(condi==T | bayes==T){
-          bg.eval[num,1] <- ((1/(sqrt(2*pi)*bg.sd)*(2.71828^(-1*((den$x[num] - bg.mean)^2)/(2*bg.sd^2)))));
+          #bg.eval[num,1] <- ((1/(sqrt(2*pi)*bg.sd)*(2.71828^(-1*((den$x[num] - bg.mean)^2)/(2*bg.sd^2)))));
 				}
 			};
 			larr.den[1:n, i] <- den$y;
 			larr.den.x[1:n, i] <- den$x;
 			if(condi == T){
-			  eval[,1] = (eval[,1]/bg.eval[,1]);
+			  bg.eval <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 3, from = fr, to = t, bw = bw, na.rm = TRUE); 
+			  
+			  eval[,1] = (eval[,1]/bg.eval$y);
+		#	  eval[,1] = bg.eval[,1]/eval[,1];
 			}
 			if(bayes == T){
-			  eval[,1] = (eval[,1]/bg.eval[,1])*eval[,1];
+			  bg.eval <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 3, from = fr, to = t, bw = bw, na.rm = TRUE); 
+			  
+			  eval[,1] = (eval[,1]/bg.eval$y)*eval[,1];
 			}
 			larr.den.gauss[1:n, i] <- eval[,1];
 			larr.mean[1,i] <- mean;
@@ -244,6 +255,8 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "SJ", manip = 'reg', n = 
 	
 };
 
+densform = compiler::cmpfun(densform);
+
 #' A wrapper for vegdistmod::densform where a multi-taxon extraction object can be passed to densform one taxon at a time.
 #' 
 #' This function takes extracted climate data (from an object generated by the vegdistmod::extraction() function) and generates probability density functions for each taxon/variable pair using both a Gaussian (normal) approximation and a Gaussian Kernel Density estimator.
@@ -262,7 +275,7 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "SJ", manip = 'reg', n = 
 #' dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024);
 #' multiplot(dens.list.raw, names(climondbioclim[[1]]));
 
-dens_obj <- function(ex, clim, manip = 'condi', bw = "SJ", bg=0, n = 1024) {
+dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024) {
 	rawbioclim = clim;
 	ex <- data.frame(ex);
 	condi = FALSE;
@@ -341,6 +354,7 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "SJ", bg=0, n = 1024) {
 	return(dens.list);
 }
 
+dens_obj <- compiler::cmpfun(dens_obj);
 
 #' P(A | B) = P(A) + P(B)
 #' 
@@ -431,6 +445,8 @@ or_fun <- function(dens.oblist){
 	return(fin);
 };
 
+and_fun = compiler::cmpfun(and_fun);
+
 #' P(A | B) = P(A) * P(B)
 #' 
 #' Using an object from the vegdistmod::dens_obj() function. Create a single density object (i.e., like that produced by vegdistmod::densform()) where the probability curves correspond to the probability density function of ALL taxa/species from the original set occurring. 
@@ -520,6 +536,8 @@ and_fun <- function(dens.oblist){
 	fin <- .makeaucone(fin);
 	return(fin);
 };
+
+or_fun = compiler::cmpfun(or_fun);
 
 #get_optim() takes an object output from the densform function or and_fun or or_fun and finds optimal values for each PDF
 #' Find PDF optim(a)um
@@ -643,6 +661,7 @@ get_optim <- function(dens.ob){
 	return(ret);
 };
 
+get_optim = compiler::cmpfun(get_optim);
 
 
 #makes area under any PDF curve equal 1 (good for standardizing curves to be compared). HIDDEN!
