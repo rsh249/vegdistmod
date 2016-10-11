@@ -620,6 +620,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
 #'  thinning of data to limit overfitting. Set to 1 to ignore.
 #' @param bg An object of background point climate data matching the 
 #'  output of extraction(). Generate random backround points and then use extraction().
+#' @param n An integer value of the number of bins to use for Kernel Density Estimation
 
 #'
 #' @export
@@ -643,7 +644,8 @@ findlocal <-
            searchrep = 3,
            manip = 'condi',
            alpha = 0.05,
-           factor = 4) {
+           factor = 4,
+           n = 1024) {
     nrec <- 100000
     
     
@@ -704,7 +706,7 @@ findlocal <-
         currdist[[a]][,1] = as.numeric(as.character(currdist[[a]][,1]));
         currdist[[a]] <- stats::na.omit(currdist[[a]])
         dens[[a]] <-
-          densform(currdist[[a]], r[[a]], bg = bg[[a]], manip = manip)
+          densform(currdist[[a]], r[[a]], bg = bg[[a]], manip = manip, n = n)
         currdist[[a]] <- stats::na.omit(currdist[[a]])
         for (i in 1:length(currdist[[a]][, 1])) {
           vporig[i, a] <-
@@ -718,7 +720,7 @@ findlocal <-
       
     } else {
       currdist[,1] <- as.numeric(as.character(currdist[,1])); 
-      dens <- densform(currdist, r, bg = bg, manip = manip)
+      dens <- densform(currdist, r, bg = bg, manip = manip, n=n)
       vporig <- vector()
       currdist <- stats::na.omit(currdist)
       for (i in 1:length(currdist[, 1])) {
@@ -755,7 +757,7 @@ findlocal <-
       for (a in 1:length(ext)) {
         currdist[[a]] <- stats::na.omit(currdist[[a]])
         dens[[a]] <-
-          densform(currdist[[a]], r[[a]], bg = bg[[a]], manip = manip)
+          densform(currdist[[a]], r[[a]], bg = bg[[a]], manip = manip, n = n)
         currdist[[a]] <- stats::na.omit(currdist[[a]])
         for (i in 1:length(currdist[[a]][, 1])) {
           vporig[i, a] <-

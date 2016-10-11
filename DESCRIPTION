@@ -17,4 +17,5 @@ Description: This is an R package with functions that perform the maximum
 License: GPL-2 | GPL-3
 Encoding: UTF-8
 LazyData: true
+ByteCompile: true
 RoxygenNote: 5.0.1.9000

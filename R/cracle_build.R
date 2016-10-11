@@ -154,9 +154,12 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 		bg.eval = data.frame();
 	#	if(condi == TRUE | bayes == TRUE){
 	#	  if(length(bg)<2){
-		      bg <- vegdistmod:::.get_bg(clim);
-		      bg.ex = extraction(bg, clim, schema='raw');
-#   		bgn = 3000;
+		  #    bg <- vegdistmod:::.get_bg(clim);
+		  #    bg.ex = extraction(bg, clim, schema='raw');
+	if(bg == 0){} else{
+  	bg.ex = bg;
+	}
+  	#   		bgn = 3000;
 # 	  	bg <- dismo::randomPoints(clim, bgn);
 # 	  	bgn = length(bg[,1]);
 # 		  bg <- cbind(rep("0000", bgn), rep("bg", bgn), as.numeric(as.character(bg[,2])), as.numeric(as.character(bg[,1])));
@@ -203,9 +206,9 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 			if(bayes == TRUE){
 			  bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 3, from = fr, to = t, bw = bw, na.rm = TRUE); 
 			 # bg.den$y <- bg.den$y + min(subset(bg.den$y, bg.den$y > 0));
-			  bg.den$y <- bg.den$y;
+			#  bg.den$y <- bg.den$y;
 			  den$y <- (den$y/bg.den$y)*den$y;
-			 # den$y = bg.den$y/den$y;
+		#	  den$y = bg.den$y*den$y;
 			  bg.mean <- mean(bg.ex[,names(phytoclim[[i]])]);
 			  bg.sd <- sd(bg.ex[,names(phytoclim[[i]])]);
 			}
@@ -218,7 +221,7 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 				sd = 0.01;
 			};
 			for(num in 1:length(den$x)){
-				eval[num,1] <- ((1/(sqrt(2*pi)*sd)*(2.71828^(-1*((den$x[num] - mean)^2)/(2*sd^2)))));
+				eval[num,1] <- ((1/(sqrt((2*pi)*(sd^2)))*(2.71828^(-1*((den$x[num] - mean)^2)/(2*sd^2)))));
 				if(condi==T | bayes==T){
           #bg.eval[num,1] <- ((1/(sqrt(2*pi)*bg.sd)*(2.71828^(-1*((den$x[num] - bg.mean)^2)/(2*bg.sd^2)))));
 				}
@@ -229,12 +232,13 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 			  bg.eval <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 3, from = fr, to = t, bw = bw, na.rm = TRUE); 
 			  
 			  eval[,1] = (eval[,1]/bg.eval$y);
-		#	  eval[,1] = bg.eval[,1]/eval[,1];
+		  #  eval[,1] = bg.eval[,1]/eval[,1];
 			}
 			if(bayes == T){
 			  bg.eval <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 3, from = fr, to = t, bw = bw, na.rm = TRUE); 
 			  
-			  eval[,1] = (eval[,1]/bg.eval$y)*eval[,1];
+			   eval[,1] = (eval[,1]/bg.eval$y)*eval[,1];
+			  #eval[,1] = (eval[,1]*bg.eval$y);
 			}
 			larr.den.gauss[1:n, i] <- eval[,1];
 			larr.mean[1,i] <- mean;
@@ -317,24 +321,28 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024) {
 	};
 	tax.list <- unique(ex$tax);
 	tax.list <- stats::na.omit(tax.list);
-
-	trm.list <- vector();
-	for(j in 1:length(tax.list)){
-	#  print(j)
-	  subit = subset(ex, ex$tax == tax.list[[j]])
-	  if(length(subit[,1])>=5){
-      lsub <- lapply(list(apply(subit[,(head+1):length(subit[1,])], 2, unique))[[1]],  length);
-      #print(lsub)
-		  if(min(unlist(lsub)) >= 10){
-			  trm.list <- c(trm.list, as.character(tax.list[[j]]))
-		  } else {
-		      
-		      #cat("TOO FEW RECORDS FOR", tax.list[[j]], "OMITTING it...\n")
-		  }
-	  }
-	}
-
-	tax.list <- trm.list;
+# 
+# 	trm.list <- vector();
+# 	for(j in 1:length(tax.list)){
+# 	#  print(j)
+# 	  subit = subset(ex, ex$tax == tax.list[[j]])
+# 	  
+# 	  if(length(subit[,1])>=5){
+#       lsub <- lapply(list(apply(subit[,(head+1):length(subit[1,])], 2, unique))[[1]],  length);
+#       print(lsub)
+# 		  if(min(unlist(lsub)) >= 10){
+# 			  trm.list <- c(trm.list, as.character(tax.list[[j]]))
+# 		  } else {
+# 		      
+# 		      #cat("TOO FEW RECORDS FOR", tax.list[[j]], "OMITTING it...\n")
+# 		  }
+# 	  }
+# 	}
+# 
+# 	tax.list <- trm.list;
+# 	print(trm.list);
+# 	print(unique(ex$tax));
+# 	return();
 	
 	for(i in 1:length(tax.list)){	
 	
