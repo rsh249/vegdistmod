@@ -94,5 +94,8 @@ MCR <- function(ext, method="unweight", plot = FALSE, file = 'mcr_plot'){
 		}
 	#return(optimatr)
 	colnames(optim) <- colnames(ext[,(head+1):ncol(ext)])
+	optim <- data.frame(optim)
+	optim = list(optim);
+	names(optim) = c(method)
 	return(optim);
 }
