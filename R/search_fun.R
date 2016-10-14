@@ -1349,6 +1349,8 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
 #' @param boundaries A shapefile (e.g., GADM country or state outlines)
 #' @param file If a file path is set this function will try to write the plot as a png to that path
 #' @param col Color of points to plot.
+#' @param legend TRUE or FALSE to plot the legend on the map.
+#' @param l.cex cex parameter to pass to legend function
 #'
 #' @export
 #' @examples
@@ -1356,13 +1358,13 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
 #' ext.abies = extraction(abies, climondbioclim, schema='raw');
 #' plot_clim(ext.abies, climondbioclim[[5]]);
 #' 
-plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red') {
+plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend = TRUE, l.cex = 0.9) {
   #require(RColorBrewer);
   #require(classInt);
   poi = ext_ob;
   usa <- boundaries;
   nclr = 8;
-  breaks <- round((maxValue(clim) - minValue(clim))/nclr, 0)
+  breaks <- round((maxValue(clim) - minValue(clim))/nclr, digits = 3)
   plotclr = ( grDevices::topo.colors(1000));
   plotvar <- seq(minValue(clim), maxValue(clim), by = breaks);
   class <- classInt::classIntervals(plotvar, nclr, style = 'fixed', fixedBreaks = plotvar, 1)
@@ -1390,7 +1392,7 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red') {
     # legend.width = 1,
     axis.args = list(
       at = seq(minValue(clim), maxValue(clim), by = 100),
-      lebels = round(seq(minValue(clim), maxValue(clim), by = 100), 0),
+      labels = round(seq(minValue(clim), maxValue(clim), by = 100), 0),
       cex.axis = 0.9
     )
   )
@@ -1402,15 +1404,17 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red') {
   if(boundaries!= ''){
     graphics::plot(usa, add = T)
   }
+  if(legend == TRUE){
   graphics::legend(
     "topleft",
     legend = names(attr(colcode, "table")),
     title = names(clim),
     text.col = 'white',
     fill = attr(colcode, "palette"),
-    cex = 0.5,
+    cex = l.cex,
     bty = 'n'
   )
+  }
   
   
   if(file!=''){

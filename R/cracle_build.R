@@ -727,11 +727,11 @@ densplot <- function(dens.ob, var, col = sample(grDevices::colours()), type = ".
 	tempvarlist <- c("bio1", "bio2", "bio3", "bio4", "bio5", "bio6", "bio7", "bio8", "bio9", "bio10", "bio11", "MAT", "MaximumT", "MinimumT");
 	if(var %in% tempvarlist){by = 10}else{by = 1};
 	var <- paste(var, type, sep = "");
-	graphics::plot(dens.ob[[varx]]/by, dens.ob[[var]], xlab = "", ylab = "", ylim = c(0, 4*max(dens.ob[[var]])), type = "l", lwd = 3, col = col, frame.plot=F, axes = F);
-	graphics::axis(side = 2, at = pretty(c(0, 4*max(dens.ob[[var]]))));
+	graphics::plot(dens.ob[[varx]]/by, dens.ob[[var]], xlab = "", ylab = "", ylim = c(0, 3.5*max(dens.ob[[var]])), type = "l", lwd = 3, col = col, frame.plot=F, axes = F);
+	graphics::axis(side = 2, at = pretty(c(0, 2.5*max(dens.ob[[var]]))));
 	graphics::axis(side = 1, at = pretty(range(dens.ob[[varx]]/by)));
 	graphics::mtext(var, side = 1, line =3);
-	graphics::mtext("Kernel Density Estimation", side = 2, line = 3);
+	graphics::mtext("Probability Density Estimation", side = 2, line = 3);
 };
 
 
@@ -743,6 +743,8 @@ densplot <- function(dens.ob, var, col = sample(grDevices::colours()), type = ".
 #' @param var A character string that matches one of the layer names in the source raster object.
 #' @param col A color vector of the same length as the dens.oblist object. Default is 'grDevices::heat.colors(length(dens.oblist))'.
 #' @param type A character string of value either ".kde" for a Kernel Density Estimator curve, or ".gauss" for a Gaussian (normal) curve. All other values will result in errors.
+#' @param l.pos  Legend position. Recommend 'topleft' or 'topright'. Default is 'topleft'.
+#' @param l.cex  cex setting for legend. Default is 0.8.
 #' @export
 #' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
@@ -752,7 +754,7 @@ densplot <- function(dens.ob, var, col = sample(grDevices::colours()), type = ".
 #' dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024);
 #' multiplot(dens.list.raw, names(climondbioclim[[1]]));
 
-multiplot <- function(dens.oblist, var, col = grDevices::heat.colors(length(dens.oblist)), type = ".kde"){ 
+multiplot <- function(dens.oblist, var, col = grDevices::heat.colors(length(dens.oblist)), type = ".kde", l.pos = 'topleft', l.cex = 0.8){ 
 	arr.dens.ob = dens.oblist;
 	varx <- paste(var, "x", sep = ".");
 	vart = paste(var, type, sep = '');
@@ -771,7 +773,7 @@ multiplot <- function(dens.oblist, var, col = grDevices::heat.colors(length(dens
 	};
 #	max.x <- mean(as.numeric(as.character(max.x.hold)));
 #	max.y <- mean(as.numeric(as.character(max.y.hold)));
-	graphics::legend("topleft", legend = as.character(names.hold), lty=1, lwd=2, cex=0.8, col = col, box.col=NA);
+	graphics::legend(l.pos, legend = as.character(names.hold), lty=1, lwd=2, cex=l.cex, col = col, box.col=NA);
 };
 
 #' Adds a single PDF plot to already open plot
