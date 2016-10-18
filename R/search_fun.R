@@ -134,6 +134,7 @@ NULL
 #' @param clim A raster object of climate data (matching x)
 #' @param dens A density object from vegdistmod::densform(), vegdistmod::and_fun(), or vegdistmod::or_fun();
 #' @param type Designate either ".gauss" or ".kde".
+#' @param w To weight or not to weight by coefficient of variation.
 #'
 #' @export
 #' @examples
@@ -147,51 +148,84 @@ NULL
 #' }
 #' print(ext.abies$prob)
 
-multiv_likelihood <- function(x, clim, dens, type) {
+multiv_likelihood <- function(x, clim, dens, type, w = FALSE) {
   dens.ob1 <- dens;
   varlist <- names(dens.ob1);
-  varlist <- (varlist[1:((length(varlist) - 1) / 5)]);
+  varlist <- (varlist[1:((length(varlist) - 1) / 6)]);
   varlist <- sub(".kde", "", varlist);
   p <- vector()
   weight = vector();
   x <- as.data.frame(x)
   sumit = vector();
+  centerby = vector();
+  sd = vector();
+  nrecs = nrow(x);
+  if(w == TRUE){
   for (n in 1:length(varlist)) {
     var = varlist[[n]]
     varx <- paste(var, "x", sep = ".")
+    varsd <- paste(var, "sd", sep = ".")
+    varmean <- paste(var, "mean", sep = ".")
     varlook <- paste(var, type, sep = '')
     to <- max(dens.ob1[[varx]])
     from <- min(dens.ob1[[varx]])
     num = length(dens.ob1[[varx]])
     by = (to - from) / num;
-    sumit[[n]] = 1;
+    #print(by);
+   # sumit[[n]] = max(dens.ob1[[varx]]*by);
+    centerby[[n]] = (max(dens.ob1[[varx]]) - min(dens.ob1[[varx]]));
+    sd[[n]] = dens.ob1[[varsd]]
+ #   sumit[[n]] = dens.ob1[[varsd]]/(centerby[[n]]);
+    sumit[[n]] = sd[[n]] / centerby[[n]];
+    #sumit[[n]] = 1;
   }
-  weight = 1/(sumit/max(sumit));
-  for (j in 1:length(varlist)) {
-    var = varlist[[j]]
-    varx <- paste(var, "x", sep = ".")
-    varlook <- paste(var, type, sep = '')
-    to <- max(dens.ob1[[varx]])
-    from <- min(dens.ob1[[varx]])
-    num = length(dens.ob1[[varx]])
-    by = (to - from) / num
-    search = x[, j]
-    search = as.numeric(as.character(search));
-    if (is.na(search)) {
-      return(0)
-    }
-    bin = round((search - from) / by) + 1
-    if (by == 0) {
-      #Suggests that this is an invariant variable in this dataset
-      bin = 1
-    }
-    if (bin > num) {
-      bin = num
-    }
-    lr = dens.ob1[[varlook]][bin];
-    p[j] = log(lr*by);
+    
+  #  return(sumit)
+    weight = 1/sumit;  
+    weight = weight-(0.9*min(weight));
+    weight = weight/max(weight);  
+  } else {
+    weight = rep(1, length(varlist));
   }
-  return(list(sum(p), weight));
+  #return(weight)
+  set = vector();
+  for (z in 1:nrecs){
+    for (j in 1:length(varlist)) {
+      var = varlist[[j]];
+      varx <- paste(var, "x", sep = ".")
+      varlook <- paste(var, type, sep = '')
+      to <- max(dens.ob1[[varx]])
+      from <- min(dens.ob1[[varx]])
+      num = length(dens.ob1[[varx]])
+      by = (to - from) / num; 
+      search = x[, j]; 
+      search = as.numeric(as.character(search));
+      if (is.na(search[[z]])) {
+        return(0)
+      }
+      #print(search[[z]])
+      #print(from)
+      #print(by)
+      bin = round((search[[z]] - from) / by) + 1
+      if (by == 0) {
+        #Suggests that this is an invariant variable in this dataset
+        bin = 1
+      }
+      #print(bin);
+     # print(num);
+      if (bin > num) {
+        bin = num
+      }
+      if(bin < 1) {
+        bin = 1;
+      }
+      lr = dens.ob1[[varlook]][bin]; 
+      p[j] = log(lr*by)/weight[[j]]; 
+    }
+    set[z] = sum(na.omit(p));
+  }
+  #return(p)
+  return(list(set, weight));
 }
 
 #multiv_likelihood = compiler::cmpfun(multiv_likelihood);
@@ -208,6 +242,7 @@ multiv_likelihood <- function(x, clim, dens, type) {
 #' @param min The minimum likelihood to be kept. Will override the value of alpha given. Optional.
 #' @param alpha The value of alpha you would like to use for confidence interval construction. Default to 0.01 for a 99 percen confidence interval.
 #' @param type Designate either ".gauss" or ".kde".
+#' @param w To weight log-likelihoods by coefficient of variation or not. 
 #' 
 #' @export
 #' @examples
@@ -219,7 +254,7 @@ multiv_likelihood <- function(x, clim, dens, type) {
 #'  filter_dist(ext.abies, dens.abies, climondbioclim, alpha = 0.01, type = '.kde')
 #' 
 
-filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.kde') {
+filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.kde', w=FALSE) {
     
     if (type == '') {
       type = '.kde'
@@ -234,7 +269,7 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
         dens.ab <- dens_ob[[n]]
         for (i in 1:length(ext.abies[, 1])) {
           lookup <- (ext.abies[i, head:length(ext.abies[1,])])
-          p <- multiv_likelihood(lookup, r, dens.ab, type = type)
+          p <- multiv_likelihood(lookup, r, dens.ab, type = type, w=w)
           ext.abies[i, 'prob'] = p[[1]];
         }
         
@@ -261,7 +296,7 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
       head <- which(colnames(ext.abies) %in% 'cells') + 1
       for (i in 1:length(ext.abies[, 1])) {
         lookup <- (ext.abies[i, head:length(ext.abies[1, ])])
-        p <- multiv_likelihood(lookup, r, dens.ab, type = type)
+        p <- multiv_likelihood(lookup, r, dens.ab, type = type, w=w)
         ext.abies[i, 'prob'] = p[[1]];
       }
       if (min == 0) {
@@ -349,6 +384,7 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
 #' @param dens_ob A density object from vegdistmod::densform(), vegdistmod::and_fun(), or vegdistmod::or_fun();
 #' @param type Designate either ".gauss" or ".kde".
 #' @param name Optional. Give taxon name.
+#' @param w To weight log-likelihoods by coefficient of variation or not.
 #'
 #' @export
 #' @examples
@@ -357,7 +393,7 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
 #' dens.abies = densform(ext.abies, climondbioclim);
 #' n <- near2(ext.abies, climondbioclim, dens.abies, type = '.kde');
 
-near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
+near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
   cells = ext_ob;
   ras = clim;
   dens = dens_ob;
@@ -461,9 +497,9 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
           break;
         }
         pold[[a]] <-
-          (multiv_likelihood(cells[[a]][it, 6:length(cells[[a]][1, ])], ras[[a]],  dens[[a]], type = type))[[1]]
+          (multiv_likelihood(cells[[a]][it, 6:length(cells[[a]][1, ])], ras[[a]],  dens[[a]], type = type, w=w))[[1]]
         pnew[[a]] <-
-          (multiv_likelihood(newer[[a]][1, 6:length(newer[[a]][1, ])], ras[[a]], dens[[a]], type = type))[[1]]
+          (multiv_likelihood(newer[[a]][1, 6:length(newer[[a]][1, ])], ras[[a]], dens[[a]], type = type, w=w))[[1]]
       }
       pnew = sum(pnew)
       pold = sum(pold)
@@ -531,9 +567,9 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
         next
       }
       pold <-
-        (multiv_likelihood(cells[it, 6:length(cells[1, ])], ras,  dens, type = type))[[1]]
+        (multiv_likelihood(cells[it, 6:length(cells[1, ])], ras,  dens, type = type, w=w))[[1]]
       pnew <-
-        (multiv_likelihood(newer[1, 6:length(newer[1, ])], ras, dens, type = type))[[1]]
+        (multiv_likelihood(newer[1, 6:length(newer[1, ])], ras, dens, type = type, w=w))[[1]]
       if (pnew >= (pold)) {
        # newrecord[j, 1:ncol(newer)] = (newer); 
        # print(newer);
@@ -621,6 +657,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL') {
 #' @param bg An object of background point climate data matching the 
 #'  output of extraction(). Generate random backround points and then use extraction().
 #' @param n An integer value of the number of bins to use for Kernel Density Estimation
+#' @param w To weight the log-likelihoods by coefficient of variation or not.
 
 #'
 #' @export
@@ -645,7 +682,8 @@ findlocal <-
            manip = 'condi',
            alpha = 0.05,
            factor = 4,
-           n = 1024) {
+           n = 1024,
+           w=FALSE) {
     nrec <- 100000
     
     
@@ -713,7 +751,7 @@ findlocal <-
             (multiv_likelihood(currdist[[a]][i, 6:length(currdist[[a]][1,])],
                                r[[a]],
                                dens[[a]],
-                               type = type))[[1]]
+                               type = type, w=w))[[1]]
         }
       }
       vporig = apply(vporig, 1, sum)
@@ -728,7 +766,7 @@ findlocal <-
           (multiv_likelihood(currdist[i, 6:length(currdist[1,])],
                              r,
                              dens,
-                             type = type))[[1]]
+                             type = type, w=w))[[1]]
       }
     }
     plast <- mean(vporig)
@@ -764,7 +802,7 @@ findlocal <-
             (multiv_likelihood(currdist[[a]][i, 6:length(currdist[[a]][1,])],
                                r[[a]],
                                dens[[a]],
-                               type = type))[[1]]
+                               type = type, w=w))[[1]]
         }
       }
       vporig <- stats::na.omit(vporig)
@@ -783,7 +821,7 @@ findlocal <-
           (multiv_likelihood(currdist[i, 6:length(currdist[1,])],
                              r,
                              dens,
-                             type = type))[[1]]
+                             type = type, w=w))[[1]]
       }
       currdist$prob = vporig
       
@@ -879,7 +917,7 @@ findlocal <-
               (multiv_likelihood(sub[i, 6:length(sub[1,])],
                                  r[[a]],
                                  dens[[a]],
-                                 type = type))[[1]]
+                                 type = type, w=w))[[1]]
             
           }
           
@@ -918,7 +956,7 @@ findlocal <-
             (multiv_likelihood(sub[i, 6:length(sub[1,])],
                                r,
                                dens,
-                               type = type))[[1]]
+                               type = type, w=w))[[1]]
         }
       } 
       origmin <- min(vporig)
@@ -1006,6 +1044,8 @@ findlocal <-
 #'  be returned if too few occurrences are selected.
 #' @param nclus If parallel is TRUE then set the maximum number of cores 
 #'  to use in the compute cluster. Default is 2.
+#' @param w To weight log-likelihoods by the coefficient of variation or not.
+#' 
 #' @export
 #' @examples
 #' data(abies);
@@ -1018,8 +1058,9 @@ findlocal <-
 
  
 
-geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 1, manip = 'condi', alpha = 0.05, divisions = 10, factor = 4, parallel = FALSE, nclus = 2){
+geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 1, manip = 'condi', alpha = 0.05, divisions = 10, factor = 4, parallel = FALSE, nclus = 2, w=FALSE){
   ext = ext_ob;
+  if(w == TRUE){}
   if(length(bg)<2){
     if(class(ext)=='list'){
       bg.hold = .get_bg(clim[[1]]);
@@ -1049,6 +1090,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
       foreach(i = 1:divisions,
               .combine = 'rbind',
               .packages = 'vegdistmod') %dopar% {
+                source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
                 ##Try the "when()" function instead of while()
                 #when(nn <= divisions)
                 #while(i<divisions){
@@ -1120,7 +1162,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                       maxiter = maxiter,
                       searchrep = searchrep,
                       manip = manip,
-                      factor = factor
+                      factor = factor, w=w
                     )
                   search.sw <-
                     findlocal(
@@ -1130,7 +1172,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                       maxiter = maxiter,
                       searchrep = searchrep,
                       manip = manip,
-                      factor = factor
+                      factor = factor, w=w
                     )
                   search.nw <-
                     findlocal(
@@ -1140,7 +1182,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                       maxiter = maxiter,
                       searchrep = searchrep,
                       manip = manip,
-                      factor = factor
+                      factor = factor, w=w
                     )
                   search.se <-
                     findlocal(
@@ -1150,7 +1192,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                       maxiter = maxiter,
                       searchrep = searchrep,
                       manip = manip,
-                      factor = factor
+                      factor = factor, w=w
                     )
                   
                   to.search = rbind(search.nw, search.se, search.sw, search.ne)
@@ -1186,7 +1228,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                         bg = bg,
                         searchrep = searchrep,
                         manip = manip,
-                        alpha = alpha
+                        alpha = alpha, w=w
                       )
                   }
                   
@@ -1200,7 +1242,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                         bg = bg,
                         searchrep = searchrep,
                         manip = manip,
-                        alpha = alpha
+                        alpha = alpha, w=w
                       )
                   }
                   
@@ -1214,7 +1256,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                         bg = bg,
                         searchrep = searchrep,
                         manip = manip,
-                        alpha = alpha
+                        alpha = alpha, w=w
                       )
                   }
                   
@@ -1228,7 +1270,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
                         bg = bg,
                         searchrep = searchrep,
                         manip = manip,
-                        alpha = alpha
+                        alpha = alpha, w=w
                       )
                   }
                   
@@ -1284,10 +1326,10 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
         }
         i=i+1;
         print(length(search.ne.l));
-        search.ne <- findlocal(search.ne.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
-        search.sw <- findlocal(search.sw.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
-        search.nw <- findlocal(search.nw.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
-        search.se <- findlocal(search.se.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor)
+        search.ne <- findlocal(search.ne.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor, w=w)
+        search.sw <- findlocal(search.sw.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor, w=w)
+        search.nw <- findlocal(search.nw.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor, w=w)
+        search.se <- findlocal(search.se.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor, w=w)
         
         search[[i]] = rbind(search.nw, search.se, search.sw, search.ne);
       } else {
@@ -1302,18 +1344,18 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
         search.ne = NA;
         search.se = NA;
         if(length(sub.nw[,1])>= 5){
-          search.nw <- findlocal(sub.nw, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
+          search.nw <- findlocal(sub.nw, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha, w=w)
           
         };
         if(length(sub.sw[,1])>= 5){
-          search.sw <- findlocal(sub.sw, clim, type, maxiter=maxiter, bg=bg,  searchrep=searchrep, manip = manip, alpha = alpha)
+          search.sw <- findlocal(sub.sw, clim, type, maxiter=maxiter, bg=bg,  searchrep=searchrep, manip = manip, alpha = alpha, w=w)
           
         };
         if(length(sub.ne[,1])>=5){
-          search.ne <- findlocal(sub.ne, clim, type, maxiter=maxiter, bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
+          search.ne <- findlocal(sub.ne, clim, type, maxiter=maxiter, bg=bg, searchrep=searchrep, manip = manip, alpha = alpha, w=w)
         };
         if(length(sub.se[,1])>=5){
-          search.se <- findlocal(sub.se, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha)
+          search.se <- findlocal(sub.se, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha, w=w)
           
         };
         i=i+1;

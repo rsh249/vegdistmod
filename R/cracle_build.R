@@ -125,7 +125,7 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 #' densplot(dens.sub, names(climondbioclim[[1]]));
 
 densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n = 1024, from = 0, to = 0){
-  kern = 'epanechnikov'
+  kern = 'gaussian'
   condi = FALSE;
   bayes = FALSE;
   
@@ -148,15 +148,22 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 		larr.den <- data.frame();
  		larr.den.x <- data.frame();
 		larr.den.gauss <- data.frame();
+	#  larr.den.lognorm <- data.frame();
 		larr.mean <- data.frame();
 		larr.sd <- data.frame();
+	  larr.w <- data.frame();
 		eval <- data.frame();
+	#  lognorm <- data.frame();
 		bg.eval = data.frame();
 	#	if(condi == TRUE | bayes == TRUE){
 	#	  if(length(bg)<2){
 		  #    bg <- vegdistmod:::.get_bg(clim);
 		  #    bg.ex = extraction(bg, clim, schema='raw');
-	if(bg == 0){} else{
+	if(bg == 0){
+	 # whole.ex=extract(clim,extent(clim),cellnumbers=T,df=T) 
+	  
+	  bg.ex = extraction(.get_bg(phytoclim), phytoclim, schema='raw')
+	} else{
   	bg.ex = bg;
 	}
   	#   		bgn = 3000;
@@ -222,6 +229,7 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 			};
 			for(num in 1:length(den$x)){
 				eval[num,1] <- ((1/(sqrt((2*pi)*(sd^2)))*(2.71828^(-1*((den$x[num] - mean)^2)/(2*sd^2)))));
+			#	lognorm[num,1] <- ((1/(sqrt((2*pi)*(sd^2)*den$x[num]))*(2.71828^(-1*((log(den$x[num]) - mean)^2)/(2*sd^2)))));
 				if(condi==T | bayes==T){
           #bg.eval[num,1] <- ((1/(sqrt(2*pi)*bg.sd)*(2.71828^(-1*((den$x[num] - bg.mean)^2)/(2*bg.sd^2)))));
 				}
@@ -241,19 +249,34 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 			  #eval[,1] = (eval[,1]*bg.eval$y);
 			}
 			larr.den.gauss[1:n, i] <- eval[,1];
+		#	larr.den.lognorm[1:n, i] <- lognorm[,1];
 			larr.mean[1,i] <- mean;
 			larr.sd[1,i] <- sd;
+			range <- maxValue(phytoclim[[i]]) - minValue(phytoclim[[i]]);
+			w <- sd/range;
+			larr.w[1,i] = 1/w;
 		};
+	 # for(i in 1:length(larr.w[1,])){
+	   # weight = larr.w[1,i]
+	    weight = as.numeric(larr.w[1,])
+	    weight =  weight - (0.9*min(weight));
+	    weight = weight/(0.5*max(weight));
+	    larr.w[1,] = weight;
+	  #}
 		colnames(larr.den.gauss) <- c(paste(names(phytoclim), "gauss", sep = "."));
+#	  colnames(larr.den.lognorm) <- c(paste(names(phytoclim), "lognorm", sep = "."));
+	
 		colnames(larr.mean) <- c(paste(names(phytoclim), "mean", sep = "."));
 		colnames(larr.sd) <- c(paste(names(phytoclim), "sd", sep = "."));
+	  colnames(larr.w) <- c(paste(names(phytoclim), "w", sep = "."));
+	
 		colnames(larr.den) <- c(paste(names(phytoclim), "kde", sep = "."));
 		colnames(larr.den.x) <- c(paste(names(phytoclim), "x", sep = "."));
 		name = data.frame(name);
 		larr.mean = data.frame(larr.mean);
 		larr.sd = data.frame(larr.sd);
 		colnames(name) <- "name";
-		fin <- c(larr.den, larr.den.x, larr.den.gauss, larr.mean, larr.sd, name);
+		fin <- c(larr.den, larr.den.x, larr.den.gauss, larr.mean, larr.sd, larr.w, name);
 		fin <- .makeaucone(fin);
 		return(fin);
 	
@@ -383,7 +406,7 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024) {
 
 or_fun <- function(dens.oblist){
 	varlist <- names(dens.oblist[[1]]);
-	varlist <- (varlist[1:((length(varlist)-1)/5)]);
+	varlist <- (varlist[1:((length(varlist)-1)/6)]);
 	varlist <- sub(".kde", "", varlist);
 
 	field <- list();
@@ -459,6 +482,7 @@ or_fun <- function(dens.oblist){
 #' 
 #' Using an object from the vegdistmod::dens_obj() function. Create a single density object (i.e., like that produced by vegdistmod::densform()) where the probability curves correspond to the probability density function of ALL taxa/species from the original set occurring. 
 #' @param dens.oblist An object derived from the vegdistmod::dens_ob() function.
+#' @param w Weight importance of probability functions
 #' @export
 #' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
@@ -473,10 +497,10 @@ or_fun <- function(dens.oblist){
 #' and <- and_fun(dens.list.raw);
 #' addplot(and, names(climondbioclim[[1]]), col ='black');
 
-and_fun <- function(dens.oblist){
+and_fun <- function(dens.oblist, w = FALSE){
 	dens.oblist <- .scramble(dens.oblist);
 	varlist <- names(dens.oblist[[1]]); #print(varlist)
-	varlist <- (varlist[1:((length(varlist)-1)/5)]) ;
+	varlist <- (varlist[1:((length(varlist)-1)/6)]) ;
 	varlist <- sub(".kde", "", varlist);
 
 	field <- list();
@@ -493,23 +517,38 @@ and_fun <- function(dens.oblist){
 		vargauss <- paste(var, "gauss", sep = ".");
 		varmean <- paste(var, "mean", sep = ".");
 		varsd <- paste(var, "sd", sep = ".");
+		varw <- paste(var, "w", sep = '.');
 		meanlist <- list();
 		sdlist <- list();
+
 		dens.obcurr <- dens.oblist[[1]];
+		
+		if(w == TRUE){ 
+		  we = dens.obcurr[[varw]]; #print(we);
+		} else {
+		  we <- 1;
+		}
+		
 		to <- max(dens.obcurr[[varx]]);
 		from <- min(dens.obcurr[[varx]]);
 		num = length(dens.obcurr[[varx]]);
 		by = (to - from)/num;
 		meanlist[[1]] <- as.numeric(dens.obcurr[[varmean]]);
 		sdlist[[1]] <- as.numeric(dens.obcurr[[varsd]])^2;
-		prod <- as.numeric(dens.obcurr[[varkde]]);
+		prod <- as.numeric(dens.obcurr[[varkde]]) ^ we;
 		prod <- prod*by;
 		prod.gauss <- as.numeric(dens.obcurr[[vargauss]])*by;
-		for(i in 2:length(dens.oblist)){dens.obnow <- dens.oblist[[i]];
-			prod <- prod * (as.numeric(dens.obnow[[varkde]])*by);
+		for(i in 2:length(dens.oblist)){
+		  dens.obnow <- dens.oblist[[i]];
+		  if(w == TRUE){
+  		  we = dens.obnow[[varw]]; #print(we);
+		  } else {
+		    we = 1;
+		  }
+  		prod <- prod * ((as.numeric(dens.obnow[[varkde]])*by) ^ we);
 			prod.area <- sum(prod)*by;
 			prod <- prod / prod.area;
-			prod.gauss <- prod.gauss * (as.numeric(dens.obnow[[vargauss]])*by);
+			prod.gauss <- prod.gauss * ((as.numeric(dens.obnow[[vargauss]])*by)^we);
 			prod.gauss.area <- sum(prod.gauss)*by;
 			prod.gauss <- prod.gauss / prod.gauss.area;
 			meanlist[[i]] <- as.numeric(dens.obnow[[varmean]]);
@@ -579,6 +618,7 @@ get_optim <- function(dens.ob){
 	means <- list();
 	sds <- list();
 	for (j in 1:length(varlist)){
+	  
 		var = varlist[[j]];
 		varx <- paste(var, "x", sep = ".");
 		#print(varx)
@@ -674,7 +714,7 @@ get_optim <- function(dens.ob){
 
 #makes area under any PDF curve equal 1 (good for standardizing curves to be compared). HIDDEN!
 .makeaucone <- function(dens.ob1, var){ var <- names(dens.ob1);
-	var <- (var[1:((length(var)-1)/5)]);
+	var <- (var[1:((length(var)-1)/6 )]);
 	var <- sub('.kde', '', var)
 	for(i in 1:length(var)){
 		varnow <- var[[i]];
