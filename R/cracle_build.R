@@ -160,7 +160,7 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 		  #    bg <- vegdistmod:::.get_bg(clim);
 		  #    bg.ex = extraction(bg, clim, schema='raw');
 	if(bg == 0){
-	 # whole.ex=extract(clim,extent(clim),cellnumbers=T,df=T) 
+#	  whole.ex=extract(clim,extent(clim),cellnumbers=T,df=T) 
 	  
 	  bg.ex = extraction(.get_bg(phytoclim), phytoclim, schema='raw')
 	} else{
@@ -252,14 +252,15 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 		#	larr.den.lognorm[1:n, i] <- lognorm[,1];
 			larr.mean[1,i] <- mean;
 			larr.sd[1,i] <- sd;
-			range <- maxValue(phytoclim[[i]]) - minValue(phytoclim[[i]]);
+	#		range <- maxValue(phytoclim[[i]]) - minValue(phytoclim[[i]]);
+			range <- max(larr.den.x[,i]) - min(larr.den.x[,i]);
 			w <- sd/range;
 			larr.w[1,i] = 1/w;
 		};
 	 # for(i in 1:length(larr.w[1,])){
 	   # weight = larr.w[1,i]
 	    weight = as.numeric(larr.w[1,])
-	    weight =  weight - (0.9*min(weight));
+	    weight =  weight - (min(weight));
 	    weight = weight/(0.5*max(weight));
 	    larr.w[1,] = weight;
 	  #}
@@ -292,6 +293,9 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 #' @param bw A bandwidth compatible with stats::density(). Options include "nrd", "nrd0", "ucv", "bcv", etc.. Default (and recommended) value is "nrd0".
 #' @param n Number of equally spaced points at which the probability density is to be estimated. Defaults to 1024. A lower number increases speed but decreases resolution in the function. A higher number increases resolution at the cost of speed. Recommended values: 512, 1024, 2048, ....
 #' @param manip Character string of 'reg' for straight likelihood, 'condi' for conditional likelihood, or 'bayes' for a Bayesian style likelihood statement.
+#' @param parallel TRUE or FALSE. Make use of multicore architecture.
+#' @param nclus Number of cores to allocate to this function
+#' 
 #' @export
 #' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
@@ -302,7 +306,7 @@ densform <- function(ex, clim, bg = 0, name = '', bw = "nrd0", manip = 'reg', n 
 #' dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024);
 #' multiplot(dens.list.raw, names(climondbioclim[[1]]));
 
-dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024) {
+dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024, parallel = FALSE, nclus = 4) {
 	rawbioclim = clim;
 	ex <- data.frame(ex);
 	condi = FALSE;
@@ -366,21 +370,53 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024) {
 # 	print(trm.list);
 # 	print(unique(ex$tax));
 # 	return();
+	if(parallel == TRUE){
+	  
+	  cl <- parallel::makeCluster(nclus, type = "SOCK")
+	  doSNOW::registerDoSNOW(cl);
+	  
+	  dens.list <-
+	    foreach(i = 1:length(tax.list),
+	           
+	            .packages = 'vegdistmod') %dopar% {
+	              source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
+	              source('~/Desktop/cracle_testing/vegdistmod/R/cracle_build.R')
+	              s.ex <- subset(ex, ex$tax == tax.list[[i]]);
+	              
+	              s.ex <- stats::na.omit(s.ex);
+	              
+	             # nlist[[i]] <- length(s.ex[,1])
+	              
+	              dlist <- (densform(s.ex, rawbioclim, name = tax.list[[i]], manip = manip, bw = bw, bg = bg, n=n, from = from, to = to));
+	              
+	              len <- length(dlist);
+	              if(len <= 1) {
+	                dlist <- NULL;
+	              };
+	              return(dlist);
+	              
+	              
+	            }
+	  parallel::stopCluster(cl)
+	  
+	} else {
+	  
 	
 	for(i in 1:length(tax.list)){	
 	
-		s.ex <- subset(ex, ex$tax == tax.list[[i]]);
+	  	s.ex <- subset(ex, ex$tax == tax.list[[i]]);
 		
-		s.ex <- stats::na.omit(s.ex);
+	  	s.ex <- stats::na.omit(s.ex);
 		
-		nlist[[i]] <- length(s.ex[,1])
+	  	nlist[[i]] <- length(s.ex[,1])
 
-		dens.list[[i]] <- (densform(s.ex, rawbioclim, name = tax.list[[i]], manip = manip, bw = bw, bg = bg, n=n, from = from, to = to));
+  		dens.list[[i]] <- (densform(s.ex, rawbioclim, name = tax.list[[i]], manip = manip, bw = bw, bg = bg, n=n, from = from, to = to));
 
-	 	len <- length(dens.list[[i]]);
-		if(len <= 1) {
-			dens.list[[i]] <- NULL;
-		};
+	 	  len <- length(dens.list[[i]]);
+		  if(len <= 1) {
+		  	dens.list[[i]] <- NULL;
+	  	};
+  	};
 	};
 	return(dens.list);
 }
@@ -750,6 +786,8 @@ get_optim <- function(dens.ob){
 #' @param var A character string that matches one of the layer names in the source raster object.
 #' @param col A color declaration. Default is a random color.
 #' @param type A character string of value either ".kde" for a Kernel Density Estimator curve, or ".gauss" for a Gaussian (normal) curve. All other values will result in errors.
+#' @param w TRUE or FALSE to show weighted probability functions
+
 #' @export
 #' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
@@ -760,13 +798,24 @@ get_optim <- function(dens.ob){
 #' dens.sub = densform(extr.sub, clim = climondbioclim, bw = 'nrd0', n = 512);
 #' densplot(dens.sub, names(climondbioclim[[1]]));
 
-densplot <- function(dens.ob, var, col = sample(grDevices::colours()), type = ".kde") {
+densplot <- function(dens.ob, var, col = sample(grDevices::colours()), type = ".kde", w=FALSE) {
 	
 	varx <- paste(var, "x", sep = ".");
+	varw <- paste(var, "w", sep = ".");
+	
 	graphics::par(mar= c(5,4,4,4) + 0.3);
 	tempvarlist <- c("bio1", "bio2", "bio3", "bio4", "bio5", "bio6", "bio7", "bio8", "bio9", "bio10", "bio11", "MAT", "MaximumT", "MinimumT");
 	if(var %in% tempvarlist){by = 10}else{by = 1};
 	var <- paste(var, type, sep = "");
+	if(w ==TRUE){
+	  to <- max(dens.ob[[varx]]);
+	  from <- min(dens.ob[[varx]]);
+	  num = length(dens.ob[[varx]]);
+	  lby = (to - from)/num;
+	  dens.ob[[var]] = dens.ob[[var]]^dens.ob[[varw]];
+	  den.area <- sum(dens.ob[[var]])*lby;
+	  dens.ob[[var]] = dens.ob[[var]]/den.area
+	}
 	graphics::plot(dens.ob[[varx]]/by, dens.ob[[var]], xlab = "", ylab = "", ylim = c(0, 3.5*max(dens.ob[[var]])), type = "l", lwd = 3, col = col, frame.plot=F, axes = F);
 	graphics::axis(side = 2, at = pretty(c(0, 2.5*max(dens.ob[[var]]))));
 	graphics::axis(side = 1, at = pretty(range(dens.ob[[varx]]/by)));
@@ -785,6 +834,8 @@ densplot <- function(dens.ob, var, col = sample(grDevices::colours()), type = ".
 #' @param type A character string of value either ".kde" for a Kernel Density Estimator curve, or ".gauss" for a Gaussian (normal) curve. All other values will result in errors.
 #' @param l.pos  Legend position. Recommend 'topleft' or 'topright'. Default is 'topleft'.
 #' @param l.cex  cex setting for legend. Default is 0.8.
+#' @param w TRUE or FALSE to show weighted probability functions
+
 #' @export
 #' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
@@ -794,19 +845,19 @@ densplot <- function(dens.ob, var, col = sample(grDevices::colours()), type = ".
 #' dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024);
 #' multiplot(dens.list.raw, names(climondbioclim[[1]]));
 
-multiplot <- function(dens.oblist, var, col = grDevices::heat.colors(length(dens.oblist)), type = ".kde", l.pos = 'topleft', l.cex = 0.8){ 
+multiplot <- function(dens.oblist, var, col = grDevices::heat.colors(length(dens.oblist)), type = ".kde", l.pos = 'topleft', l.cex = 0.8, w = FALSE){ 
 	arr.dens.ob = dens.oblist;
 	varx <- paste(var, "x", sep = ".");
 	vart = paste(var, type, sep = '');
 
 	current <- arr.dens.ob[[1]];
-	densplot(current, var, col[1], type = type);
+	densplot(current, var, col[1], type = type, w=w);
 	max.x.hold = list(max(current[[varx]]));
 	max.y.hold = list(max(current[[vart]]));
 	names.hold = as.character(current[["name"]]);
 	for(i in 2:length(arr.dens.ob)){
 		current <- arr.dens.ob[[i]];
-		addplot(current, var, col[i], type = type);
+		addplot(current, var, col[i], type = type, w=w);
 #		max.x.hold = c(max.x.hold, max(current[[varx]]));
 #		max.y.hold = c(max.y.hold, max(current[[vart]]));
 		names.hold = c(names.hold, as.character(current[["name"]]));
@@ -823,6 +874,7 @@ multiplot <- function(dens.oblist, var, col = grDevices::heat.colors(length(dens
 #' @param var A character string that matches one of the layer names in the source raster object.
 #' @param col A color declaration. Default is a random color.
 #' @param type A character string of value either ".kde" for a Kernel Density Estimator curve, or ".gauss" for a Gaussian (normal) curve. All other values will result in errors.
+#' @param w TRUE or FALSE to show weighted probability functions
 #' @export
 #' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
@@ -836,11 +888,22 @@ multiplot <- function(dens.oblist, var, col = grDevices::heat.colors(length(dens
 #' #and <- and_fun(dens.list.raw);
 #' #addplot(and, names(climondbioclim[[1]]), col ='black');
 
-addplot <- function(dens.ob, var, col = sample(grDevices::colours()), type = ".kde") {
+addplot <- function(dens.ob, var, col = sample(grDevices::colours()), type = ".kde", w=FALSE) {
 	varx <- paste(var, "x", sep = ".");
+	varw <- paste(var, "w", sep = ".");
+	
 	tempvarlist <- c("bio1", "bio2", "bio3", "bio4", "bio5", "bio6", "bio7", "bio8", "bio9", "bio10", "bio11", "MAT", "MaximumT", "MinimumT");
 	if(var %in% tempvarlist){by = 10}else{by = 1};
 	var <- paste(var, type, sep = "");
+	if(w ==TRUE){
+	  to <- max(dens.ob[[varx]]);
+	  from <- min(dens.ob[[varx]]);
+	  num = length(dens.ob[[varx]]);
+	  lby = (to - from)/num;
+	  dens.ob[[var]] = dens.ob[[var]]^dens.ob[[varw]];
+	  den.area <- sum(dens.ob[[var]])*lby;
+	  dens.ob[[var]] = dens.ob[[var]]/den.area
+	}
 	graphics::points(dens.ob[[varx]]/by, dens.ob[[var]], type = "l", lwd = 3, col = col);
 };
 
