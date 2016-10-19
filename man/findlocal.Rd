@@ -5,7 +5,7 @@
 \title{Search for likely occurrences}
 \usage{
 findlocal(ext_ob, clim, bg = 0, type, maxiter = 50, searchrep = 3,
-  manip = "condi", alpha = 0.05, factor = 4)
+  manip = "condi", alpha = 0.05, factor = 4, n = 1024, w = FALSE)
 }
 \arguments{
 \item{ext_ob}{A data.frame of climate values (i.e., extracted from the climate raster object). Will be passed to multiv_likelihood().}
@@ -30,6 +30,10 @@ for removing climatic outliers in the sample(s).}
 
 \item{factor}{To be passed to the extraction() function for post search 
 thinning of data to limit overfitting. Set to 1 to ignore.}
+
+\item{n}{An integer value of the number of bins to use for Kernel Density Estimation}
+
+\item{w}{To weight the log-likelihoods by coefficient of variation or not.}
 }
 \description{
 This is a Markov Chain like search procedure to construct a set of likely occurrences 

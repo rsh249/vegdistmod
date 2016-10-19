@@ -4,7 +4,8 @@
 \alias{addplot}
 \title{Adds a single PDF plot to already open plot}
 \usage{
-addplot(dens.ob, var, col = sample(grDevices::colours()), type = ".kde")
+addplot(dens.ob, var, col = sample(grDevices::colours()), type = ".kde",
+  w = FALSE)
 }
 \arguments{
 \item{dens.ob}{An object derived from the vegdistmod::densform() or vegdistmod::and_fun() or vegdistmod::or_fun() functions.}
@@ -14,6 +15,8 @@ addplot(dens.ob, var, col = sample(grDevices::colours()), type = ".kde")
 \item{col}{A color declaration. Default is a random color.}
 
 \item{type}{A character string of value either ".kde" for a Kernel Density Estimator curve, or ".gauss" for a Gaussian (normal) curve. All other values will result in errors.}
+
+\item{w}{TRUE or FALSE to show weighted probability functions}
 }
 \description{
 Using an object from the vegdistmod::densform() or vegdistmod::and_fun() or vegdistmod::or_fun() functions, add a PDF over the existing plot. Useful for visualizing joint likelihood curves.

@@ -4,7 +4,8 @@
 \alias{densplot}
 \title{Plot PDF curve of given type and variable for single density object.}
 \usage{
-densplot(dens.ob, var, col = sample(grDevices::colours()), type = ".kde")
+densplot(dens.ob, var, col = sample(grDevices::colours()), type = ".kde",
+  w = FALSE)
 }
 \arguments{
 \item{dens.ob}{An object derived from the vegdistmod::dens_ob() function.}
@@ -14,6 +15,8 @@ densplot(dens.ob, var, col = sample(grDevices::colours()), type = ".kde")
 \item{col}{A color declaration. Default is a random color.}
 
 \item{type}{A character string of value either ".kde" for a Kernel Density Estimator curve, or ".gauss" for a Gaussian (normal) curve. All other values will result in errors.}
+
+\item{w}{TRUE or FALSE to show weighted probability functions}
 }
 \description{
 Using an object from the densform() function. Plot a single PDF curve in a new plot window.

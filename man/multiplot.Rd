@@ -5,7 +5,7 @@
 \title{Plot PDF curves of given type and variable for density list object}
 \usage{
 multiplot(dens.oblist, var, col = grDevices::heat.colors(length(dens.oblist)),
-  type = ".kde")
+  type = ".kde", l.pos = "topleft", l.cex = 0.8, w = FALSE)
 }
 \arguments{
 \item{dens.oblist}{An object derived from the vegdistmod::dens_obj() function.}
@@ -15,6 +15,12 @@ multiplot(dens.oblist, var, col = grDevices::heat.colors(length(dens.oblist)),
 \item{col}{A color vector of the same length as the dens.oblist object. Default is 'grDevices::heat.colors(length(dens.oblist))'.}
 
 \item{type}{A character string of value either ".kde" for a Kernel Density Estimator curve, or ".gauss" for a Gaussian (normal) curve. All other values will result in errors.}
+
+\item{l.pos}{Legend position. Recommend 'topleft' or 'topright'. Default is 'topleft'.}
+
+\item{l.cex}{cex setting for legend. Default is 0.8.}
+
+\item{w}{TRUE or FALSE to show weighted probability functions}
 }
 \description{
 Using an object from the vegdistmod::dens_obj() function. Plot a series PDF curves in a new plot window.

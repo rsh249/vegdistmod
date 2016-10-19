@@ -4,7 +4,8 @@
 \alias{filter_dist}
 \title{Filter a set of occurrence data based on the multivariate likelihoods.}
 \usage{
-filter_dist(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = ".kde")
+filter_dist(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = ".kde",
+  w = FALSE)
 }
 \arguments{
 \item{ext_ob}{A data.frame of climate values (i.e., extracted from the climate raster object). Will be passed to multiv_likelihood().}
@@ -18,6 +19,8 @@ filter_dist(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = ".kde")
 \item{alpha}{The value of alpha you would like to use for confidence interval construction. Default to 0.01 for a 99 percen confidence interval.}
 
 \item{type}{Designate either ".gauss" or ".kde".}
+
+\item{w}{To weight log-likelihoods by coefficient of variation or not.}
 }
 \description{
 Given a table including localities and climate data,and a value of alpha this 

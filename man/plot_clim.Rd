@@ -4,7 +4,8 @@
 \alias{plot_clim}
 \title{Plot lat/long points on a raster map.}
 \usage{
-plot_clim(ext_ob, clim, boundaries = "", file = "", col = "red")
+plot_clim(ext_ob, clim, boundaries = "", file = "", col = "red",
+  legend = TRUE, l.cex = 0.9)
 }
 \arguments{
 \item{ext_ob}{A data.frame of climate values (i.e., extracted from the climate raster object). MUST include columns named 'lon' and 'lat'.}
@@ -16,6 +17,10 @@ plot_clim(ext_ob, clim, boundaries = "", file = "", col = "red")
 \item{file}{If a file path is set this function will try to write the plot as a png to that path}
 
 \item{col}{Color of points to plot.}
+
+\item{legend}{TRUE or FALSE to plot the legend on the map.}
+
+\item{l.cex}{cex parameter to pass to legend function}
 }
 \description{
 Plotting with fancy colors. Canned so you don't have to think too hard about it.

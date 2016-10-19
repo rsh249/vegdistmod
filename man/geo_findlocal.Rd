@@ -6,7 +6,7 @@
 \usage{
 geo_findlocal(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 1,
   manip = "condi", alpha = 0.05, divisions = 10, factor = 4,
-  parallel = FALSE, nclus = 2)
+  parallel = FALSE, nclus = 2, w = FALSE)
 }
 \arguments{
 \item{ext_ob}{A data.frame of climate values (i.e., extracted from the climate raster object). Will be passed to multiv_likelihood().}
@@ -43,6 +43,8 @@ be returned if too few occurrences are selected.}
 
 \item{nclus}{If parallel is TRUE then set the maximum number of cores 
 to use in the compute cluster. Default is 2.}
+
+\item{w}{To weight log-likelihoods by the coefficient of variation or not.}
 }
 \description{
 This wraps the search() function within a set of commands that randomly splits the distribution 

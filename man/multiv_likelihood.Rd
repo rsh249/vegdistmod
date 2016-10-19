@@ -4,7 +4,7 @@
 \alias{multiv_likelihood}
 \title{The multivariate likelihood (log-likelihood) for a given set of PDF climate functions and localities.}
 \usage{
-multiv_likelihood(x, clim, dens, type)
+multiv_likelihood(x, clim, dens, type, w = FALSE)
 }
 \arguments{
 \item{x}{A data.frame of climate values (i.e., extracted from the climate raster object)}
@@ -14,6 +14,8 @@ multiv_likelihood(x, clim, dens, type)
 \item{dens}{A density object from vegdistmod::densform(), vegdistmod::and_fun(), or vegdistmod::or_fun();}
 
 \item{type}{Designate either ".gauss" or ".kde".}
+
+\item{w}{To weight or not to weight by coefficient of variation.}
 }
 \description{
 Returns a log-likelihood calculated from the climate data at one 

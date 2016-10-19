@@ -4,10 +4,12 @@
 \alias{and_fun}
 \title{P(A | B) = P(A) * P(B)}
 \usage{
-and_fun(dens.oblist)
+and_fun(dens.oblist, w = FALSE)
 }
 \arguments{
 \item{dens.oblist}{An object derived from the vegdistmod::dens_ob() function.}
+
+\item{w}{Weight importance of probability functions}
 }
 \description{
 Using an object from the vegdistmod::dens_obj() function. Create a single density object (i.e., like that produced by vegdistmod::densform()) where the probability curves correspond to the probability density function of ALL taxa/species from the original set occurring.

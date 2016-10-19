@@ -4,7 +4,7 @@
 \alias{near2}
 \title{Find nearby localities that are likely occurrences given environmental PDFs.}
 \usage{
-near2(ext_ob, clim, dens_ob, type, name = "NULL")
+near2(ext_ob, clim, dens_ob, type, name = "NULL", w = FALSE)
 }
 \arguments{
 \item{ext_ob}{A data.frame of climate values (i.e., extracted from the climate raster object). Will be passed to multiv_likelihood().}
@@ -16,6 +16,8 @@ near2(ext_ob, clim, dens_ob, type, name = "NULL")
 \item{type}{Designate either ".gauss" or ".kde".}
 
 \item{name}{Optional. Give taxon name.}
+
+\item{w}{To weight log-likelihoods by coefficient of variation or not.}
 }
 \description{
 Given an occurrence set, find nearby localities that have an equal 
