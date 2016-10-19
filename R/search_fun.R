@@ -1090,7 +1090,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
       foreach(i = 1:divisions,
               .combine = 'rbind',
               .packages = 'vegdistmod') %dopar% {
-                source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
+              #  source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
                 ##Try the "when()" function instead of while()
                 #when(nn <= divisions)
                 #while(i<divisions){
@@ -1503,7 +1503,7 @@ heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = F
               .combine = 'c'
       ) %dopar% {
         #Add to line above: .packages = 'vegdistmod'
-        source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
+        #source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
         m = multiv_likelihood(whole.ex[i,3:length(whole.ex[1,])], clim, dens, type = type, w=w);
         if(m[[1]] == 0 | m[[1]] == -Inf){m=NA;}
         return(m[[1]]);

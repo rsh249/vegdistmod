@@ -379,8 +379,8 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", bg=0, n = 1024, par
 	    foreach(i = 1:length(tax.list),
 	           
 	            .packages = 'vegdistmod') %dopar% {
-	              source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
-	              source('~/Desktop/cracle_testing/vegdistmod/R/cracle_build.R')
+	        #      source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
+	         #     source('~/Desktop/cracle_testing/vegdistmod/R/cracle_build.R')
 	              s.ex <- subset(ex, ex$tax == tax.list[[i]]);
 	              
 	              s.ex <- stats::na.omit(s.ex);
