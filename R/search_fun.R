@@ -201,7 +201,9 @@ multiv_likelihood <- function(x, clim, dens, type, w = FALSE) {
       search = x[, j]; 
       search = as.numeric(as.character(search));
       if (is.na(search[[z]])) {
-        return(0)
+      #  return(0)
+        p[j] = NA;
+        next;
       }
       #print(search[[z]])
       #print(from)
@@ -1482,11 +1484,7 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend
 #' @param w TRUE or FALSE should variable PDFs be weighted by relative niche breadth.
 #'
 #' @export
-#' @examples
-#' data(abies);
-#' ext.abies = extraction(abies, climondbioclim, schema='raw');
-#' plot_clim(ext.abies, climondbioclim[[5]]);
-#'
+#' 
 heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = FALSE){
   #whole = .get_bg(clim);
   whole.ex=extract(clim,extent(clim),cellnumbers=T,df=T) #climate values for climate raster
@@ -1499,17 +1497,24 @@ heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = F
     doSNOW::registerDoSNOW(cl);
     
     lvec <-
-      foreach(i = 1:length(whole.ex[,1]),
-              .combine = 'c'
-      ) %dopar% {
+      foreach(i = 1:ceiling(0.1*length(whole.ex[,1])),
+              .packages = 'vegdistmod'
+                    ) %dopar% {
         #Add to line above: .packages = 'vegdistmod'
         #source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
-        m = multiv_likelihood(whole.ex[i,3:length(whole.ex[1,])], clim, dens, type = type, w=w);
-        if(m[[1]] == 0 | m[[1]] == -Inf){m=NA;}
-        return(m[[1]]);
+        m = multiv_likelihood(whole.ex[(((i-1)*10)+1):(i*10),3:length(whole.ex[1,])], clim, dens, type = type, w=w);
+        m = (m[[1]]);
+        if(length(m) < 10){
+          m = rep(-Inf, 10)
+        }
+        for(n in 1:length(m)){
+                if(m[[n]] == 0 | m[[n]] == -Inf){m[[n]]=NA;}
+        }
+        return(as.numeric(m));
       }
     parallel::stopCluster(cl)
-    
+    lvec = unlist(lvec);
+    #return(lvec)
   } else {
     lvec = vector();
     for(i in 1:length(whole.ex[,1])){
