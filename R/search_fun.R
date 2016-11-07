@@ -224,7 +224,7 @@ multiv_likelihood <- function(x, clim, dens, type, w = FALSE) {
       lr = dens.ob1[[varlook]][bin]; 
       p[j] = log(lr*by)/weight[[j]]; 
     }
-    set[z] = sum(na.omit(p));
+    set[z] = sum(stats::na.omit(p));
   }
   #return(p)
   return(list(set, weight));
