@@ -26,9 +26,11 @@ plot_clim(ext_ob, clim, boundaries = "", file = "", col = "red",
 Plotting with fancy colors. Canned so you don't have to think too hard about it.
 }
 \examples{
+\dontrun{
 data(abies);
 ext.abies = extraction(abies, climondbioclim, schema='raw');
 plot_clim(ext.abies, climondbioclim[[5]]);
+}
 
 }
 

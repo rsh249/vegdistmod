@@ -4,7 +4,8 @@
 \alias{extraction}
 \title{Extract environmental data}
 \usage{
-extraction(data, clim, schema = "raw", factor = 0)
+extraction(data, clim, schema = "raw", factor = 0, rm.outlier = FALSE,
+  alpha = 0.01, nmin = 5)
 }
 \arguments{
 \item{data}{Distribution data. A data.frame that should include (at least) a column for species/taxon name named 'tax', latitude named 'lat', longitude named 'lon', and an optional column 'sub' if it is necessary to define subgroups (i.e., if 'tax' corresponds to genera but sampling needs to know which records belong to which species. See param 'schema' below).}
@@ -14,6 +15,12 @@ extraction(data, clim, schema = "raw", factor = 0)
 \item{schema}{A string of value "raw", "flat", or "species" to define the sampling protocol. In "raw", all records are counted (including duplicate exact localities). In "flat", all unique localities will be counted where a unique locality is defined as a raster grid cell. Under the "flat" sampling strategy two records in the same raster grid cell will be counted as one. The option "species", only applies when taxa are identified as genera and species identities are represented in the "sub" column of the data object. In "species", each unique locality is counted for each species within the group (taxon). This weighs more diverse localities higher. Default is "raw".}
 
 \item{factor}{An integer value for the methods "flat" and "spec" to increase the systematic sampling grid size to courser resolutions than the given climate grid. The value of factor corresponds to the number of rows and columns to aggregate into each courser grid cell. Default is 0 which will not be processed.}
+
+\item{rm.outlier}{TRUE or FALSE. Indicate whether to remove points that are climatic outliers for at least one variable given a normal 95 percent confidence interval.}
+
+\item{alpha}{Confidence level (i.e., 0.05) for clipping out outlier records.}
+
+\item{nmin}{Minimum number of records allowed. Taxa or groups with fewer records will not be returned.}
 }
 \description{
 This function is a feature-added wrapper for raster::extract();

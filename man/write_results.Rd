@@ -7,20 +7,20 @@
 write_results(optima, siteval = "", clim, method, filename, append = F)
 }
 \arguments{
-\item{optima}{A results object from vegdistmod::get_optim() or vegdistmod::cracboot().}
+\item{optima}{A results object from vegdistmod::get_optim()}
 
 \item{siteval}{A vector of site values for envirnomental parameters (See example for generating).}
 
 \item{clim}{The original raster object used in the vegdistmod::extraction() step.}
 
-\item{method}{The result summary method. Supported methods are "conintkde", "conintgauss", "origg", "origk", "dirconint" for the "get_optim()" type objects and "conintkde" and "conintgauss" for the "cracboot()" type objects.}
+\item{method}{The result summary method. Supported methods are "conintkde", "conintgauss", "origg", "origk", "dirconint" for the "get_optim()" type objects.}
 
 \item{filename}{Path to desired file.}
 
 \item{append}{Should this be appended to an existing file. Default is FALSE.}
 }
 \description{
-Write results from a results object from either vegdistmod::get_optim() or vegdistmod::cracboot() to a tab delimited table in a text file. This is done one 'method' at a time. Supported methods are "conintkde", "conintgauss", "origg", "origk", "dirconint" for the "get_optim()" type objects and "conintkde" and "conintgauss" for the "cracboot()" type objects.
+Write results from a results object from either vegdistmod::get_optim() to a tab delimited table in a text file. This is done one 'method' at a time. Supported methods are "conintkde", "conintgauss", "origg", "origk", "dirconint" for the "get_optim()" type objects.
 }
 \examples{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");
@@ -30,9 +30,7 @@ extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
 dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024);
 and <- and_fun(dens.list.raw);
 optima <- get_optim(and);
-boot.raw <- cracboot(dens.list.raw, clim = climondbioclim, n = 100); 
 #Compare to optima.
 write_results(optima, clim = climondbioclim, method = 'conintkde', file = 'raw')
-write_results(boot.raw, clim = climondbioclim, method = 'conintkde', file = 'boot.raw')
 }
 

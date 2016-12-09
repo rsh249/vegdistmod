@@ -24,4 +24,18 @@ heat_up(clim, dens, parallel = FALSE, nclus = 4, type = ".kde",
 This is not an ENM. What it does do is provides a geographic representation of the likelihood functions
  that are used in CRACLE and the spatial defragmentation functions.
 }
+\examples{
+\dontrun{
+data(abies);
+ext.abies = extraction(abies, climondbioclim, schema='raw');
+den <- densform(ext.abies, cl)
+h = heat_up(cl, den)
+plot(h)
+}
+}
+\author{
+Robert Harbert, \email{rharbert@amnh.org}
+
+Avery Hill
+}
 

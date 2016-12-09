@@ -7,13 +7,13 @@
 rad_bg(coords, clim, radius, n)
 }
 \arguments{
-\item{coords.}{A two-column matrix or data.frame of coordinates with the first column being longitude and the second being latitude.}
+\item{coords}{A two-column matrix or data.frame of coordinates with the first column being longitude and the second being latitude.}
 
-\item{clim.}{A raster object to extract background data from.}
+\item{clim}{A raster object to extract background data from.}
 
-\item{radius.}{A distance in km to define a radius around each occurrence to sample from.}
+\item{radius}{A distance in km to define a radius around each occurrence to sample from.}
 
-\item{n.}{Number of background points to generate per occurrence point. Note that background points will be thinned so that only one occurs per grid cell, so the total number returned will be less than n * length(coords[,1]).}
+\item{n}{Number of background points to generate per occurrence point. Note that background points will be thinned so that only one occurs per grid cell, so the total number returned will be less than n * length(coords[,1]).}
 }
 \description{
 This function generates a sample of background coordinates that are within n kilometers of one occurrene record up to x background points per record.
@@ -21,9 +21,5 @@ This function generates a sample of background coordinates that are within n kil
 \examples{
 data(distr);
 bg.ext <- rad_bg(distr[,4:3], climondbioclim, radius=100, n = 100)
-n' the number of times to sample around each point.
-radius' the distance in kilometers around each point to sample. 
-coords' a two column matrix or data frame with longitude and latitude (in that order..)
-clim' a raster object
 }
 

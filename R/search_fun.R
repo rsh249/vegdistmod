@@ -1,6 +1,6 @@
 #' @import classInt
 #' @import grDevices
-#' @import doSNOW
+#' @import doParallel
 NULL
 
 # A function for retrieving data from cloud.diversityoflife.org
@@ -16,7 +16,7 @@ NULL
 
 
 .get_gbif_cloud <- function(taxon) {
-  curl_string = "curl --user rsh249:Roanoke1999 http://cloud.diversityoflife.org/cgi-div/tmp_mat_get.pl?taxon="
+  curl_string = "curl --user rsh249:7420bklyn http://cloud.diversityoflife.org/cgi-div/tmp_mat_get.pl?taxon="
   curl_string = paste(curl_string, taxon, sep = '')
   s = system(curl_string, intern = TRUE)
   if(length(s) < 2){return();}
@@ -40,7 +40,7 @@ NULL
   #assumes square (in degrees) cells
   #returns lat/lon coordinates from the center of each cell
   d <- dim(clim)
-  e <- extent(clim)
+  e <- raster::extent(clim)
   uplon <- e[1]
   uplat <- e[4]
   nrow = d[1]
@@ -49,7 +49,7 @@ NULL
   yres = (e[4] - e[3])/nrow;
   
 
-  r <- res(clim)
+  r <- raster::res(clim)
   m <- matrix(nrow = length(cells), ncol = 4);
   for(i in 1:length(cells)){
    # print(cells[[i]])
@@ -77,8 +77,6 @@ NULL
   n = 1000
 
   if(class(clim) == 'list'){
-    #dim <- dim(clim[[1]]);
-    #n = dim[1]*dim[2];
     m = list();
     for(a in 1:length(clim)){
       r = clim[[a]];
@@ -110,17 +108,8 @@ NULL
     return(m)
     
     
-    #   dim <- dim(clim);
-    #  n = dim[1]*dim[2];
-#    bg <- randomPoints(r, n)
-#    bg <- cbind(rep('0000', length(bg[,1])), rep('bg', length(bg[,1])), bg[,2], bg[,1])
-#    colnames(bg) <- c('ind_id', 'tax', 'lat', 'lon');
-#    bg = as.data.frame(bg);
-#   bg$lon <- as.numeric(as.character(bg$lon));
-#    bg$lat <- as.numeric(as.character(bg$lat));
-#    ret = bg;
+ 
   }
-  #return(ret);
 }
 
 #.get_bg = compiler::cmpfun(.get_bg);
@@ -139,7 +128,7 @@ NULL
 #' @export
 #' @examples
 #' data(abies);
-#' ext.abies = extraction(abies, climondbioclim, schema='raw');
+#' ext.abies = extraction(abies, climondbioclim, schema='raw', rm.outlier=FALSE);
 #' dens.abies = densform(ext.abies, climondbioclim);
 #' for(i in 1:length(ext.abies[,1])){
 #'   m = multiv_likelihood(ext.abies[i,6:length(ext.abies[1,])],
@@ -152,7 +141,7 @@ multiv_likelihood <- function(x, clim, dens, type, w = FALSE) {
   dens.ob1 <- dens;
   varlist <- names(dens.ob1);
   varlist <- (varlist[1:((length(varlist) - 1) / 6)]);
-  varlist <- sub(".kde", "", varlist);
+  varlist <- base::sub(".kde", "", varlist);
   p <- vector()
   weight = vector();
   x <- as.data.frame(x)
@@ -202,13 +191,14 @@ multiv_likelihood <- function(x, clim, dens, type, w = FALSE) {
       search = as.numeric(as.character(search));
       if (is.na(search[[z]])) {
       #  return(0)
-        p[j] = NA;
+      #  print("IS NA");
+        p[j] = 0;
         next;
       }
       #print(search[[z]])
       #print(from)
       #print(by)
-      bin = round((search[[z]] - from) / by) + 1
+      bin = floor((search[[z]] - from) / by) + 1
       if (by == 0) {
         #Suggests that this is an invariant variable in this dataset
         bin = 1
@@ -221,12 +211,20 @@ multiv_likelihood <- function(x, clim, dens, type, w = FALSE) {
       if(bin < 1) {
         bin = 1;
       }
-      lr = dens.ob1[[varlook]][bin]; 
-      p[j] = log(lr*by)/weight[[j]]; 
+      lr = (dens.ob1[[varlook]][bin]); 
+      if(is.na(lr)){
+        lr = 0;
+      }
+      p[j] = (lr*by)/weight[[j]]; 
+      if(is.na(p[j])){p[j] = 0;}
+     # p[j] = (lr*by)/weight[[j]];
+      #if(p[j] == 0){ return(list(p[[j]], j, z))}
     }
-    set[z] = sum(stats::na.omit(p));
+   # set[z] = prod(stats::na.omit(p));
+    set[z] = sum((log(p)));
+  #  if(set[z] == 0){return(list(z, search, p))}
+    
   }
-  #return(p)
   return(list(set, weight));
 }
 
@@ -236,7 +234,7 @@ multiv_likelihood <- function(x, clim, dens, type, w = FALSE) {
 #' 
 #' Given a table including localities and climate data,and a value of alpha this 
 #' function will return the same table with statistical outliers
-#' removed according to the alpha-confidence interval of the likelihoods.
+#' removed according to the alpha-confidence interval of the multivariate likelihoods.
 #' 
 #' @param ext_ob A data.frame of climate values (i.e., extracted from the climate raster object). Will be passed to multiv_likelihood().
 #' @param clim A raster object of climate data (matching x)
@@ -315,6 +313,8 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
 #HIdden function to find the distance between two points
 .distance <- function(lon1, lat1, lon2, lat2) {
   R = 6737
+  pi = 3.14159265359;
+  
   lon1 = as.numeric(as.character(lon1));
   lon2 = as.numeric(as.character(lon2));
   lat1 = as.numeric(as.character(lat1));
@@ -348,6 +348,8 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
 #Hidden function to get coordinates given a direction and bearing from start point.
 .findcoord <- function(lon, lat, dist, brng) {
   R = 6737
+  pi = 3.14159265359;
+  
   lon = as.numeric(as.character(lon));
   lat = as.numeric(as.character(lat));
   dist = as.numeric(as.character(dist));
@@ -475,7 +477,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
       newer = as.list(rep(NA, length(ras)));
       #print(newer);
       for (a in 1:length(cells)) {
-        extr <- extract(ras[[a]], cbind(new[1], new[2]), cellnumbers = T); #print("JUST EXTRACTED");print(extr);
+        extr <- raster::extract(ras[[a]], cbind(new[1], new[2]), cellnumbers = T); #print("JUST EXTRACTED");print(extr);
         if(anyNA(extr) == FALSE){
           newextr[[a]] <- extr;
         } else {
@@ -559,7 +561,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
     } else {
       new = .findcoord(cells[it, 'lon'], cells[it, 'lat'], dist =
                          dist, brng = dir)
-      newextr <- extract(ras, cbind(new[1], new[2]), cellnumbers = T)
+      newextr <- raster::extract(ras, cbind(new[1], new[2]), cellnumbers = T)
       newer <- cbind("0000", name, new[2], new[1], newextr)
       newer <- as.data.frame(newer)
       for (i in 3:length(newer[1, ])) {
@@ -663,7 +665,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
 
 #'
 #' @export
-#' @examples
+#' @examples \dontrun{
 #' 
 #' data(abies);
 #' ext.abies = extraction(abies, climondbioclim, schema='raw');
@@ -673,6 +675,8 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
 #'  type = '.kde', 
 #'  maxiter = 5, searchrep = 1, 
 #'  manip = 'condi');
+#'  }
+
 
 findlocal <-
   function(ext_ob,
@@ -746,7 +750,7 @@ findlocal <-
         currdist[[a]][,1] = as.numeric(as.character(currdist[[a]][,1]));
         currdist[[a]] <- stats::na.omit(currdist[[a]])
         dens[[a]] <-
-          densform(currdist[[a]], r[[a]], bg = bg[[a]], manip = manip, n = n)
+          densform(currdist[[a]], r[[a]], manip = manip, n = n)
         currdist[[a]] <- stats::na.omit(currdist[[a]])
         for (i in 1:length(currdist[[a]][, 1])) {
           vporig[i, a] <-
@@ -760,7 +764,7 @@ findlocal <-
       
     } else {
       currdist[,1] <- as.numeric(as.character(currdist[,1])); 
-      dens <- densform(currdist, r, bg = bg, manip = manip, n=n)
+      dens <- densform(currdist, r, manip = manip, n=n)
       vporig <- vector()
       currdist <- stats::na.omit(currdist)
       for (i in 1:length(currdist[, 1])) {
@@ -782,10 +786,10 @@ findlocal <-
       origmin <-
         plast + stats::qnorm(alpha / 2) * (stats::sd(vporig) / sqrt(length(vporig)))
     }
-    print(alpha)
+   # print(alpha)
     
     porig = plast
-    print(origmin)
+   # print(origmin)
     last <- currdist
     f = filter_dist(currdist, dens, r, min = origmin, type = type)
     
@@ -797,7 +801,7 @@ findlocal <-
       for (a in 1:length(ext)) {
         currdist[[a]] <- stats::na.omit(currdist[[a]])
         dens[[a]] <-
-          densform(currdist[[a]], r[[a]], bg = bg[[a]], manip = manip, n = n)
+          densform(currdist[[a]], r[[a]],manip = manip, n = n)
         currdist[[a]] <- stats::na.omit(currdist[[a]])
         for (i in 1:length(currdist[[a]][, 1])) {
           vporig[i, a] <-
@@ -815,7 +819,7 @@ findlocal <-
         
       }
     } else {
-      dens <- densform(currdist, r, bg = bg, manip = manip)
+      dens <- densform(currdist, r, manip = manip)
       vporig <- vector()
       currdist <- stats::na.omit(currdist)
       for (i in 1:length(currdist[, 1])) {
@@ -832,8 +836,8 @@ findlocal <-
     porig = plast
     origmin <- min(vporig)
     
-    print(origmin)
-    cat("porig is: ", porig, '\n')
+   # print(origmin)
+  #  cat("porig is: ", porig, '\n')
     
     last <- currdist
     best = last
@@ -876,7 +880,7 @@ findlocal <-
         sim <- subset(currdist[[1]], currdist[[1]][, 1] == "0000")
         if(length(sim[,1])>5){
         ext.sim <-
-          extraction(sim[, 1:(which(colnames(sim) == 'cells') - 1)], clim[[1]], schema = 'flat', factor = factor)
+          extraction(sim[, 1:(which(colnames(sim) == 'cells') - 1)], clim[[1]], schema = 'flat', factor = factor, rm.outlier=FALSE)
         
         sim = ext.sim
         
@@ -912,7 +916,7 @@ findlocal <-
           
           sub <- subset(currdist[[a]], currdist[[a]][, 1] != "0000")
           
-          dens[[a]] = densform(currdist[[a]], r[[a]], bg = bg[[a]], manip = manip)
+          dens[[a]] = densform(currdist[[a]], r[[a]], manip = manip)
           
           for (i in 1:length(currdist[[a]][, 1])) {
             vporig[i, a] <-
@@ -932,10 +936,10 @@ findlocal <-
         sim <- subset(currdist, currdist[, 1] == "0000")
         
         if (length(sim[, 1]) > 5) {
-          print("spThin");
+         # print("spThin");
           ext.sim <-
             extraction(sim[, 1:(which(colnames(sim) == 'cells') - 1)], clim, schema =
-                         'flat', factor = factor)
+                         'flat', factor = factor, rm.outlier =FALSE)
           
           sim <- ext.sim
           
@@ -951,7 +955,7 @@ findlocal <-
         currdist <- rbind(sub, sim)
         
         
-        dens = densform(currdist, r, bg = bg, manip = manip)
+        dens = densform(currdist, r,  manip = manip)
         
         for (i in 1:length(currdist[, 1])) {
           vporig[i] <-
@@ -1049,14 +1053,18 @@ findlocal <-
 #' @param w To weight log-likelihoods by the coefficient of variation or not.
 #' 
 #' @export
-#' @examples
-#' data(abies);
-#' ext.abies = extraction(abies, climondbioclim, schema='flat', factor = 4);
-#' dens.abies = densform(ext.abies, climondbioclim);
-#' sea <- geo_findlocal(ext.abies, climondbioclim, 
+#' @examples \dontrun{
+#' data(quercus_alba);
+#' head(que.al)
+#' ext.qalb = extraction(que.al, climondbioclim, 
+#'  schema='flat', factor =4,  
+#'  rm.outlier=TRUE, alpha=0.01);
+#' sea <- geo_findlocal(ext.qalb, climondbioclim, 
 #'  type = '.kde', maxiter = 5, 
 #'  searchrep = 1, manip = 'condi', 
 #'  divisions = 2)
+#'  plot_clim(sea, climondbioclim[[1]])
+#'  }
 
  
 
@@ -1068,14 +1076,14 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
       bg.hold = .get_bg(clim[[1]]);
       bg = list();
       for(i in 1:length(clim)){
-        bg[[i]]= extraction(bg.hold, clim[[i]], schema='raw');
+        bg[[i]]= extraction(bg.hold, clim[[i]], schema='raw', rm.outlier = FALSE);
       }
       
       
     } else {
       bg.e = .get_bg(clim)
       #bg.e = get_bg(clim);
-      bg = extraction(bg.e, clim, schema='raw');
+      bg = extraction(bg.e, clim, schema='raw', rm.outlier=FALSE);
     }
     
   }
@@ -1089,7 +1097,7 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
     doSNOW::registerDoSNOW(cl);
     
     search <-
-      foreach(i = 1:divisions,
+      foreach::foreach(i = 1:divisions,
               .combine = 'rbind',
               .packages = 'vegdistmod') %dopar% {
               #  source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
@@ -1397,10 +1405,11 @@ geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 
 #' @param l.cex cex parameter to pass to legend function
 #'
 #' @export
-#' @examples
+#' @examples \dontrun{
 #' data(abies);
 #' ext.abies = extraction(abies, climondbioclim, schema='raw');
 #' plot_clim(ext.abies, climondbioclim[[5]]);
+#' }
 #' 
 plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend = TRUE, l.cex = 0.9) {
   #require(RColorBrewer);
@@ -1408,9 +1417,9 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend
   poi = ext_ob;
   usa <- boundaries;
   nclr = 8;
-  breaks <- round((maxValue(clim) - minValue(clim))/nclr, digits = 3)
+  breaks <- round((raster::maxValue(clim) - raster::minValue(clim))/nclr, digits = 3)
   plotclr = ( grDevices::topo.colors(1000));
-  plotvar <- seq(minValue(clim), maxValue(clim), by = breaks);
+  plotvar <- seq(raster::minValue(clim), raster::maxValue(clim), by = breaks);
   class <- classInt::classIntervals(plotvar, nclr, style = 'fixed', fixedBreaks = plotvar, 1)
   colcode <- classInt::findColours(class, plotclr);
 
@@ -1431,12 +1440,12 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend
     #col = rev(rainbow(1000, start = 0, end = 0.7))
     col = (grDevices::topo.colors(1000)),
     
-    breaks = seq(minValue(clim), maxValue(clim), length.out = 1000),
+    breaks = seq(raster::minValue(clim), raster::maxValue(clim), length.out = 1000),
     legend = F,
     # legend.width = 1,
     axis.args = list(
-      at = seq(minValue(clim), maxValue(clim), by = 100),
-      labels = round(seq(minValue(clim), maxValue(clim), by = 100), 0),
+      at = seq(raster::minValue(clim), raster::maxValue(clim), by = 100),
+      labels = round(seq(raster::minValue(clim), raster::maxValue(clim), by = 100), 0),
       cex.axis = 0.9
     )
   )
@@ -1482,12 +1491,20 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend
 #' @param nclus If parallel is TRUE, how many cores should be allocated.
 #' @param type Which PDF should be used, .gauss or .kde
 #' @param w TRUE or FALSE should variable PDFs be weighted by relative niche breadth.
+#' @author Robert Harbert, \email{rharbert@amnh.org}
+#' @author Avery Hill
 #'
 #' @export
-#' 
+#' @examples \dontrun{
+#' data(abies);
+#' ext.abies = extraction(abies, climondbioclim, schema='raw');
+#' den <- densform(ext.abies, cl)
+#' h = heat_up(cl, den)
+#' plot(h)
+#' }
 heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = FALSE){
   #whole = .get_bg(clim);
-  whole.ex=extract(clim,extent(clim),cellnumbers=T,df=T) #climate values for climate raster
+  whole.ex=raster::extract(clim,raster::extent(clim),cellnumbers=T,df=T) #climate values for climate raster
   
   #whole.ex = extraction(whole, clim, schema='raw')
   #cells = which(colnames(whole.ex)=='cells')+1;
@@ -1497,11 +1514,11 @@ heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = F
     doSNOW::registerDoSNOW(cl);
     
     lvec <-
-      foreach(i = 1:ceiling(0.1*length(whole.ex[,1])),
+      foreach::foreach(i = 1:ceiling(0.1*length(whole.ex[,1])),
               .packages = 'vegdistmod'
                     ) %dopar% {
         #Add to line above: .packages = 'vegdistmod'
-        #source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
+       # source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
         m = multiv_likelihood(whole.ex[(((i-1)*10)+1):(i*10),3:length(whole.ex[1,])], clim, dens, type = type, w=w);
         m = (m[[1]]);
         if(length(m) < 10){
@@ -1529,11 +1546,14 @@ heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = F
   # get multiv_likelihood for each cell
   
   # Write vector of likelihoods to raster of same extent:
-  r=raster(nrows=nrow(clim),ncol=ncol(clim),crs="+proj=longlat +datum=WGS84",ext=extent(clim)) #make raster of same extent and dimensions as original climate raster
-  r=setValues(r,values=lvec) #set the values as the new probability values
+  r=raster::raster(nrows=nrow(clim),ncol=ncol(clim),crs="+proj=longlat +datum=WGS84",ext=raster::extent(clim)) #make raster of same extent and dimensions as original climate raster
+  r=raster::setValues(r,values=lvec) #set the values as the new probability values
   
   
   return(r)
   
   
 }
+
+#heat_up <- compiler::cmpfun(heat_up);
+

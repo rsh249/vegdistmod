@@ -45,6 +45,7 @@ The process is repeated a given number of times (think Markov Chain again), to h
 reach a near optimal set of simulated occurrences.
 }
 \examples{
+\dontrun{
 
 data(abies);
 ext.abies = extraction(abies, climondbioclim, schema='raw');
@@ -54,5 +55,6 @@ sea <- findlocal(
  type = '.kde', 
  maxiter = 5, searchrep = 1, 
  manip = 'condi');
+ }
 }
 

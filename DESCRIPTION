@@ -7,13 +7,11 @@ Author: Robert S. Harbert
 Maintainer: R Harbert <rharbert@amnh.org>
 Depends:
     R(>= 3.1.0),
-    raster,
     dismo, 
-    classInt,
-    doSNOW
-Description: This is an R package with functions that perform the maximum
-    likelihood estimation of climate given local (plant) species coexistence under
-    the CRACLE method as described by Harbert and Nixon, 2015 and related methods 	    including the Mutual Climate Range technique of Thompson et al., 2012. Related spatial modeling methods are available here as well.
+    classInt
+Imports:
+    doParallel, foreach, iterators, raster, doSNOW
+Description: This is an R package with functions that perform the maximum likelihood estimation of climate given local (plant) species coexistence under the CRACLE method as described by Harbert and Nixon, 2015 and related methods including the Mutual Climate Range technique of Thompson et al., 2012. Related spatial modeling methods are available here as well.
 License: GPL-2 | GPL-3
 Encoding: UTF-8
 LazyData: true

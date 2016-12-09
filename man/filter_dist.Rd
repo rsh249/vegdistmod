@@ -25,7 +25,7 @@ filter_dist(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = ".kde",
 \description{
 Given a table including localities and climate data,and a value of alpha this 
 function will return the same table with statistical outliers
-removed according to the alpha-confidence interval of the likelihoods.
+removed according to the alpha-confidence interval of the multivariate likelihoods.
 }
 \examples{
 

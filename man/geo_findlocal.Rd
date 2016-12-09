@@ -52,12 +52,17 @@ in to 4 quadrants 'n' number of times. For widespread, genetically diverse speci
 the effect of applying more locally relevant probability functions to the data.
 }
 \examples{
-data(abies);
-ext.abies = extraction(abies, climondbioclim, schema='flat', factor = 4);
-dens.abies = densform(ext.abies, climondbioclim);
-sea <- geo_findlocal(ext.abies, climondbioclim, 
+\dontrun{
+data(quercus_alba);
+head(que.al)
+ext.qalb = extraction(que.al, climondbioclim, 
+ schema='flat', factor =4,  
+ rm.outlier=TRUE, alpha=0.01);
+sea <- geo_findlocal(ext.qalb, climondbioclim, 
  type = '.kde', maxiter = 5, 
  searchrep = 1, manip = 'condi', 
  divisions = 2)
+ plot_clim(sea, climondbioclim[[1]])
+ }
 }
 

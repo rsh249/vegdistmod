@@ -4,23 +4,21 @@
 \alias{densform}
 \title{Generate standard probability density functions for each taxon/variable}
 \usage{
-densform(ex, clim, bg = 0, name = "", bw = "nrd0", kern = "gaussian",
-  manip = "reg", n = 1024, from = 0, to = 0, clip = 0, bg.rad = 25,
-  bg.n = 1000)
+densform(ex, clim, name = "", bw = "nrd0", kern = "gaussian",
+  manip = "condi", n = 1024, from = 0, to = 0, clip = 0, bg.n = 200)
 }
 \arguments{
 \item{ex}{An object derived from the extraction() function.}
 
 \item{clim}{A raster object (see raster::raster() and raster::stack() documentation for reading raster files into R).}
 
-\item{bg}{An object of background point climate data matching the 
-output of extraction(). Generate random backround points and then use extraction().}
-
 \item{name}{A character string describing (preferably) the group for which PDFs are being constructed (i.e., a species binomial). If none is supplied, a value of column "tax" is selected as a default.}
 
 \item{bw}{A bandwidth compatible with stats::density(). Options include "nrd", "nrd0", "ucv", "bcv", etc.. Default (and recommended) value is "nrd0".}
 
-\item{manip}{Character string of 'reg' for straight likelihood, 'condi' for conditional likelihood, or 'bayes' for a Bayesian style likelihood statement.}
+\item{kern}{Type of Kernel to smooth with. Recommend 'gaussian', 'optcosine', or 'epanechnikov'. See: stats::density for options.}
+
+\item{manip}{Character string of 'reg' for straight likelihood, 'condi' for conditional likelihood statement.}
 
 \item{n}{Number of equally spaced points at which the probability density is to be estimated. Defaults to 1024. A lower number increases speed but decreases resolution in the function. A higher number increases resolution at the cost of speed. Recommended values: 512, 1024, 2048, ....}
 
@@ -28,9 +26,7 @@ output of extraction(). Generate random backround points and then use extraction
 
 \item{to}{vector of ending points by variable}
 
-\item{clip}{A character string of value "range" or "95conf" or "99conf". Should the probability functions be clipped to either the empirical range or the 95% or 99% confidence interval? Confidence intervals (95% and 99%) are  approximated by calculating the mean +/- 2 sd and 3 sd respectivley.}
-
-\item{bg.rad}{If there is not a background matrix provided this feature defines the maximum radius around each point from which the background points will be selected. Default is 25km.}
+\item{clip}{A character string of value "range" or "95conf" or "99conf". Should the probability functions be clipped to either the empirical range or the 95 or 99 percent confidence interval?}
 
 \item{bg.n}{If there is not a background matrix, how many background points PER OCCURRENCE record should be sampled. Default is 1000.}
 }
@@ -43,7 +39,7 @@ data(distr);
 data(climondbioclim);
 extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
 extr.sub = subset(extr.raw, extr.raw$tax == extr.raw[5,'tax']);
-dens.sub = densform(extr.sub, clim = climondbioclim, bw = 'nrd0', n = 512);
+dens.sub = densform(extr.sub, clim = climondbioclim, bw = 'nrd0', n = 128);
 densplot(dens.sub, names(climondbioclim[[1]]));
 }
 

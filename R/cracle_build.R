@@ -1,7 +1,10 @@
-#' @import graphics
 #' @import grDevices
-#' @import raster
 #' @import dismo
+#' @import doParallel
+#' @import foreach
+#' @import iterators
+#' @import doSNOW
+#' @import raster
 NULL
 
 #' Extract environmental data
@@ -11,6 +14,9 @@ NULL
 #' @param clim A raster object (see raster::raster() and raster::stack() documentation for reading raster files into R).
 #' @param schema A string of value "raw", "flat", or "species" to define the sampling protocol. In "raw", all records are counted (including duplicate exact localities). In "flat", all unique localities will be counted where a unique locality is defined as a raster grid cell. Under the "flat" sampling strategy two records in the same raster grid cell will be counted as one. The option "species", only applies when taxa are identified as genera and species identities are represented in the "sub" column of the data object. In "species", each unique locality is counted for each species within the group (taxon). This weighs more diverse localities higher. Default is "raw".
 #' @param factor An integer value for the methods "flat" and "spec" to increase the systematic sampling grid size to courser resolutions than the given climate grid. The value of factor corresponds to the number of rows and columns to aggregate into each courser grid cell. Default is 0 which will not be processed.
+#' @param rm.outlier TRUE or FALSE. Indicate whether to remove points that are climatic outliers for at least one variable given a normal 95 percent confidence interval.
+#' @param alpha Confidence level (i.e., 0.05) for clipping out outlier records.
+#' @param nmin Minimum number of records allowed. Taxa or groups with fewer records will not be returned.
 #' @export
 #' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
@@ -20,7 +26,7 @@ NULL
 #' extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
 #' extr.flat = extraction(data=distr, clim= climondbioclim, schema='flat');
 #' extr.spec = extraction(data=distr, clim= climondbioclim, schema='species');
-extraction <- function(data, clim, schema = "raw", factor = 0){
+extraction <- function(data, clim, schema = "raw", factor = 0, rm.outlier = FALSE,  alpha = 0.01, nmin = 5){
 
 	if(length(data[,1]) < 5){cat('ERR: Too few records\n'); return();}
 
@@ -33,7 +39,7 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 	extr.larr <- cbind(mat.larr, extr.larr);
 	if(schema != 'raw'){
 		if(factor == 0){} else {
-			r2 <- aggregate(phytoclim, fact = factor, fun=mean);
+			r2 <- raster::aggregate(phytoclim, fact = factor, fun=mean);
 			tmp.ext <- raster::extract(r2, cbind(mat.larr$lon, mat.larr$lat), cellnumbers=T);
 			extr.larr[,(ncol(extr.larr)+1)] = extr.larr[,'cells'];
 			extr.larr[,'cells'] = tmp.ext[,'cells'];
@@ -91,10 +97,40 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 	#  print(length(holder[,1]));
 	
 	#print(length(extr.larr[,1]));
-  
-  extr.larr[,1] = as.numeric(as.character(extr.larr[,1]))
+	head = which(colnames(extr.larr)=='cells')-1;
+	#print(head)
 	
-	return(extr.larr);
+  extr.larr[,1] = as.numeric(as.character(extr.larr[,1]))
+  if(rm.outlier== TRUE){
+    
+    for(nn in 1:raster::nlayers(phytoclim)){
+      n.mean <- mean(as.numeric(extr.larr[,(head+nn)]));
+      n.sd <- stats::sd(as.numeric(extr.larr[,(head+nn)]));
+      rn <- length(extr.larr[,(head+nn)]);
+      t = stats::qt((1-(alpha/2)), rn-1);
+      minci = n.mean-(t*n.sd);
+      maxci = n.mean+(t*n.sd);
+      extr.larr <- subset(extr.larr, extr.larr[,(head+nn)] >= minci);
+      extr.larr <- subset(extr.larr, extr.larr[,(head+nn)] <= maxci);
+      
+    }
+    
+  }
+  t.list = unique(extr.larr$tax);
+  hold = data.frame();
+
+  for(zz in 1:length(t.list)){
+    sub <- subset(extr.larr, extr.larr$tax == t.list[[zz]]);
+    if(nrow(sub) < nmin){
+      
+    } else {
+      hold = rbind(hold, sub);
+    }
+  }
+  colnames(hold) = colnames(extr.larr);
+  
+	
+	return(hold);
 };
 
 #extraction = compiler::cmpfun(extraction);
@@ -108,14 +144,12 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 #' @param clim A raster object (see raster::raster() and raster::stack() documentation for reading raster files into R).
 #' @param name A character string describing (preferably) the group for which PDFs are being constructed (i.e., a species binomial). If none is supplied, a value of column "tax" is selected as a default.
 #' @param bw A bandwidth compatible with stats::density(). Options include "nrd", "nrd0", "ucv", "bcv", etc.. Default (and recommended) value is "nrd0".
+#' @param kern Type of Kernel to smooth with. Recommend 'gaussian', 'optcosine', or 'epanechnikov'. See: stats::density for options.
 #' @param n Number of equally spaced points at which the probability density is to be estimated. Defaults to 1024. A lower number increases speed but decreases resolution in the function. A higher number increases resolution at the cost of speed. Recommended values: 512, 1024, 2048, ....
-#' @param manip Character string of 'reg' for straight likelihood, 'condi' for conditional likelihood, or 'bayes' for a Bayesian style likelihood statement.
-#' @param bg An object of background point climate data matching the 
-#'  output of extraction(). Generate random backround points and then use extraction().
+#' @param manip Character string of 'reg' for straight likelihood, 'condi' for conditional likelihood statement.
 #' @param from vector of starting points by variable
 #' @param to vector of ending points by variable
-#' @param clip A character string of value "range" or "95conf" or "99conf". Should the probability functions be clipped to either the empirical range or the 95% or 99% confidence interval? Confidence intervals (95% and 99%) are  approximated by calculating the mean +/- 2 sd and 3 sd respectivley.
-#' @param bg.rad If there is not a background matrix provided this feature defines the maximum radius around each point from which the background points will be selected. Default is 25km.
+#' @param clip A character string of value "range" or "95conf" or "99conf". Should the probability functions be clipped to either the empirical range or the 95 or 99 percent confidence interval? 
 #' @param bg.n If there is not a background matrix, how many background points PER OCCURRENCE record should be sampled. Default is 1000.
 #' @export
 #' @examples
@@ -124,157 +158,140 @@ extraction <- function(data, clim, schema = "raw", factor = 0){
 #' data(climondbioclim);
 #' extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
 #' extr.sub = subset(extr.raw, extr.raw$tax == extr.raw[5,'tax']);
-#' dens.sub = densform(extr.sub, clim = climondbioclim, bw = 'nrd0', n = 512);
+#' dens.sub = densform(extr.sub, clim = climondbioclim, bw = 'nrd0', n = 128);
 #' densplot(dens.sub, names(climondbioclim[[1]]));
 
 densform <- function(ex, clim, 
-                     bg = 0, name = '', bw = "nrd0", kern = 'gaussian',
+                     name = '', bw = "nrd0", kern = 'gaussian',
                      
-                     manip = 'reg', n = 1024, 
+                     manip = 'condi', n = 1024, 
                      from = 0, to = 0, clip = 0,
-                     bg.rad = 25,
-                     bg.n = 1000){
-  kern = 'gaussian'
+                     bg.n = 200){
+#  kern = 'gaussian'
+  cut = 0;
+ # adjust = (512*60)/n;
+  adjust = 1;
   condi = FALSE;
-  bayes = FALSE;
   if(manip == 'condi') {
     condi = TRUE; #print("Conditional Likelihood")
   }
-  if(manip == 'bayes'){
-    bayes = TRUE; #print("Bayesian-ish Likelihood")
-  }
+
 	data = ex;
 	if(name == ''){
 		name = data[2,'tax'];
 	};
-	pi = 22/7;
+	pi = 3.14159265359;
 	extr.larr <- data;
 	head = which(colnames(ex) %in% 'cells') - 1;
-	#print(head);
-	#head = 5;
 	phytoclim <- clim;
 		larr.den <- data.frame();
  		larr.den.x <- data.frame();
 		larr.den.gauss <- data.frame();
-	#  larr.den.lognorm <- data.frame();
 		larr.mean <- data.frame();
 		larr.sd <- data.frame();
 	  larr.w <- data.frame();
 		eval <- data.frame();
-	#  lognorm <- data.frame();
 		bg.eval = data.frame();
-	#	if(condi == TRUE | bayes == TRUE){
-	#	  if(length(bg)<2){
-		  #    bg <- .get_bg(clim);
-		  #    bg.ex = extraction(bg, clim, schema='raw');
-	if(length(bg)==1){
-#	  whole.ex=extract(clim,extent(clim),cellnumbers=T,df=T) 
+	  ncoords = length(extr.larr$lon);
+	  dmatrix = matrix(ncol = ncoords,
+	                   nrow = ncoords);
+	#  print("Getting distance matrix");
+	  
+	  for(xx in 1:ncoords){
+	    for(yy in 1:ncoords){
+	      dmatrix[xx,yy] <- .distance(extr.larr$lon[xx], extr.larr$lat[xx], 
+	                                  extr.larr$lon[yy], extr.larr$lat[yy]);
+	                                                                     
+	        
+
+	    }
+	  }
+    #NOTE: The background is selected from a radius around each occurrence
+	  #record within 5x the mean distance between all points in the sample.
+	  #This threshold is arbitrary and needs to be empirically tested, but does seem to work.
+	  bg.rad = 5*mean(dmatrix);
+#	  print("before rad_bg");
 	  bg.ex <- rad_bg(cbind(extr.larr$lon, extr.larr$lat), 
 	               phytoclim, 
 	               radius = bg.rad, 
 	               n = bg.n)
-	  
-	 # bg.ex = extraction(.get_bg(phytoclim), phytoclim, schema='raw')
-	} else{
-  	bg.ex = bg;
-	}
+#	 print("after")
 
 		for(i in 1:length(names(phytoclim))){	
-			from <- raster::minValue(phytoclim[[i]]); ### At issue with from and to is reproducibility. If defined globally from the raster then it will always be compatible.
-			to <- raster::maxValue(phytoclim[[i]]);
-		  if(length(from) ==1){
-		    #assumes no range has been passed
-		    so <- sort(bg.ex[,i+5]);
-		    ncells = length(so);
-		    #fr = so[1];
-		    fr = from;
-		    #t = so[ncells]; 
-		    t = to;
-		    
-		  }else {
-		    fr = from;
-		    t = to;
-		    #fr = from[[i]];
-		    #t = to[[i]];
-		  }
-		  #print(fr)
-		  #print(t)
-
-		#	to <- raster::maxValue(phytoclim[[i]]);
-
-			den <- stats::density(as.numeric(extr.larr[,names(phytoclim[[i]])]), n = n, kernel = kern, from = fr, adjust = 1, to = t, bw = bw, na.rm = TRUE);
-    #  plot(den, type = 'l')
-			if(condi == TRUE){
-  			bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 5, from = fr, to = t, bw = bw, na.rm = TRUE); 
-      #  plot(bg.den$x, (bg.den$y), type = 'l')
-  	  	#	bg.den$y <- bg.den$y + min(subset(bg.den$y, bg.den$y > 0));
-	 # 		bg.den$y <- bg.den$y;
-	  		
-		  	den$y <- (den$y/bg.den$y); 
-		  	#try conditional that is P(clim | occ) = P(clim and occ)/p(occ)
-	  	#	den$y = bg.den$y/den$y;
+	  	fr <- raster::minValue(phytoclim[[i]]); ### At issue with from and to is reproducibility. If defined globally from the raster then it will always be compatible.
+			t <- raster::maxValue(phytoclim[[i]]);
+	  	bg.vec = bg.ex[,names(phytoclim[[i]])];
+    	if(condi == TRUE){
+	    	bg.den <- stats::density(as.numeric(bg.vec), 
+			                           n = n, kernel = kern, 
+			                           adjust = 1, from = fr, 
+			                           to = t, bw = bw, 
+			                           na.rm = TRUE); 
+			  weights = 1/.vecprob(as.numeric(extr.larr[,names(phytoclim[[i]])]), bg.den$x, bg.den$y)
+        weights = weights/sum(stats::na.omit(weights)); #So the weights sum to 1. Could consider other scaling. i.e., by rank order
+       # print(weights);
+        o.vec <- as.numeric(extr.larr[,names(phytoclim[[i]])]);
+        o.vec <- cbind(o.vec, weights);
+        o.vec = stats::na.omit(o.vec);
+        
+        #For the KDE PDF use the weights option in the stats::density function to estimate the conditional probability
+			  den <- stats::density(o.vec[,1], 
+			                        n = n, kernel = kern, 
+			                        from = fr,  to = t, weights = o.vec[,2],
+			                        bw = bw, na.rm = TRUE);
 		  	bg.mean <- mean(bg.ex[,names(phytoclim[[i]])]);
-		  	bg.sd <- sd(bg.ex[,names(phytoclim[[i]])]);
-			}
-			if(bayes == TRUE){
-			  bg.den <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 3, from = fr, to = t, bw = bw, na.rm = TRUE); 
-			 # bg.den$y <- bg.den$y + min(subset(bg.den$y, bg.den$y > 0));
-			#  bg.den$y <- bg.den$y;
-			  den$y <- (den$y/bg.den$y)*den$y;
-		#	  den$y = bg.den$y*den$y;
-			  bg.mean <- mean(bg.ex[,names(phytoclim[[i]])]);
-			  bg.sd <- sd(bg.ex[,names(phytoclim[[i]])]);
-			}
-			
-			
-			mean <- mean(extr.larr[,names(phytoclim[[i]])]);
-			sd <- sd(extr.larr[,i+head+1]);
-			rn <- length(extr.larr[,names(phytoclim[[i]])]);
-			
-			if(sd == 0 || is.na(sd) == "TRUE"){
-				sd = 0.01;
-			};
-		#se = sd/sqrt(rn);
-
-			
-			for(num in 1:length(den$x)){
-				eval[num,1] <- ((1/(sqrt((2*pi)*(sd^2)))*(2.71828^(-1*((den$x[num] - mean)^2)/(2*sd^2)))));
-			#	lognorm[num,1] <- ((1/(sqrt((2*pi)*(sd^2)*den$x[num]))*(2.71828^(-1*((log(den$x[num]) - mean)^2)/(2*sd^2)))));
-				if(condi==T | bayes==T){
-          #bg.eval[num,1] <- ((1/(sqrt(2*pi)*bg.sd)*(2.71828^(-1*((den$x[num] - bg.mean)^2)/(2*bg.sd^2)))));
-				}
-			};
-			larr.den[1:n, i] <- den$y;
-			larr.den.x[1:n, i] <- den$x;
-			if(condi == T){
-			  bg.eval <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 5, from = fr, to = t, bw = bw, na.rm = TRUE); 
+		  	bg.sd <- stats::sd(bg.ex[,names(phytoclim[[i]])]);
+        x = extr.larr[,names(phytoclim[[i]])]
+        
+        #For the gaussian PDF estimates use the weighted mean and sd:
+        mean <- stats::weighted.mean(x, weights);
+        sd <- sqrt(sum(weights * (x - mean)^2))
+        rn <- length(extr.larr[,names(phytoclim[[i]])]);
+        
+        if(sd == 0 || is.na(sd) == "TRUE"){
+          sd = 0.01;
+        };
+        for(num in 1:length(den$x)){
+          eval[num,1] <- ((1/(sqrt((2*pi)
+                                   *(sd^2)))
+                           *(2.71828^(-1*((den$x[num] - mean)^2)
+                                      /(2*sd^2)))));
+          
+        };
+        
+			} else {
+			  den <- stats::density(as.numeric(extr.larr[,names(phytoclim[[i]])]), 
+			                        n = n, kernel = kern, 
+			                        from = fr,  to = t, 
+			                        bw = bw, na.rm = TRUE);
+			  mean <- mean(extr.larr[,names(phytoclim[[i]])]);
+			  sd <- stats::sd(extr.larr[,i+head+1]);
+			  rn <- length(extr.larr[,names(phytoclim[[i]])]);
 			  
-			  eval[,1] = (eval[,1]/bg.eval$y);
-		  #  eval[,1] = bg.eval[,1]/eval[,1];
+			  if(sd == 0 || is.na(sd) == "TRUE"){
+			    sd = 0.01;
+			  };
+			  for(num in 1:length(den$x)){
+			    eval[num,1] <- ((1/(sqrt((2*pi)*(sd^2)))*(2.71828^(-1*((den$x[num] - mean)^2)/(2*sd^2)))));
+			  };
 			}
-			if(bayes == T){
-			  bg.eval <- stats::density(as.numeric(bg.ex[,names(phytoclim[[i]])]), n = n, kernel = 'gaussian', adjust = 5, from = fr, to = t, bw = bw, na.rm = TRUE); 
-			  
-			   eval[,1] = (eval[,1]/bg.eval$y)*eval[,1];
-			  #eval[,1] = (eval[,1]*bg.eval$y);
-			}
-			
+	  	
+	  	##Below is for clipping the PDFs to fit empirical ranges or inferred confidence intervals
 			minci = 0;maxci=0;
-			
 			if(clip == "95conf"){
-			  t = stats::qt(0.95, rn-1);
+			  t = stats::qt(0.975, rn-1);
 			  minci = mean-(t*sd);
 			  maxci = mean+(t*sd);
 			}
 			if(clip == "99conf"){
 
-			  t = stats::qt(0.99, rn-1);
+			  t = stats::qt(0.995, rn-1);
 			  minci = mean-(t*sd);
 			  maxci = mean+(t*sd);
 			}
 			if(clip == "999conf"){
 			  
-			  t = stats::qt(0.999, rn-1);
+			  t = stats::qt(0.9995, rn-1);
 			  minci = mean-(t*sd);
 			  maxci = mean+(t*sd);
 			}
@@ -283,38 +300,43 @@ densform <- function(ex, clim,
 			  maxci = max(extr.larr[,names(phytoclim[[i]])]);
 			}
 			if(minci == 0 & maxci==0){} else{
-
-		  	for(zz in 1:length(den$x)){
+			  
+			  if(den$x[[1]] < minci){
+			    larr.den[1, i] = 0;
+			    eval[1,1] =0;
+			  }
+			  if(den$x[[1]] > maxci){
+			    larr.den[1, i] = 0;
+			    eval[1,1] = 0;
+			  }
+			  
+		  	for(zz in 2:length(den$x)){
 			  
 	  		  if(den$x[[zz]] < minci){
-	  		    larr.den[zz, i] = 0;
-			      eval[zz,1] =0;
+	  		    larr.den[(zz-1), i] = 0;
+			      eval[(zz-1),1] =0;
 			    }
 		  	  if(den$x[[zz]] > maxci){
-		  	    larr.den[zz, i] = 0;
-			      eval[zz,1] = 0;
-			    }
+		  	    larr.den[(zz-1), i] = 0;
+			      eval[(zz-1),1] = 0;
+		  	  }
 			  }
 			}
+			larr.den.x[1:n, i] <- den$x;
+			larr.den[1:n, i] <- den$y;
+			
 			larr.den.gauss[1:n, i] <- eval[,1];
-		#	larr.den.lognorm[1:n, i] <- lognorm[,1];
 			larr.mean[1,i] <- mean;
 			larr.sd[1,i] <- sd;
-	#		range <- maxValue(phytoclim[[i]]) - minValue(phytoclim[[i]]);
 			range <- max(larr.den.x[,i]) - min(larr.den.x[,i]);
 			w <- sd/range;
 			larr.w[1,i] = 1/w;
-		};
-	 # for(i in 1:length(larr.w[1,])){
-	   # weight = larr.w[1,i]
 	    weight = as.numeric(larr.w[1,])
 	    weight =  weight - (min(weight));
 	    weight = weight/(0.5*max(weight));
 	    larr.w[1,] = weight;
-	  #}
+	  }
 		colnames(larr.den.gauss) <- c(paste(names(phytoclim), "gauss", sep = "."));
-#	  colnames(larr.den.lognorm) <- c(paste(names(phytoclim), "lognorm", sep = "."));
-	
 		colnames(larr.mean) <- c(paste(names(phytoclim), "mean", sep = "."));
 		colnames(larr.sd) <- c(paste(names(phytoclim), "sd", sep = "."));
 	  colnames(larr.w) <- c(paste(names(phytoclim), "w", sep = "."));
@@ -333,6 +355,16 @@ densform <- function(ex, clim,
 
 #densform = compiler::cmpfun(densform);
 
+.vecprob <- function(search, x,y){
+  to <- max(x);
+  from <- min(x);
+  num <- length(x);
+  by = (to - from)/num;
+  bin = floor((search - from) / by) + 1;
+  ret = y[bin]*by;
+  ret[ret == NA] <- min(stats::na.omit(ret));
+  return(ret);
+}
 
 #' Generate backround data within a radius of occurrence records
 #' 
@@ -347,11 +379,10 @@ densform <- function(ex, clim,
 #' bg.ext <- rad_bg(distr[,4:3], climondbioclim, radius=100, n = 100)
 
 rad_bg <- function(coords, clim, radius, n){
-  #'n' the number of times to sample around each point.
-  #'radius' the distance in kilometers around each point to sample. 
-  #'coords' a two column matrix or data frame with longitude and latitude (in that order..)
-  #'clim' a raster object
   extr = coords;
+  ##Premise: IF a species PDF - P(sp) - is approximately equal to the background PDF
+  #P(bg) then P(condi) = P(sp)/P(bg) should be a uniform distribution and
+  #not contribute to the overall estimation of climate.
   
   bg.mat <- matrix(ncol = 2, nrow = n * nrow(extr));
   for(i in 1:length(extr[,1])){
@@ -369,7 +400,7 @@ rad_bg <- function(coords, clim, radius, n){
   bg.mat$lon = as.numeric(as.character(bg.mat$lon))
   bg.mat$lat = as.numeric(as.character(bg.mat$lat))
   bg.mat = unique(bg.mat);
-  bg.ext <- extract(clim, bg.mat[,4:3], cellnumbers=T)
+  bg.ext <- raster::extract(clim, bg.mat[,4:3], cellnumbers=T)
   bg.ext <- cbind(bg.mat, bg.ext);
   bg.ext <- stats::na.omit(bg.ext);
   
@@ -378,62 +409,48 @@ rad_bg <- function(coords, clim, radius, n){
   return(bg.ext);
   
 }
+
 #' A wrapper for vegdistmod::densform where a multi-taxon extraction object can be passed to densform one taxon at a time.
 #' 
 #' This function takes extracted climate data (from an object generated by the vegdistmod::extraction() function) and generates probability density functions for each taxon/variable pair using both a Gaussian (normal) approximation and a Gaussian Kernel Density estimator.
 #' @param ex An object derived from the extraction() function.
 #' @param clim A raster object (see raster::raster() and raster::stack() documentation for reading raster files into R).
 #' @param bw A bandwidth compatible with stats::density(). Options include "nrd", "nrd0", "ucv", "bcv", etc.. Default (and recommended) value is "nrd0".
-#' @param bg A data.frame of the type output by the extraction() function containing background data.
+#' @param kern Type of Kernel to smooth with. Recommend 'gaussian', 'optcosine', or 'epanechnikov'. See: stats::density for options.
 #' @param n Number of equally spaced points at which the probability density is to be estimated. Defaults to 1024. A lower number increases speed but decreases resolution in the function. A higher number increases resolution at the cost of speed. Recommended values: 512, 1024, 2048, ....
-#' @param clip A character string of value "range" or "95conf" or "99conf". Should the probability functions be clipped to either the empirical range or the 95% or 99% confidence interval? Confidence intervals (95% and 99%) are  approximated by calculating the mean +/- 2 sd and 3 sd respectivley.
-#' @param manip Character string of 'reg' for straight likelihood, 'condi' for conditional likelihood, or 'bayes' for a Bayesian style likelihood statement.
+#' @param clip A character string of value "range" or "95conf" or "99conf". Should the probability functions be clipped to either the empirical range or the 95 or 99 percent confidence interval? 
+#' @param manip Character string of 'reg' for straight likelihood, 'condi' for conditional likelihood statement.
 #' @param parallel TRUE or FALSE. Make use of multicore architecture.
 #' @param nclus Number of cores to allocate to this function
-#' @param bg.rad If there is not a background matrix provided this feature defines the maximum radius around each point from which the background points will be selected. Default is 25km.
 #' @param bg.n If there is not a background matrix, how many background points PER OCCURRENCE record should be sampled. Default is 1000.
-
-#' 
 #' @export
 #' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
 #' #OR:
 #' data(distr);
 #' data(climondbioclim);
-#' extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
-#' dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024);
+#' extr.raw = extraction(data=distr, clim= climondbioclim, 
+#'  schema='flat', factor = 4, rm.outlier=FALSE);
+#' dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, 
+#'  manip = 'condi', bg.n = 200, bw = 'nrd0', n = 1024);
 #' multiplot(dens.list.raw, names(climondbioclim[[1]]));
 
-dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", kern='gaussian',
-                     bg=0, clip = 0, n = 1024, parallel = FALSE, 
-                     nclus = 4, bg.rad = 25, bg.n = 1000) {
+dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", kern='optcosine',
+                     clip = 0, n = 1024, parallel = FALSE, 
+                     nclus = 4, bg.n = 200) {
 	rawbioclim = clim;
 	ex <- data.frame(ex);
 	condi = FALSE;
 	bayes = FALSE;
 	head = which(colnames(ex) == 'cells');
-	#print(head)
-	
-	##Set up an option to use the entire extent or just the observed values for all taxa
-	from = apply(ex[,(head+1):length(ex[1,])], 2, min);
-	to = apply(ex[,(head+1):length(ex[1,])], 2, max);
-#  from = minValue(clim);
-#  to = maxValue(clim);
+  from = raster::minValue(clim);
+  to = raster::maxValue(clim);
 	####
 	
 	
 	
 	if(manip == 'condi') {
 	  condi = TRUE; #print("Conditional Likelihood")
-	}
-	if(manip == 'bayes'){
-	  bayes = TRUE; #print("Bayesian-ish Likelihood")
-	}
-	if(condi == TRUE | bayes == TRUE){
-	  if(length(bg)<2){
-  	#  bg <- .get_bg(clim);
-	  #  bg = extraction(bg, clim, schema='raw');
-	  } 
 	}
 	dens.list <- list();
 	nlist <- vector();
@@ -448,46 +465,25 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", kern='gaussian',
 	};
 	tax.list <- unique(ex$tax);
 	tax.list <- stats::na.omit(tax.list);
-# 
-# 	trm.list <- vector();
-# 	for(j in 1:length(tax.list)){
-# 	#  print(j)
-# 	  subit = subset(ex, ex$tax == tax.list[[j]])
-# 	  
-# 	  if(length(subit[,1])>=5){
-#       lsub <- lapply(list(apply(subit[,(head+1):length(subit[1,])], 2, unique))[[1]],  length);
-#       print(lsub)
-# 		  if(min(unlist(lsub)) >= 10){
-# 			  trm.list <- c(trm.list, as.character(tax.list[[j]]))
-# 		  } else {
-# 		      
-# 		      #cat("TOO FEW RECORDS FOR", tax.list[[j]], "OMITTING it...\n")
-# 		  }
-# 	  }
-# 	}
-# 
-# 	tax.list <- trm.list;
-# 	print(trm.list);
-# 	print(unique(ex$tax));
-# 	return();
 	if(parallel == TRUE){
 	  
 	  cl <- parallel::makeCluster(nclus, type = "SOCK")
 	  doSNOW::registerDoSNOW(cl);
 	  
 	  dens.list <-
-	    foreach(i = 1:length(tax.list),
+	    foreach::foreach(i = 1:length(tax.list),
 	           
 	            .packages = 'vegdistmod') %dopar% {
-	            #  source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
-	            #  source('~/Desktop/cracle_testing/vegdistmod/R/cracle_build.R')
+	           #   source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
+	           #   source('~/Desktop/cracle_testing/vegdistmod/R/cracle_build.R')
 	              s.ex <- subset(ex, ex$tax == tax.list[[i]]);
 	              
 	              s.ex <- stats::na.omit(s.ex);
 	              
-	             # nlist[[i]] <- length(s.ex[,1])
-	              
-	              dlist <- (densform(s.ex, rawbioclim, name = tax.list[[i]], manip = manip, bw = bw, kern=kern, bg = 0, n=n, from = from, to = to, clip = clip, bg.n = bg.n, bg.rad = bg.rad));
+	              dlist <- (densform(s.ex, rawbioclim, name = tax.list[[i]], 
+	                                 manip = manip, bw = bw, kern=kern, 
+	                                 n=n, from = from, to = to,
+	                                 clip = clip, bg.n = bg.n));
 	              
 	              len <- length(dlist);
 	              if(len <= 1) {
@@ -503,14 +499,17 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", kern='gaussian',
 	  
 	
 	for(i in 1:length(tax.list)){	
-	
+	  print(i);
 	  	s.ex <- subset(ex, ex$tax == tax.list[[i]]);
 		
 	  	s.ex <- stats::na.omit(s.ex);
 		
 	  	nlist[[i]] <- length(s.ex[,1])
 
-  		dens.list[[i]] <- (densform(s.ex, rawbioclim, name = tax.list[[i]], manip = manip, bw = bw, kern = kern, bg = 0, n=n, from = from, to = to, clip = clip, bg.n = bg.n, bg.rad = bg.rad));
+  		dens.list[[i]] <- (densform(s.ex, rawbioclim, name = tax.list[[i]], 
+  		                            manip = manip, bw = bw, kern = kern, 
+  		                            n=n, from = from, to = to, 
+  		                            clip = clip, bg.n = bg.n));
 
 	 	  len <- length(dens.list[[i]]);
 		  if(len <= 1) {
@@ -665,9 +664,9 @@ and_fun <- function(dens.oblist, w = FALSE){
 		  we <- 1;
 		}
 		
-		to <- max(dens.obcurr[[varx]]);
-		from <- min(dens.obcurr[[varx]]);
-		num = length(dens.obcurr[[varx]]);
+		to <- max(stats::na.omit(dens.obcurr[[varx]]));
+		from <- min(stats::na.omit(dens.obcurr[[varx]]));
+		num = length((dens.obcurr[[varx]]));
 		by = (to - from)/num;
 		meanlist[[1]] <- as.numeric(dens.obcurr[[varmean]]);
 		sdlist[[1]] <- as.numeric(dens.obcurr[[varsd]])^2;
@@ -681,26 +680,27 @@ and_fun <- function(dens.oblist, w = FALSE){
 		  } else {
 		    we = 1;
 		  }
+		  if(sum(stats::na.omit(dens.obnow[[varkde]]*by)) == 0) {next;}
   		prod <- prod * ((as.numeric(dens.obnow[[varkde]])*by) ^ we);
-			prod.area <- sum(prod)*by;
+			prod.area <- sum(stats::na.omit(prod))*by;
 			prod <- prod / prod.area;
 			prod.gauss <- prod.gauss * ((as.numeric(dens.obnow[[vargauss]])*by)^we);
-			prod.gauss.area <- sum(prod.gauss)*by;
+			prod.gauss.area <- sum(stats::na.omit(prod.gauss))*by;
 			prod.gauss <- prod.gauss / prod.gauss.area;
 			meanlist[[i]] <- as.numeric(dens.obnow[[varmean]]);
 			sdlist[[i]] <- as.numeric(dens.obnow[[varsd]])^2;
 		};
-		prod.area <- sum(prod)*by;
+		prod.area <- sum(stats::na.omit(prod))*by;
 		prod <- prod / prod.area;
-		prod.gauss.area <- sum(prod.gauss)*by;
+		prod.gauss.area <- sum(stats::na.omit(prod.gauss))*by;
 		prod.gauss <- prod.gauss / prod.gauss.area;
 		field[[n]] <- prod;
 		gfield[[n]] <- prod.gauss;
 		xfield[[n]] <- dens.obcurr[[varx]];
-		meanadjust[[n]] <- as.numeric(meanlist)/as.numeric(sdlist);
-		variances[[n]] <- 1/as.numeric(sdlist);
+		meanadjust[[n]] <- as.numeric(unlist(meanlist))/as.numeric(unlist(sdlist));
+		variances[[n]] <- 1/as.numeric(unlist(sdlist));
 	};
-	meansum <- lapply(meanadjust, sum);
+  meansum <- lapply(meanadjust, sum);
 	varisum <- lapply(variances, sum);
 	wmeans <- mapply("/", meansum, varisum);
 	wsd <- mapply("/", 1, varisum);
@@ -769,9 +769,9 @@ get_optim <- function(dens.ob){
 		cigauss <- list(0,0);
 		runkde <- 0;
 		rungauss <- 0;
-		to <- max(dens.ob1[[varx]]);
-		from <- min(dens.ob1[[varx]]);
-		num = length(dens.ob1[[varx]]);
+		to <- max(stats::na.omit(dens.ob1[[varx]]));
+		from <- min(stats::na.omit(dens.ob1[[varx]]));
+		num = length(stats::na.omit(dens.ob1[[varx]]));
 		by = (to - from)/num;
 		for (i in 1:length(dens.ob1[[varkde]])){
 			runkde = runkde + (dens.ob1[[varkde]][i]*by);
@@ -816,12 +816,12 @@ get_optim <- function(dens.ob){
 	};
 	logkde <- ifelse(dens.ob1[[varkde]]>0, log(dens.ob1[[varkde]]*by), -Inf);
 	print(varkde);
-	origkde <- subset(dens.ob1[[varx]], logkde >= max(logkde)*1.01);
+	origkde <- subset(dens.ob1[[varx]], logkde >= max(stats::na.omit(logkde))*1.01);
 	origk[[j]] <- c(min(stats::na.omit(origkde)), max(stats::na.omit(origkde)));
 	loggauss <- ifelse(dens.ob1[[vargauss]]>0, log(dens.ob1[[vargauss]]*by), -Inf);
 #	loggauss <- log(dens.ob1[[vargauss]]*by)
-	origgauss <- subset(dens.ob1[[varx]], loggauss >= max(loggauss)*1.01);
-	origg[[j]] <- c(min(origgauss), max(origgauss));
+	origgauss <- subset(dens.ob1[[varx]], loggauss >= max(stats::na.omit(loggauss))*1.01); 
+	origg[[j]] <- c(min(stats::na.omit(origgauss)), max(stats::na.omit(origgauss)));
 	conintkde[[j]] <- c(cikde[[1]], cikde[[2]]);
 	conintgauss[[j]] <- c(cigauss[[1]], cigauss[[2]]);
 	dirconint[[j]] <- c((dens.ob1[[varmean]] - 1.96*dens.ob1[[varsd]]), (dens.ob1[[varmean]]+1.96*dens.ob1[[varsd]]));
@@ -860,12 +860,15 @@ get_optim <- function(dens.ob){
 		gauss <- paste(var[[i]], "gauss", sep = ".");
 		kde <- paste(var[[i]], "kde", sep = ".");
 
-		to <- max(dens.ob1[[varx]]);
-		from <- min(dens.ob1[[varx]]);
-		num <- length(dens.ob1[[varx]]);
+		to <- max(subset(dens.ob1[[varx]], !is.na(dens.ob1[[kde]])));
+		from <- min(subset(dens.ob1[[varx]], !is.na(dens.ob1[[kde]])));
+		num <- length(subset(dens.ob1[[varx]], !is.na(dens.ob1[[kde]])));
 		by = (to - from)/num;
-		do <- sum(dens.ob1[[kde]])*by;
-		do.gauss <- sum(dens.ob1[[gauss]])*by;
+		do <- sum(stats::na.omit(dens.ob1[[kde]]))*by;
+		if(do == '0'){
+		  return(0)
+		}
+		do.gauss <- sum(stats::na.omit(dens.ob1[[gauss]]))*by;
 		dens.ob1[[kde]] <- dens.ob1[[kde]]/do;
 		dens.ob1[[gauss]] <- dens.ob1[[gauss]]/do.gauss;
 	};
@@ -889,7 +892,6 @@ get_optim <- function(dens.ob){
 #' @param col A color declaration. Default is a random color.
 #' @param type A character string of value either ".kde" for a Kernel Density Estimator curve, or ".gauss" for a Gaussian (normal) curve. All other values will result in errors.
 #' @param w TRUE or FALSE to show weighted probability functions
-
 #' @export
 #' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
@@ -910,17 +912,17 @@ densplot <- function(dens.ob, var, col = sample(grDevices::colours()), type = ".
 	if(var %in% tempvarlist){by = 10}else{by = 1};
 	var <- paste(var, type, sep = "");
 	if(w ==TRUE){
-	  to <- max(dens.ob[[varx]]);
-	  from <- min(dens.ob[[varx]]);
+	  to <- max(stats::na.omit(dens.ob[[varx]]));
+	  from <- min(stats::na.omit(dens.ob[[varx]]));
 	  num = length(dens.ob[[varx]]);
 	  lby = (to - from)/num;
 	  dens.ob[[var]] = dens.ob[[var]]^dens.ob[[varw]];
-	  den.area <- sum(dens.ob[[var]])*lby;
+	  den.area <- sum(stats::na.omit(dens.ob[[var]]))*lby;
 	  dens.ob[[var]] = dens.ob[[var]]/den.area
 	}
-	graphics::plot(dens.ob[[varx]]/by, dens.ob[[var]], xlab = "", ylab = "", ylim = c(0, 3.5*max(dens.ob[[var]])), type = "l", lwd = 3, col = col, frame.plot=F, axes = F);
-	graphics::axis(side = 2, at = pretty(c(0, 2.5*max(dens.ob[[var]]))));
-	graphics::axis(side = 1, at = pretty(range(dens.ob[[varx]]/by)));
+	graphics::plot(dens.ob[[varx]]/by, dens.ob[[var]], xlab = "", ylab = "", ylim = c(0, 3.5*max(stats::na.omit(dens.ob[[var]]))), type = "l", lwd = 3, col = col, frame.plot=F, axes = F);
+	graphics::axis(side = 2, at = pretty(c(0, 2.5*max(stats::na.omit(dens.ob[[var]])))));
+	graphics::axis(side = 1, at = pretty(range(stats::na.omit(dens.ob[[varx]])/by)));
 	graphics::mtext(var, side = 1, line =3);
 	graphics::mtext("Probability Density Estimation", side = 2, line = 3);
 };
@@ -937,7 +939,6 @@ densplot <- function(dens.ob, var, col = sample(grDevices::colours()), type = ".
 #' @param l.pos  Legend position. Recommend 'topleft' or 'topright'. Default is 'topleft'.
 #' @param l.cex  cex setting for legend. Default is 0.8.
 #' @param w TRUE or FALSE to show weighted probability functions
-
 #' @export
 #' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
@@ -1009,132 +1010,13 @@ addplot <- function(dens.ob, var, col = sample(grDevices::colours()), type = ".k
 	graphics::points(dens.ob[[varx]]/by, dens.ob[[var]], type = "l", lwd = 3, col = col);
 };
 
-
-#' Vegetation resampling CRACLE bootstrap.
-#' 
-#' Using an density list object (vegdistmod::dens_obj()) draw incomplete samples of taxa from the list of taxa and run CRACLE. The Gaussian and KDE derived maximum likelihood values are kept and summarized as confidence intervals and bootstrap mean and standard deviation for each variable. 
-#' @param dens.oblist A density list object derived from the vegdistmod::dens_obj() function.
-#' @param clim A raster file containing environmental data. MUST be the same one used to create the density list object.
-#' @param n Number of bootstrap iterations. Default is 100. 
-#' @export
-#' @examples
-#' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
-#' #OR:
-#' data(distr); data(climondbioclim);
-#' extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
-#' dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024);
-#' and <- and_fun(dens.list.raw);
-#' optima <- get_optim(and);
-#' boot.raw <- cracboot(dens.list.raw, clim = climondbioclim, n = 100); 
-#' #Compare to optima.
-#' write_results(optima, clim = climondbioclim, method = 'conintkde', file = 'raw')
-#' write_results(boot.raw, clim = climondbioclim, method = 'conintkde', file = 'boot.raw')
-
-
-
-cracboot <- function(dens.oblist, clim, n = 100){
-	dens.list <- dens.oblist;
-	#if(length(dens.list)< 8){
-	#	print("Too few taxa in sample for bootstrap");
-	#	return(0);
-	#}
-	if(n < 50){
-		print("ERR: Number of Iterations must be greater than 50");
-		return(NULL);
-	}
-
-	nvars <- raster::nlayers(clim);
-	varlist <- names(clim);
-	val = list();
-
-	nlist = vector();
-	for (z in 1:length(dens.list)){
-		nlist[[z]] = as.character(dens.list[[z]]$name);
-	}
-
-	for(i in 1:n){
-		prop = stats::runif(1, 0.5, 0.9);
-		size <- as.integer(prop*length(nlist))
-		if(size < 2){
-			size = 2;
-		}
-		sample <- sample(1:length(nlist), size, replace=F);
-		data.sam <- nlist[sample];
-
-		dens.sample <- list();
-		now = 1;
-		for(q in 1:length(dens.list)){
-			if(dens.list[[q]]$name %in% data.sam) {
-				dens.sample[[now]] = dens.list[[q]];
-				now = now+1;
-			} else {}
-		}
-		
-		anded.sub <- and_fun(dens.sample)
-		opti.sub <- get_optim(anded.sub)
-
-		val[[i]] = opti.sub;
-	}
-
-		df.origk = matrix(ncol = nvars);
-		df.origg = matrix(ncol = nvars);
-		df.sds = matrix(ncol = nvars);
-		df.means = matrix(ncol = nvars);
-		for (x in 1:length(val)){
-			origk = rbind(apply(val[[x]]$origk,2,mean));
-			df.origk=rbind(df.origk, origk);
-			df.origk = stats::na.omit(df.origk);
-			origg = rbind(apply(val[[x]]$origg,2,mean));
-			df.origg=rbind(df.origg, origg);
-			df.origg = stats::na.omit(df.origg);
-
-			sds = rbind(apply(val[[x]]$sds,2,mean));
-			df.sds=rbind(df.sds, sds);
-			df.sds = stats::na.omit(df.sds);
-			means = rbind(apply(val[[x]]$means,2,mean));
-			df.means=rbind(df.means, means);
-			df.means = stats::na.omit(df.means);
-
-		}
-
-		##Reconstruct get_optim object from the stacks above
-		conintkde <- list();
-		conintgauss <- list();
-		means <- list();
-		sds <- list();
-		for(j in 1:nvars){
-			cikde <- sort(df.origk[,j]); 
-			conintkde[[j]] <- c(cikde[[0.025*n]], cikde[[0.975*n]]);
-			cigauss <- sort(df.origg[,j]); 
-			conintgauss[[j]] <- c(cigauss[[0.025*n]], cigauss[[0.975*n]]);
-			cimeans <- sort(df.means[,j]);		
-			means[[j]] <- c(cimeans[[0.025*n]], cimeans[[0.975*n]]);
-			cisds <- sort(df.sds[,j]);
-			sds[[j]] <- c(cisds[[0.025*n]], cisds[[0.975*n]]);
-		}	
-		conintkde <- data.frame(conintkde);
-		conintgauss <- data.frame(conintgauss);
-		means <- data.frame(means);
-		sds <- data.frame(sds);
-		colnames(conintkde) <- paste(varlist, "cikde", sep = ".");
-		colnames(conintgauss) <- paste(varlist, "cigauss", sep = ".");
-		colnames(means) <- paste(varlist, "mean", sep = ".");
-		colnames(sds) <- paste(varlist, "sd", sep = ".");
-		ret <- list(conintkde, conintgauss, means, sds);
-		names(ret) <- c("conintkde", "conintgauss", "means", "sds");
-		return(ret);
-		
-
-}
-
-
 #' Write results to file
 #' 
-#' Write results from a results object from either vegdistmod::get_optim() or vegdistmod::cracboot() to a tab delimited table in a text file. This is done one 'method' at a time. Supported methods are "conintkde", "conintgauss", "origg", "origk", "dirconint" for the "get_optim()" type objects and "conintkde" and "conintgauss" for the "cracboot()" type objects.
-#' @param optima A results object from vegdistmod::get_optim() or vegdistmod::cracboot().
+#' Write results from a results object from either vegdistmod::get_optim() to a tab delimited table in a text file. This is done one 'method' at a time. Supported methods are "conintkde", "conintgauss", "origg", "origk", "dirconint" for the "get_optim()" type objects.
+#' @param optima A results object from vegdistmod::get_optim()
 #' @param siteval A vector of site values for envirnomental parameters (See example for generating).
 #' @param clim The original raster object used in the vegdistmod::extraction() step.
-#' @param method The result summary method. Supported methods are "conintkde", "conintgauss", "origg", "origk", "dirconint" for the "get_optim()" type objects and "conintkde" and "conintgauss" for the "cracboot()" type objects.
+#' @param method The result summary method. Supported methods are "conintkde", "conintgauss", "origg", "origk", "dirconint" for the "get_optim()" type objects.
 #' @param filename Path to desired file.
 #' @param append Should this be appended to an existing file. Default is FALSE.
 #' @export
@@ -1146,10 +1028,8 @@ cracboot <- function(dens.oblist, clim, n = 100){
 #' dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024);
 #' and <- and_fun(dens.list.raw);
 #' optima <- get_optim(and);
-#' boot.raw <- cracboot(dens.list.raw, clim = climondbioclim, n = 100); 
 #' #Compare to optima.
 #' write_results(optima, clim = climondbioclim, method = 'conintkde', file = 'raw')
-#' write_results(boot.raw, clim = climondbioclim, method = 'conintkde', file = 'boot.raw')
 
 write_results <- function(optima, siteval = '', clim, method, filename, append = F){
 	# type and file name writes output either
