@@ -227,10 +227,10 @@ densform <- function(ex, clim,
 			                           adjust = 1, from = fr, 
 			                           to = t, bw = bw, 
 			                           na.rm = TRUE); 
-			  weights = 1/.vecprob(as.numeric(extr.larr[,names(phytoclim[[i]])]), bg.den$x, bg.den$y)
+	    	o.vec <- as.numeric(extr.larr[,names(phytoclim[[i]])]);
+			  weights = 1/.vecprob(o.vec, bg.den$x, bg.den$y)
         weights = weights/sum(stats::na.omit(weights)); #So the weights sum to 1. Could consider other scaling. i.e., by rank order
        # print(weights);
-        o.vec <- as.numeric(extr.larr[,names(phytoclim[[i]])]);
         o.vec <- cbind(o.vec, weights);
         o.vec = stats::na.omit(o.vec);
         
@@ -329,13 +329,16 @@ densform <- function(ex, clim,
 			larr.mean[1,i] <- mean;
 			larr.sd[1,i] <- sd;
 			range <- max(larr.den.x[,i]) - min(larr.den.x[,i]);
+			#print(sd); print(range);
 			w <- sd/range;
-			larr.w[1,i] = 1/w;
-	    weight = as.numeric(larr.w[1,])
-	    weight =  weight - (min(weight));
-	    weight = weight/(0.5*max(weight));
-	    larr.w[1,] = weight;
-	  }
+			w = 1/w;
+			larr.w[1,i] = w;
+	    #weight = as.numeric(larr.w[1,])
+	   # weight =  weight - (min(weight));
+	   # weight = weight/(0.5*max(weight));
+	    #larr.w[1,] = weight;
+		}
+	  larr.w[1,] = larr.w[1,]/(0.5*max(larr.w[,1]));
 		colnames(larr.den.gauss) <- c(paste(names(phytoclim), "gauss", sep = "."));
 		colnames(larr.mean) <- c(paste(names(phytoclim), "mean", sep = "."));
 		colnames(larr.sd) <- c(paste(names(phytoclim), "sd", sep = "."));
@@ -499,7 +502,7 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", kern='optcosine',
 	  
 	
 	for(i in 1:length(tax.list)){	
-	  print(i);
+	 # print(i);
 	  	s.ex <- subset(ex, ex$tax == tax.list[[i]]);
 		
 	  	s.ex <- stats::na.omit(s.ex);
@@ -815,7 +818,7 @@ get_optim <- function(dens.ob){
 		};
 	};
 	logkde <- ifelse(dens.ob1[[varkde]]>0, log(dens.ob1[[varkde]]*by), -Inf);
-	print(varkde);
+#	print(varkde);
 	origkde <- subset(dens.ob1[[varx]], logkde >= max(stats::na.omit(logkde))*1.01);
 	origk[[j]] <- c(min(stats::na.omit(origkde)), max(stats::na.omit(origkde)));
 	loggauss <- ifelse(dens.ob1[[vargauss]]>0, log(dens.ob1[[vargauss]]*by), -Inf);
