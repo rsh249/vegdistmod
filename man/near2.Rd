@@ -26,9 +26,11 @@ Will return up to one simulated record per given occurrence, however,
  it is unlikely that so many suitable points will be found.
 }
 \examples{
+\dontrun{
 data(abies);
 ext.abies = extraction(abies, climondbioclim, schema='raw');
 dens.abies = densform(ext.abies, climondbioclim);
 n <- near2(ext.abies, climondbioclim, dens.abies, type = '.kde');
+}
 }
 

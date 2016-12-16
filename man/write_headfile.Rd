@@ -17,6 +17,7 @@ write_headfile(site.coord = "", tax.list = "", filename)
 Companion file will include the environmental data extracted for the site locality, site locality information (lat/lon), and the list of taxa used in this analysis as derived from an extraction object. This list may differ from the original list requested if some taxa were excluded due to too few records left once filtered.
 }
 \examples{
+\dontrun{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");
 #OR:
 data(distr); data(climondbioclim);
@@ -30,5 +31,6 @@ tax.list <- unique(subset(extr.raw, extr.raw$tax != 'SITECOORD')$tax);
 #Substitute whatever you called your site if you did it this way. OR:
 #tax.list <- unique(extr.raw$tax);
 write_headfile(site.coord=site.coord, tax.list=tax.list, filename = "headfile.try.hdr")
+}
 }
 

@@ -4,8 +4,8 @@
 \alias{geo_findlocal}
 \title{Search for likely simulated localities with geographic subsetting.}
 \usage{
-geo_findlocal(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 1,
-  manip = "condi", alpha = 0.05, divisions = 10, factor = 4,
+geo_findlocal(ext_ob, clim, type, maxiter = 10, searchrep = 1,
+  manip = "condi", alpha = 0, divisions = 10, factor = 4,
   parallel = FALSE, nclus = 2, w = FALSE)
 }
 \arguments{
@@ -16,9 +16,6 @@ geo_findlocal(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 1,
 \item{type}{Designate either ".gauss" or ".kde".}
 
 \item{maxiter}{Maximum number of search iterations.}
-
-\item{bg}{An object of background point climate data matching the 
-output of extraction(). Generate random backround points and then use extraction().}
 
 \item{searchrep}{How many times to search for simulated localities 
 (per parent occurrence) per iteration. Recommend 1, but feel free to tune this parameter.}
@@ -53,16 +50,16 @@ the effect of applying more locally relevant probability functions to the data.
 }
 \examples{
 \dontrun{
-data(quercus_alba);
-head(que.al)
-ext.qalb = extraction(que.al, climondbioclim, 
+data(abies);
+head(abies)
+ext.abies = extraction(abies, climondbioclim, 
  schema='flat', factor =4,  
- rm.outlier=TRUE, alpha=0.01);
-sea <- geo_findlocal(ext.qalb, climondbioclim, 
+ rm.outlier=FALSE);
+sea <- geo_findlocal(ext.abies, climondbioclim, 
  type = '.kde', maxiter = 5, 
  searchrep = 1, manip = 'condi', 
- divisions = 2)
- plot_clim(sea, climondbioclim[[1]])
+ divisions = 8, parallel =TRUE, nclus = 4)
+ plot_clim(sea, climondbioclim[[5]])
  }
 }
 

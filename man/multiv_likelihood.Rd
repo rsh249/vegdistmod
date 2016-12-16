@@ -22,8 +22,10 @@ Returns a log-likelihood calculated from the climate data at one
  or more localities referenced against a set of climate PDFs.
 }
 \examples{
+\dontrun{
 data(abies);
-ext.abies = extraction(abies, climondbioclim, schema='raw', rm.outlier=FALSE);
+ext.abies = extraction(abies, climondbioclim, schema='raw', 
+ rm.outlier=FALSE);
 dens.abies = densform(ext.abies, climondbioclim);
 for(i in 1:length(ext.abies[,1])){
   m = multiv_likelihood(ext.abies[i,6:length(ext.abies[1,])],
@@ -31,5 +33,6 @@ for(i in 1:length(ext.abies[,1])){
    ext.abies[i, 'prob'] = m;
 }
 print(ext.abies$prob)
+}
 }
 

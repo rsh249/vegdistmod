@@ -23,6 +23,7 @@ write_results(optima, siteval = "", clim, method, filename, append = F)
 Write results from a results object from either vegdistmod::get_optim() to a tab delimited table in a text file. This is done one 'method' at a time. Supported methods are "conintkde", "conintgauss", "origg", "origk", "dirconint" for the "get_optim()" type objects.
 }
 \examples{
+\dontrun{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");
 #OR:
 data(distr); data(climondbioclim);
@@ -32,5 +33,6 @@ and <- and_fun(dens.list.raw);
 optima <- get_optim(and);
 #Compare to optima.
 write_results(optima, clim = climondbioclim, method = 'conintkde', file = 'raw')
+}
 }
 

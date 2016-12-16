@@ -22,6 +22,7 @@ densplot(dens.ob, var, col = sample(grDevices::colours()), type = ".kde",
 Using an object from the densform() function. Plot a single PDF curve in a new plot window.
 }
 \examples{
+\dontrun{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");
 #OR:
 data(distr); data(climondbioclim);
@@ -29,5 +30,6 @@ extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
 extr.sub = subset(extr.raw, extr.raw$tax == extr.raw[5,'tax']);
 dens.sub = densform(extr.sub, clim = climondbioclim, bw = 'nrd0', n = 512);
 densplot(dens.sub, names(climondbioclim[[1]]));
+}
 }
 

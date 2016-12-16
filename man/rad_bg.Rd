@@ -19,7 +19,9 @@ rad_bg(coords, clim, radius, n)
 This function generates a sample of background coordinates that are within n kilometers of one occurrene record up to x background points per record.
 }
 \examples{
+\dontrun{
 data(distr);
 bg.ext <- rad_bg(distr[,4:3], climondbioclim, radius=100, n = 100)
+}
 }
 

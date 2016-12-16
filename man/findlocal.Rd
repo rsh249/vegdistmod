@@ -4,16 +4,13 @@
 \alias{findlocal}
 \title{Search for likely occurrences}
 \usage{
-findlocal(ext_ob, clim, bg = 0, type, maxiter = 50, searchrep = 3,
+findlocal(ext_ob, clim, type = ".kde", maxiter = 50, searchrep = 3,
   manip = "condi", alpha = 0.05, factor = 4, n = 1024, w = FALSE)
 }
 \arguments{
 \item{ext_ob}{A data.frame of climate values (i.e., extracted from the climate raster object). Will be passed to multiv_likelihood().}
 
 \item{clim}{A raster object of climate data (matching x)}
-
-\item{bg}{An object of background point climate data matching the 
-output of extraction(). Generate random backround points and then use extraction().}
 
 \item{type}{Designate either ".gauss" or ".kde".}
 
@@ -48,13 +45,13 @@ reach a near optimal set of simulated occurrences.
 \dontrun{
 
 data(abies);
-ext.abies = extraction(abies, climondbioclim, schema='raw');
-dens.abies = densform(ext.abies, climondbioclim);
+ext.abies = extraction(abies, climondbioclim, schema='flat', factor =4);
 sea <- findlocal(
  ext.abies, climondbioclim, 
  type = '.kde', 
- maxiter = 5, searchrep = 1, 
+ maxiter = 15, searchrep = 1, 
  manip = 'condi');
+ plot_clim(sea[[1]], climondbioclim[[5]])
  }
 }
 

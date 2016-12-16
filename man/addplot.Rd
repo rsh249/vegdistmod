@@ -22,6 +22,7 @@ addplot(dens.ob, var, col = sample(grDevices::colours()), type = ".kde",
 Using an object from the vegdistmod::densform() or vegdistmod::and_fun() or vegdistmod::or_fun() functions, add a PDF over the existing plot. Useful for visualizing joint likelihood curves.
 }
 \examples{
+\dontrun{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");
 #OR:
 data(distr); data(climondbioclim);
@@ -32,5 +33,6 @@ data(distr); data(climondbioclim);
 #addplot(or, names(climondbioclim[[1]]), col ='black');
 #and <- and_fun(dens.list.raw);
 #addplot(and, names(climondbioclim[[1]]), col ='black');
+}
 }
 

@@ -26,11 +26,13 @@ multiplot(dens.oblist, var, col = grDevices::heat.colors(length(dens.oblist)),
 Using an object from the vegdistmod::dens_obj() function. Plot a series PDF curves in a new plot window.
 }
 \examples{
+\dontrun{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");
 #OR:
 data(distr); data(climondbioclim);
 extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
 dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024);
 multiplot(dens.list.raw, names(climondbioclim[[1]]));
+}
 }
 

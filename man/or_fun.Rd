@@ -13,6 +13,7 @@ or_fun(dens.oblist)
 Using an object from the vegdistmod::dens_obj() function. Create a single density object (i.e., like that produced by vegdistmod::densform()) where the probability curves correspond to the probability density function of any one taxon/species from the original set occurring. This is not actually used in the implementation of finding the maximum joint likelihood in a CRACLE analysis, but is a good companion to the vegdistmod::and_fun() function.
 }
 \examples{
+\dontrun{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");
 #OR:
 data(distr);
@@ -22,5 +23,6 @@ dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim, bw = 'nrd0', n = 1024
 multiplot(dens.list.raw, names(climondbioclim[[1]]));
 or <- or_fun(dens.list.raw);
 addplot(or, names(climondbioclim[[1]]), col ='black');
+}
 }
 

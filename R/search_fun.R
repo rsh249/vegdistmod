@@ -12,11 +12,12 @@ NULL
 # @export
 # @examples
 # abies <- get_gbif_cloud('abies');
-# abies.fraseri <- get_gbif_cloud('abies_fraseri')
+# abies.fraseri <- get_gbif_cloud('abies_fraseri') 
 
 
-.get_gbif_cloud <- function(taxon) {
-  curl_string = "curl --user rsh249:7420bklyn http://cloud.diversityoflife.org/cgi-div/tmp_mat_get.pl?taxon="
+.get_gbif_cloud <- function(taxon, user, pw) {
+  #curl_string = paste("curl --user ", user, ":", pw, " http://cloud.diversityoflife.org/cgi-div/tmp_mat_get.pl?taxon=", sep = '');
+  curl_string = paste("curl http://cloud.diversityoflife.org/docs/tmp_mat_get.pl?taxon=", sep = '');
   curl_string = paste(curl_string, taxon, sep = '')
   s = system(curl_string, intern = TRUE)
   if(length(s) < 2){return();}
@@ -126,9 +127,10 @@ NULL
 #' @param w To weight or not to weight by coefficient of variation.
 #'
 #' @export
-#' @examples
+#' @examples \dontrun{
 #' data(abies);
-#' ext.abies = extraction(abies, climondbioclim, schema='raw', rm.outlier=FALSE);
+#' ext.abies = extraction(abies, climondbioclim, schema='raw', 
+#'  rm.outlier=FALSE);
 #' dens.abies = densform(ext.abies, climondbioclim);
 #' for(i in 1:length(ext.abies[,1])){
 #'   m = multiv_likelihood(ext.abies[i,6:length(ext.abies[1,])],
@@ -136,6 +138,7 @@ NULL
 #'    ext.abies[i, 'prob'] = m;
 #' }
 #' print(ext.abies$prob)
+#' }
 
 multiv_likelihood <- function(x, clim, dens, type, w = FALSE) {
   dens.ob1 <- dens;
@@ -245,14 +248,15 @@ multiv_likelihood <- function(x, clim, dens, type, w = FALSE) {
 #' @param w To weight log-likelihoods by coefficient of variation or not. 
 #' 
 #' @export
-#' @examples
+#' @examples \dontrun{
 #' 
 #' data(abies);
 #' ext.abies = extraction(abies, climondbioclim, schema='raw');
 #' dens.abies = densform(ext.abies, climondbioclim);
 #' f <- 
-#'  filter_dist(ext.abies, dens.abies, climondbioclim, alpha = 0.01, type = '.kde')
-#' 
+#'  filter_dist(ext.abies, dens.abies, 
+#'  climondbioclim, alpha = 0.01, type = '.kde')
+#' }
 
 filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.kde', w=FALSE) {
     
@@ -391,14 +395,16 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
 #' @param w To weight log-likelihoods by coefficient of variation or not.
 #'
 #' @export
-#' @examples
+#' @examples \dontrun{
 #' data(abies);
 #' ext.abies = extraction(abies, climondbioclim, schema='raw');
 #' dens.abies = densform(ext.abies, climondbioclim);
 #' n <- near2(ext.abies, climondbioclim, dens.abies, type = '.kde');
+#' }
 
 near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
   cells = ext_ob;
+  cells$prob = as.numeric(rep(0, length(cells[,1])));
   ras = clim;
   dens = dens_ob;
   if (name == 'NULL') {
@@ -452,12 +458,12 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
     #newrecord = matrix(nrow = 100 * nrow(cells), ncol = ncol(cells))
   }
   #maxdist = 500; #FIXED MAXIMUM DISTANCE
-  #dist.v <- (seq(2, as.integer(0.3 * maxdist))); #print(maxdist);
-  dist.v <- seq(5, maxdist);
-  #dist.p <- (1 / sqrt(dist.v)); #print(dist.p);
-  dist.p <- ((max(dist.v) - dist.v)/max(dist.v)); #linear scaling of probabilities.
+ # dist.v <- (seq(2, as.integer(0.3 * maxdist))); #print(maxdist);
+  dist.v <- seq(2, maxdist);
+  dist.p <- (1 / sqrt(dist.v)); #print(dist.p);
+ # dist.p <- ((max(dist.v) - dist.v)/max(dist.v)); #linear scaling of probabilities.
   j = 1;
-  
+  #return(list(cbind(dist.v, dist.p), maxdist))
   #dist.p <- dist.p/max(dist.p); 
   it = 1;
   origl = count;
@@ -574,6 +580,8 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
         (multiv_likelihood(cells[it, 6:length(cells[1, ])], ras,  dens, type = type, w=w))[[1]]
       pnew <-
         (multiv_likelihood(newer[1, 6:length(newer[1, ])], ras, dens, type = type, w=w))[[1]]
+      #  cat(pnew, "::", pold, "\n")
+       # print(c(cells[it,c(4:3, 6:10) ], newer[1, c(4:3, 6:10)]))
       if (pnew >= (pold)) {
        # newrecord[j, 1:ncol(newer)] = (newer); 
        # print(newer);
@@ -658,8 +666,6 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
 #'  (per parent occurrence) per iteration. Recommend 1, but feel free to tune this parameter.
 #' @param factor To be passed to the extraction() function for post search 
 #'  thinning of data to limit overfitting. Set to 1 to ignore.
-#' @param bg An object of background point climate data matching the 
-#'  output of extraction(). Generate random backround points and then use extraction().
 #' @param n An integer value of the number of bins to use for Kernel Density Estimation
 #' @param w To weight the log-likelihoods by coefficient of variation or not.
 
@@ -668,58 +674,38 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
 #' @examples \dontrun{
 #' 
 #' data(abies);
-#' ext.abies = extraction(abies, climondbioclim, schema='raw');
-#' dens.abies = densform(ext.abies, climondbioclim);
+#' ext.abies = extraction(abies, climondbioclim, schema='flat', factor =4);
 #' sea <- findlocal(
 #'  ext.abies, climondbioclim, 
 #'  type = '.kde', 
-#'  maxiter = 5, searchrep = 1, 
+#'  maxiter = 15, searchrep = 1, 
 #'  manip = 'condi');
+#'  plot_clim(sea[[1]], climondbioclim[[5]])
 #'  }
+
 
 
 findlocal <-
   function(ext_ob,
            clim,
-           bg = 0,
-           type,
+           type = '.kde',
            maxiter = 50,
            searchrep = 3,
            manip = 'condi',
            alpha = 0.05,
            factor = 4,
            n = 1024,
-           w=FALSE) {
+           w = FALSE) {
     nrec <- 100000
     
     
     ext = ext_ob
     
-    if (length(bg) < 2) {
-      if (class(ext) == 'list') {
-        bg.hold = .get_bg(clim[[1]])
-        
-        bg = list()
-        
-        for (i in 1:length(clim)) {
-          bg[[i]] = extraction(bg.hold, clim[[i]], schema = 'raw')
-          
-        }
-        
-        
-      } else {
-        bg.e = .get_bg(clim)
-        #bg.e = get_bg(clim)
-        
-        bg = extraction(bg.e, clim, schema = 'raw')
-        
-      }
-      
-    }
     if (class(ext) == 'list') {
       best = list()
     } else {
-      best = 0
+      best = ext
+      
     }
     bestp = vector()
     
@@ -733,48 +719,28 @@ findlocal <-
     
     currdist <- ext
     
-    if (class(ext) == 'list') {
-      name = currdist[[1]][1, 2]
-      
-    } else{
-      name = currdist[1, 2]
-    }
+    
+    name = currdist[1, 2]
+    
     iter = 1
     pnew = 0
     r = clim
-    if (class(ext) == 'list') {
-      dens = list()
-      
-      vporig = matrix(nrow = length(ext[[1]][, 1]), ncol = length(ext))
-      for (a in 1:length(ext)) {
-        currdist[[a]][,1] = as.numeric(as.character(currdist[[a]][,1]));
-        currdist[[a]] <- stats::na.omit(currdist[[a]])
-        dens[[a]] <-
-          densform(currdist[[a]], r[[a]], manip = manip, n = n)
-        currdist[[a]] <- stats::na.omit(currdist[[a]])
-        for (i in 1:length(currdist[[a]][, 1])) {
-          vporig[i, a] <-
-            (multiv_likelihood(currdist[[a]][i, 6:length(currdist[[a]][1,])],
-                               r[[a]],
-                               dens[[a]],
-                               type = type, w=w))[[1]]
-        }
-      }
-      vporig = apply(vporig, 1, sum)
-      
-    } else {
-      currdist[,1] <- as.numeric(as.character(currdist[,1])); 
-      dens <- densform(currdist, r, manip = manip, n=n)
-      vporig <- vector()
-      currdist <- stats::na.omit(currdist)
-      for (i in 1:length(currdist[, 1])) {
-        vporig[i] <-
-          (multiv_likelihood(currdist[i, 6:length(currdist[1,])],
-                             r,
-                             dens,
-                             type = type, w=w))[[1]]
-      }
+    currdist[, 1] <- as.numeric(as.character(currdist[, 1]))
+    
+    dens <- densform(currdist, r, manip = manip, n = n)
+    vporig <- vector()
+    currdist <- stats::na.omit(currdist)
+    for (i in 1:length(currdist[, 1])) {
+      vporig[i] <-
+        (multiv_likelihood(currdist[i, 6:length(currdist[1, ])],
+                           r,
+                           dens,
+                           type = type, w = w))[[1]]
     }
+    currdist = cbind(currdist, vporig)
+    colnames(currdist) = c(colnames(currdist[,-ncol(currdist)]), 'prob');
+    #return(currdist)
+    
     plast <- mean(vporig)
     
     if (length(vporig) >= 100) {
@@ -786,71 +752,47 @@ findlocal <-
       origmin <-
         plast + stats::qnorm(alpha / 2) * (stats::sd(vporig) / sqrt(length(vporig)))
     }
-   # print(alpha)
+    # print(alpha)
     
     porig = plast
-   # print(origmin)
+    print(origmin)
     last <- currdist
-    f = filter_dist(currdist, dens, r, min = origmin, type = type)
+   # f = filter_dist(currdist, dens, r, min = origmin, type = type)
     
-    currdist <- f
-    if (class(ext) == 'list') {
-      dens = list()
-      
-      vporig = matrix(nrow = length(currdist[[1]][, 1]), ncol = length(ext))
-      for (a in 1:length(ext)) {
-        currdist[[a]] <- stats::na.omit(currdist[[a]])
-        dens[[a]] <-
-          densform(currdist[[a]], r[[a]],manip = manip, n = n)
-        currdist[[a]] <- stats::na.omit(currdist[[a]])
-        for (i in 1:length(currdist[[a]][, 1])) {
-          vporig[i, a] <-
-            (multiv_likelihood(currdist[[a]][i, 6:length(currdist[[a]][1,])],
-                               r[[a]],
-                               dens[[a]],
-                               type = type, w=w))[[1]]
-        }
-      }
-      vporig <- stats::na.omit(vporig)
-      vporig = apply(vporig, 1, sum)
-      
-      for (d in 1:length(currdist)) {
-        currdist[[d]]$prob = vporig
-        
-      }
-    } else {
-      dens <- densform(currdist, r, manip = manip)
-      vporig <- vector()
-      currdist <- stats::na.omit(currdist)
-      for (i in 1:length(currdist[, 1])) {
-        vporig[i] <-
-          (multiv_likelihood(currdist[i, 6:length(currdist[1,])],
-                             r,
-                             dens,
-                             type = type, w=w))[[1]]
-      }
-      currdist$prob = vporig
-      
+   # currdist <- f
+    
+    
+    currdist = subset(currdist, currdist$prob >= origmin);
+    
+    dens <- densform(currdist, r, manip = manip)
+    vporig <- vector()
+    currdist <- stats::na.omit(currdist)
+    for (i in 1:length(currdist[, 1])) {
+      vporig[i] <-
+        (multiv_likelihood(currdist[i, 6:length(currdist[1, ])],
+                           r,
+                           dens,
+                           type = type, w = w))[[1]]
     }
+    currdist$prob = vporig
+    #return(currdist)
+    
     plast <- mean(vporig)
     porig = plast
     origmin <- min(vporig)
     
-   # print(origmin)
-  #  cat("porig is: ", porig, '\n')
+    print(origmin)
+    cat("porig is: ", porig, '\n')
     
     last <- currdist
     best = last
     
     best.dens = dens
     
-    if (class(currdist) == 'list') {
-      orig_num = length(currdist[[1]][, 1])
-    } else {
-      orig_num = length(currdist[, 1])
-      
-      
-    }
+    
+    orig_num = length(currdist[, 1])
+    
+    
     
     bestp[bc] = porig
     
@@ -868,148 +810,142 @@ findlocal <-
         currdist <- near2(currdist, r, dens, name = name, type = type)
       }
       
-      if (class(ext) == 'list') {
-        dens = list()
+      
+      vporig <- vector()
+      bep <- vector()
+      
+      currdist <- stats::na.omit(currdist)
+      if (sum(colnames(currdist) %in% 'vporig') > 0) {
+        currdist = currdist[, -ncol(currdist)]
         
-        
-        
-        ##DEFAULT TO BE SET?
-        #Spatial filter is to be done on the first environmental data layer set.
-        #User should have the choice, or this behavior needs to be documented
-        
-        sim <- subset(currdist[[1]], currdist[[1]][, 1] == "0000")
-        if(length(sim[,1])>5){
+      }
+      sim <- subset(currdist, currdist[, 1] == "0000")
+      
+      if (length(sim[, 1]) > 10) {
+        # print("spThin");
+        print(length(sim[, 1]))
         ext.sim <-
-          extraction(sim[, 1:(which(colnames(sim) == 'cells') - 1)], clim[[1]], schema = 'flat', factor = factor, rm.outlier=FALSE)
+          extraction(
+            sim[, 1:(which(colnames(sim) == 'cells') - 1)],
+            clim,
+            schema =
+              'flat',
+            factor = factor,
+            rm.outlier = FALSE
+          )
         
-        sim = ext.sim
+        sim <- ext.sim
         
         sim[, 1] = rep("0000", length(sim[, 1]))
-        } else {
-          sim = sim[!duplicated(sim[,"cells"]),];
-
-        }        
-        sub = subset(currdist[[1]], currdist[[1]][, 1] != '0000')
-        
-        currdist[[1]] = rbind(sub, sim)
-        
-        
-        
-        for (z in 2:length(clim)) {
-          #problem here if there are fewer than 5 new records the extraction() function returns nothing.
-          ext.this = extraction(sim[, 1:(which(colnames(sim) == 'cells') - 1)], clim[[z]], schema = 'raw')
-          
-          ext.this[, 1] = rep("0000", length(ext.this[, 1]))
-          
-          sub = subset(currdist[[z]], currdist[[z]][, 1] != '0000')
-          #print(length(sub[,1]));
-          currdist[[z]] = rbind(sub, ext.this)
-          
-        }
-        sub = 0
-        
-        vporig = matrix(nrow = length(currdist[[1]][, 1]),
-                        ncol = length(currdist))
-        
-        for (a in 1:length(currdist)) {
-          currdist[[a]] <- stats::na.omit(currdist[[a]])
-          
-          sub <- subset(currdist[[a]], currdist[[a]][, 1] != "0000")
-          
-          dens[[a]] = densform(currdist[[a]], r[[a]], manip = manip)
-          
-          for (i in 1:length(currdist[[a]][, 1])) {
-            vporig[i, a] <-
-              (multiv_likelihood(sub[i, 6:length(sub[1,])],
-                                 r[[a]],
-                                 dens[[a]],
-                                 type = type, w=w))[[1]]
-            
-          }
-          
-        }
-        vporig = apply(vporig, 1, sum)
         
       } else {
-        vporig <- vector()
-        currdist <- stats::na.omit(currdist)
-        sim <- subset(currdist, currdist[, 1] == "0000")
-        
-        if (length(sim[, 1]) > 5) {
-         # print("spThin");
-          ext.sim <-
-            extraction(sim[, 1:(which(colnames(sim) == 'cells') - 1)], clim, schema =
-                         'flat', factor = factor, rm.outlier =FALSE)
-          
-          sim <- ext.sim
-          
-          sim[, 1] = rep("0000", length(sim[, 1]))
-          
-        } else {
-          sim <- sim[!duplicated(sim[,"cells"]),];
-          
-        }
-        
-        sub <- subset(currdist, currdist[, 1] != '0000')
-        
-        currdist <- rbind(sub, sim)
+        sim <- sim[!duplicated(sim[, "cells"]), ]
         
         
-        dens = densform(currdist, r,  manip = manip)
-        
-        for (i in 1:length(currdist[, 1])) {
-          vporig[i] <-
-            (multiv_likelihood(sub[i, 6:length(sub[1,])],
-                               r,
-                               dens,
-                               type = type, w=w))[[1]]
-        }
-      } 
-      origmin <- min(vporig)
-      print(origmin)
-      f = filter_dist(currdist, dens, r, min = origmin, type = type)
-      
-      
-      currdist <- f
-      p <- vector()
-      if (class(currdist) == 'list') {
-        nrec = length(currdist[[1]][1,])
-        pnew <- mean(currdist[[1]][, ncol(currdist[[1]])])
-      } else {
-        nrec = length(currdist[1,])
-        pnew <- mean(currdist[, ncol(currdist)])
       }
+      
+      sub <- subset(currdist, currdist[, 1] != '0000')
+     # sub <- sub[,1:(ncol(sub)-1)]
+    #  sim <- sim[,1:(ncol(sim)-1)]
+      
+      currdist <- rbind(sub, sim)
+      
+      dens = densform(currdist, r,  manip = manip)
+      for (i in 1:length(currdist[, 1])) {
+        vporig[i] <-
+          (multiv_likelihood(currdist[i, 6:length(sub[1, ])],
+                             r,
+                             dens,
+                             type = type, w = w))[[1]]
+      }
+      currdist = cbind(currdist, vporig)
+      
+      currdist <- as.data.frame(currdist)
+      
+      
+      colnames(currdist) = c(colnames(currdist[, -ncol(currdist)]), 'prob')
+      #return(currdist)
+      # print(cbind(currdist[,1], vporig));
+      for (i in 1:length(best[, 1])) {
+        bep[i] <-
+          (multiv_likelihood(best[i, 6:length(sub[1, ])],
+                             r,
+                             dens,
+                             type = type, w = w))[[1]]
+      }
+      # return(cbind(sub, vporig))
+      
+      # return( vporig)
+      origmin <- min(vporig[which(currdist[, 1] != '0000')])
+      print(origmin)
+      # f = subset(currdist, vporig>= origmin); # This should not be necessary bc near2 only picks points better than the occ set.
+      
+      
+      # currdist <- f
+      
+      p <- vector()
+      
+      nrec = length(currdist[1, ])
+      pnew <- mean(vporig)
+      
       iter = iter + 1
-      cat('Like: ', pnew, ' ', bestp[bc - 1], '\n')
-
-      if (bestp[[bc - 1]] < pnew) {
+      cat('Like: ', pnew, ' ', mean(bep), '\n')
+      if (is.na(pnew)) {
+       # return(currdist)
+        break;
+      } ##IF this line triggers something went very wrong
+      if (mean(bep) < pnew) {
         best  <- currdist
         best.dens <- dens
-        samecount = 0;
+        samecount = 0
+        
         bestp[bc] = pnew
         
         searchp[bc] = pnew
         
         bc = bc + 1
-        
+        #return(list(best, best.dens));
       } else {
-        bestp[bc] = bestp[bc - 1]
-        
-        currdist = best
-        
-        
-        searchp[bc] = pnew
-        
-        bc  = bc + 1
-        
+        turbo = TRUE;
+        if(turbo == TRUE){
+          sim <- subset(currdist, currdist[,1] == '0000');
+          sub <- subset(currdist, currdist[,1] != '0000')
+          sim <- subset(sim, sim$prob >= mean(bep))
+          currdist <- rbind(sub,sim);
+          if(mean(currdist[,ncol(currdist)])>mean(bep)){
+            best  <- currdist
+            best.dens <- dens
+            samecount = 0
+            
+            bestp[bc] = mean(currdist[,ncol(currdist)])
+            
+            searchp[bc] = mean(currdist[,ncol(currdist)])
+            
+            bc = bc + 1
+          } else {
+            bestp[bc] = bestp[bc - 1]
+            currdist = best
+            searchp[bc] = pnew
+            bc  = bc + 1
+          }
+        } else {
+          bestp[bc] = bestp[bc - 1]
+          currdist = best
+          searchp[bc] = pnew
+          bc  = bc + 1
+        }
       }
-      if (bestp[[bc - 2]] == bestp[[bc-1]]) {
+      #THis is not how we want to count this anymore. 
+      #No progress now is if there is no improvement. I think this works still, but is not right.
+      if (bestp[[bc - 2]] == bestp[[bc - 1]]) {
         samecount = samecount + 1
         
       }
       plast = pnew
       print(iter)
-      if(samecount >10){break;}
+      if (samecount > 10) {
+        break
+      }
       
       if (iter >= maxiter) {
         break
@@ -1041,8 +977,6 @@ findlocal <-
 #'  Default is 5 resulting in 20 (5x4quads) geographically oriented samples to be selected.
 #' @param factor To be passed to the extraction() function for post search 
 #'  thinning of data to limit overfitting. Set to 1 to ignore.
-#' @param bg An object of background point climate data matching the 
-#'  output of extraction(). Generate random backround points and then use extraction().
 #' @param parallel True or False to use parallel computing. This implements 
 #'  each division as embarassingly parallel processes. However,
 #'  note that this option changes the meaning of the divisions object 
@@ -1054,341 +988,338 @@ findlocal <-
 #' 
 #' @export
 #' @examples \dontrun{
-#' data(quercus_alba);
-#' head(que.al)
-#' ext.qalb = extraction(que.al, climondbioclim, 
+#' data(abies);
+#' head(abies)
+#' ext.abies = extraction(abies, climondbioclim, 
 #'  schema='flat', factor =4,  
-#'  rm.outlier=TRUE, alpha=0.01);
-#' sea <- geo_findlocal(ext.qalb, climondbioclim, 
+#'  rm.outlier=FALSE);
+#' sea <- geo_findlocal(ext.abies, climondbioclim, 
 #'  type = '.kde', maxiter = 5, 
 #'  searchrep = 1, manip = 'condi', 
-#'  divisions = 2)
-#'  plot_clim(sea, climondbioclim[[1]])
+#'  divisions = 8, parallel =TRUE, nclus = 4)
+#'  plot_clim(sea, climondbioclim[[5]])
 #'  }
 
  
 
-geo_findlocal <- function(ext_ob, clim, type, maxiter = 10, bg = 0, searchrep = 1, manip = 'condi', alpha = 0.05, divisions = 10, factor = 4, parallel = FALSE, nclus = 2, w=FALSE){
-  ext = ext_ob;
-  if(w == TRUE){}
-  if(length(bg)<2){
-    if(class(ext)=='list'){
-      bg.hold = .get_bg(clim[[1]]);
-      bg = list();
-      for(i in 1:length(clim)){
-        bg[[i]]= extraction(bg.hold, clim[[i]], schema='raw', rm.outlier = FALSE);
-      }
-      
-      
-    } else {
-      bg.e = .get_bg(clim)
-      #bg.e = get_bg(clim);
-      bg = extraction(bg.e, clim, schema='raw', rm.outlier=FALSE);
+geo_findlocal <-
+  function(ext_ob,
+           clim,
+           type,
+           maxiter = 10,
+           searchrep = 1,
+           manip = 'condi',
+           alpha = 0,
+           divisions = 10,
+           factor = 4,
+           parallel = FALSE,
+           nclus = 2,
+           w = FALSE) {
+    ext = ext_ob
+    
+    if (w == TRUE) {
     }
     
-  }
-  
- # search = list();
-  if (parallel == TRUE) {
-    nn = 1
     
-    cl <- parallel::makeCluster(nclus, type = "SOCK")
-   # doParallel::registerDoParallel(cl)
-    doSNOW::registerDoSNOW(cl);
-    
-    search <-
-      foreach::foreach(i = 1:divisions,
-              .combine = 'rbind',
-              .packages = 'vegdistmod') %dopar% {
-              #  source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
-                ##Try the "when()" function instead of while()
-                #when(nn <= divisions)
-                #while(i<divisions){
-                #print(i)
-                #if (nn >= divisions) {return(NA)}
-                if (class(ext) == 'list') {
-                  # for(zzz in 1:length(ext)){
-                  sam.lat <- sample(ext[[1]]$lat, 1)
+    # search = list();
+    if (parallel == TRUE) {
+      cl <- parallel::makeCluster(nclus, type = "SOCK")
+      # doParallel::registerDoParallel(cl)
+      doSNOW::registerDoSNOW(cl)
+      
+      
+      search <-
+        foreach::foreach(i = 1:divisions,
+                         .combine = 'rbind',
+                         .packages = 'vegdistmod') %dopar% {
+                           source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
+                           
+                           n = 0
+                           
+                           sub.nw = NA
+                           
+                           sub.ne = NA
+                           
+                           sub.se = NA
+                           
+                           sub.sw = NA
+                           
+                           while (n < 1) {
+                             sam = ext[sample(nrow(ext), 1), ]
+                            
+                             sam.lat <- sam$lat
+                             
+                             sam.lon <- sam$lon
+                             
+                             sub.nw <-
+                               subset(ext, ext$lon <= sam.lon &
+                                        ext$lat >= sam.lat)
+                             sub.ne <-
+                               subset(ext, ext$lon >= sam.lon &
+                                        ext$lat >= sam.lat)
+                             sub.sw <-
+                               subset(ext, ext$lon <= sam.lon &
+                                        ext$lat <= sam.lat)
+                             sub.se <-
+                               subset(ext, ext$lon >= sam.lon &
+                                        ext$lat <= sam.lat)
+                             if (length(sub.nw[, 1]) < 5 |
+                                 length(sub.ne[, 1]) < 5 |
+                                 length(sub.se[, 1]) < 5 | 
+                                 length(sub.sw[, 1]) < 5) {
+                               
+                             } else{
+                               n = 1
+                               
+                             }
+                           }
+                         #  return(sub.se);
+                           searchit = matrix(nrow = 0, ncol = ncol(ext) + 1)
+                           
+                           searchit <- as.data.frame(searchit)
+                           
+                           colnames(searchit) = c(colnames(ext), 'prob')
+                           if (length(sub.sw[, 1]) >= 5) {
+                             search.sw <-
+                               findlocal(
+                                 sub.sw,
+                                 clim,
+                                 type,
+                                 maxiter = maxiter,
+                                 searchrep = searchrep,
+                                 manip = manip,
+                                 alpha = alpha,
+                                 w = w
+                               )
+                             searchit = rbind(searchit, search.sw[[1]])
+
+                           }
+                           
+                           
+                           if (length(sub.nw[, 1]) >= 5) {
+                             search.nw <-
+                               findlocal(
+                                 sub.nw,
+                                 clim,
+                                 type,
+                                 maxiter = maxiter,
+                                 searchrep = searchrep,
+                                 manip = manip,
+                                 alpha = alpha,
+                                 w = w
+                               )
+                             searchit = rbind(searchit, search.nw[[1]])
+                             
+                             
+                           }
+                           
+                           
+                           if (length(sub.ne[, 1]) >= 5) {
+                             search.ne <-
+                               findlocal(
+                                 sub.ne,
+                                 clim,
+                                 type,
+                                 maxiter = maxiter,
+                                 searchrep = searchrep,
+                                 manip = manip,
+                                 alpha = alpha,
+                                 w = w
+                               )
+                             searchit = rbind(searchit, search.ne[[1]])
+                             
+                             
+                           }
+                           
+                           
+                           if (length(sub.se[, 1]) >= 5) {
+                             search.se <-
+                               findlocal(
+                                 sub.se,
+                                 clim,
+                                 type,
+                                 maxiter = maxiter,
+                                 searchrep = searchrep,
+                                 manip = manip,
+                                 alpha = alpha,
+                                 w = w
+                               )
+                             searchit = rbind(searchit, search.se[[1]])
+                             
+                             
+                           }
+                           
+                           # return(search.se);
+                           
+                           
+                           
                   
-                  sam.lon <- sample(ext[[1]]$lon, 1)
-                  
-                  search.nw.l <- list()
-                  
-                  search.ne.l <- list()
-                  
-                  search.sw.l <- list()
-                  
-                  search.se.l <- list()
-                  
-                  for (zzz in 1:length(ext)) {
-                    sub.nw <-
-                      subset(ext[[zzz]], ext[[zzz]]$lon <= sam.lon &
-                               ext[[zzz]]$lat >= sam.lat)
-                    
-                    sub.ne <-
-                      subset(ext[[zzz]], ext[[zzz]]$lon >= sam.lon &
-                               ext[[zzz]]$lat >= sam.lat)
-                    sub.sw <-
-                      subset(ext[[zzz]], ext[[zzz]]$lon <= sam.lon &
-                               ext[[zzz]]$lat <= sam.lat)
-                    
-                    sub.se <-
-                      subset(ext[[zzz]], ext[[zzz]]$lon >= sam.lon &
-                               ext[[zzz]]$lat <= sam.lat)
-                    
-                    if (length(sub.nw[, 1]) <= 5) {
-                      return(NA)
-                    }
-                    
-                    if (length(sub.sw[, 1]) <= 5) {
-                      return(NA)
-                    }
-                    
-                    if (length(sub.ne[, 1]) <= 5) {
-                      return(NA)
-                    }
-                    
-                    if (length(sub.se[, 1]) <= 5) {
-                      return(NA)
-                    }
-                    search.ne.l[[zzz]] <- sub.nw
-                    
-                    search.nw.l[[zzz]] <- sub.ne
-                    
-                    search.se.l[[zzz]] <- sub.se
-                    
-                    search.sw.l[[zzz]] <- sub.sw
-                    
-                  }
-                  nn = nn + 1
-                  
-                  print(length(search.ne.l))
-                  
-                  search.ne <-
-                    findlocal(
-                      search.ne.l,
-                      clim,
-                      type,
-                      maxiter = maxiter,
-                      searchrep = searchrep,
-                      manip = manip,
-                      factor = factor, w=w
-                    )
-                  search.sw <-
-                    findlocal(
-                      search.sw.l,
-                      clim,
-                      type,
-                      maxiter = maxiter,
-                      searchrep = searchrep,
-                      manip = manip,
-                      factor = factor, w=w
-                    )
-                  search.nw <-
-                    findlocal(
-                      search.nw.l,
-                      clim,
-                      type,
-                      maxiter = maxiter,
-                      searchrep = searchrep,
-                      manip = manip,
-                      factor = factor, w=w
-                    )
-                  search.se <-
-                    findlocal(
-                      search.se.l,
-                      clim,
-                      type,
-                      maxiter = maxiter,
-                      searchrep = searchrep,
-                      manip = manip,
-                      factor = factor, w=w
-                    )
-                  
-                  to.search = rbind(search.nw, search.se, search.sw, search.ne)
-                  
-                  return(to.search)
-                  #}
-                } else {
-                  sam.lat <- sample(ext$lat, 1)
-                  
-                  sam.lon <- sample(ext$lon, 1)
-                  
-                  sub.nw <-
-                    subset(ext, ext$lon <= sam.lon & ext$lat >= sam.lat)
-                  
-                  sub.ne <-
-                    subset(ext, ext$lon >= sam.lon & ext$lat >= sam.lat)
-                  sub.sw <-
-                    subset(ext, ext$lon <= sam.lon & ext$lat <= sam.lat)
-                  
-                  sub.se <-
-                    subset(ext, ext$lon >= sam.lon & ext$lat <= sam.lat)
-                  search.ne = NA
-                  search.se = NA
-                  search.sw = NA
-                  search.nw = NA
-                  if (length(sub.nw[, 1]) >= 5) {
-                    search.nw <-
-                      findlocal(
-                        sub.nw,
-                        clim,
-                        type,
-                        maxiter = maxiter,
-                        bg = bg,
-                        searchrep = searchrep,
-                        manip = manip,
-                        alpha = alpha, w=w
-                      )
-                  }
-                  
-                  if (length(sub.sw[, 1]) >= 5) {
-                    search.sw <-
-                      findlocal(
-                        sub.sw,
-                        clim,
-                        type,
-                        maxiter = maxiter,
-                        bg = bg,
-                        searchrep = searchrep,
-                        manip = manip,
-                        alpha = alpha, w=w
-                      )
-                  }
-                  
-                  if (length(sub.ne[, 1]) >= 5) {
-                    search.ne <-
-                      findlocal(
-                        sub.ne,
-                        clim,
-                        type,
-                        maxiter = maxiter,
-                        bg = bg,
-                        searchrep = searchrep,
-                        manip = manip,
-                        alpha = alpha, w=w
-                      )
-                  }
-                  
-                  if (length(sub.se[, 1]) >= 5) {
-                    search.se <-
-                      findlocal(
-                        sub.se,
-                        clim,
-                        type,
-                        maxiter = maxiter,
-                        bg = bg,
-                        searchrep = searchrep,
-                        manip = manip,
-                        alpha = alpha, w=w
-                      )
-                  }
-                  
-                  
-                
-                
-                 
-                
-                  nn = nn + 1
-                  
-                  
-                  to.search = rbind(search.nw[[1]], search.se[[1]], search.sw[[1]], search.ne[[1]])
-                  
-                  return(to.search)
-                }
-                
-                
-              }
-    parallel::stopCluster(cl)
-    
-    return(search)
-    
-  } else {
-    search = list();
-    i=0;
-    while(i<divisions){
-      print(i)
-      if(class(ext)=='list'){
-        # for(zzz in 1:length(ext)){
-        sam.lat <- sample(ext[[1]]$lat, 1);
-        sam.lon <- sample(ext[[1]]$lon, 1);
-        search.nw.l <- list();
-        search.ne.l <- list();
-        search.sw.l <- list();
-        search.se.l <- list();
-        for(zzz in 1:length(ext)){
-          sub.nw <- subset(ext[[zzz]], ext[[zzz]]$lon <= sam.lon & ext[[zzz]]$lat >= sam.lat);
-          sub.ne <- subset(ext[[zzz]], ext[[zzz]]$lon >= sam.lon & ext[[zzz]]$lat >= sam.lat)
-          sub.sw <- subset(ext[[zzz]], ext[[zzz]]$lon <= sam.lon & ext[[zzz]]$lat <= sam.lat);
-          sub.se <- subset(ext[[zzz]], ext[[zzz]]$lon >= sam.lon & ext[[zzz]]$lat <= sam.lat); 
-          if(length(sub.nw[,1])>= 5){
-            search.nw.l[[zzz]] <- sub.ne;
-          };
-          if(length(sub.sw[,1])>= 5){
-            search.sw.l[[zzz]] <- sub.sw;
-          };
-          if(length(sub.ne[,1])>=5){
-            search.ne.l[[zzz]] <- sub.nw;
-          };
-          if(length(sub.se[,1])>=5){
-            search.se.l[[zzz]] <- sub.se;
-          };
+                           
+                           #  to.search = rbind(stats::na.omit(search.nw[[1]]), stats::na.omit(search.se[[1]]),
+                           # stats::na.omit(search.sw[[1]]), stats::na.omit(search.ne[[1]]))
+                           
+                           return(stats::na.omit(searchit))
+                         }
+      
+      
+      
+      parallel::stopCluster(cl)
+      
+      return(search)
+      
+    } else {
+      search = list()
+      
+      i = 0
+      
+      while (i < divisions) {
+        print(i)
+        
+        n = 0
+        
+        sub.nw = NA
+        
+        sub.ne = NA
+        
+        sub.se = NA
+        
+        sub.sw = NA
+        
+        while (n < 1) {
+          sam = ext[sample(nrow(ext), 1), ]
+          sam.lat <- sam$lat
+          
+          sam.lon <- sam$lon
+          
+          sub.nw <-
+            subset(ext, ext$lon <= sam.lon & ext$lat >= sam.lat)
+          sub.ne <-
+            subset(ext, ext$lon >= sam.lon & ext$lat >= sam.lat)
+          sub.sw <-
+            subset(ext, ext$lon <= sam.lon & ext$lat <= sam.lat)
+          sub.se <-
+            subset(ext, ext$lon >= sam.lon & ext$lat <= sam.lat)
+          if (length(sub.nw[, 1]) < 10 |
+              length(sub.ne[, 1]) < 10 |
+              length(sub.se[, 1]) < 10 | length(sub.sw[, 1]) < 10) {
+            
+          } else{
+            n = 1
+            
+          }
         }
-        i=i+1;
-        print(length(search.ne.l));
-        search.ne <- findlocal(search.ne.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor, w=w)
-        search.sw <- findlocal(search.sw.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor, w=w)
-        search.nw <- findlocal(search.nw.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor, w=w)
-        search.se <- findlocal(search.se.l, clim, type, maxiter=maxiter, searchrep=searchrep, manip = manip, factor = factor, w=w)
+        search.nw = NA
         
-        search[[i]] = rbind(search.nw, search.se, search.sw, search.ne);
-      } else {
-        sam.lat <- sample(ext$lat, 1);
-        sam.lon <- sample(ext$lon, 1);
-        sub.nw <- subset(ext, ext$lon <= sam.lon & ext$lat >= sam.lat);
-        sub.ne <- subset(ext, ext$lon >= sam.lon & ext$lat >= sam.lat)
-        sub.sw <- subset(ext, ext$lon <= sam.lon & ext$lat <= sam.lat);
-        sub.se <- subset(ext, ext$lon >= sam.lon & ext$lat <= sam.lat); 
-        search.nw = NA;
-        search.sw = NA;
-        search.ne = NA;
-        search.se = NA;
-        if(length(sub.nw[,1])>= 5){
-          search.nw <- findlocal(sub.nw, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha, w=w)
-          
-        };
-        if(length(sub.sw[,1])>= 5){
-          search.sw <- findlocal(sub.sw, clim, type, maxiter=maxiter, bg=bg,  searchrep=searchrep, manip = manip, alpha = alpha, w=w)
-          
-        };
-        if(length(sub.ne[,1])>=5){
-          search.ne <- findlocal(sub.ne, clim, type, maxiter=maxiter, bg=bg, searchrep=searchrep, manip = manip, alpha = alpha, w=w)
-        };
-        if(length(sub.se[,1])>=5){
-          search.se <- findlocal(sub.se, clim, type, maxiter=maxiter,  bg=bg, searchrep=searchrep, manip = manip, alpha = alpha, w=w)
-          
-        };
-        i=i+1;
+        search.sw = NA
         
-        search[[i]] = rbind(search.nw[[1]], search.se[[1]], search.sw[[1]], search.ne[[1]]);
+        search.ne = NA
+        
+        search.se = NA
+        
+        searchit = matrix(nrow = 0, ncol = ncol(ext) + 1)
+        
+        searchit <- as.data.frame(searchit)
+        
+        colnames(searchit) = c(colnames(ext), 'prob')
+        #return(searchit)
+        if (length(sub.nw[, 1]) >= 5) {
+          search.nw <-
+            findlocal(
+              sub.nw,
+              clim,
+              type,
+              maxiter = maxiter,
+              searchrep = searchrep,
+              manip = manip,
+              alpha = alpha,
+              w = w
+            )
+          # return(search.nw)
+          # return(list(search.nw, searchit))
+          colnames(search.nw[[1]]) = colnames(searchit)
+          searchit = rbind(stats::na.omit(search.nw[[1]]), searchit)
+          
+          
+        }
+        
+        if (length(sub.sw[, 1]) >= 5) {
+          search.sw <-
+            findlocal(
+              sub.sw,
+              clim,
+              type,
+              maxiter = maxiter,
+              searchrep = searchrep,
+              manip = manip,
+              alpha = alpha,
+              w = w
+            )
+          colnames(search.sw[[1]]) = colnames(searchit)
+          searchit = rbind(stats::na.omit(search.sw[[1]]), searchit)
+          
+        }
+        
+        if (length(sub.ne[, 1]) >= 5) {
+          search.ne <-
+            findlocal(
+              sub.ne,
+              clim,
+              type,
+              maxiter = maxiter,
+              searchrep = searchrep,
+              manip = manip,
+              alpha = alpha,
+              w = w
+            )
+          colnames(search.ne[[1]]) = colnames(searchit)
+          searchit = rbind(stats::na.omit(search.ne[[1]]), searchit)
+          
+        }
+        
+        if (length(sub.se[, 1]) >= 5) {
+          search.se <-
+            findlocal(
+              sub.se,
+              clim,
+              type,
+              maxiter = maxiter,
+              searchrep = searchrep,
+              manip = manip,
+              alpha = alpha,
+              w = w
+            )
+          colnames(search.se[[1]]) = colnames(searchit)
+          searchit = rbind(stats::na.omit(search.se[[1]]), searchit)
+          
+        }
+        
+        i = i + 1
+        
+        search[[i]] = (searchit)
+        
+        #search[[i]] = rbind(stats::na.omit(search.nw[[1]]), stats::na.omit(search.se[[1]]),
+        #                 stats::na.omit(search.sw[[1]], stats::na.omit(search.ne[[1]])));
         
       }
       
       
-    } 
+      
+      
+    }
+    #  hold = matrix(ncol = ncol(search[[1]]));
+    # return(search)
+    hold = search[[1]]
+    
+    
+    for (n in 2:length(search)) {
+    #  print(n)
+      
+      hold = rbind(hold, search[[n]])
+      
+    }
+    return(hold)
     
   }
-  hold = matrix(ncol = ncol(search[[1]]));
-  hold = search[[1]];
-
-  for(n in 2:length(search)){
-    print(n)
-
-    hold = rbind(hold, search[[n]])
-    
-  }
-  return(hold);
-}
 
 #geo_findlocal = compiler::cmpfun(geo_findlocal);
 

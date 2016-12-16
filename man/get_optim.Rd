@@ -13,6 +13,7 @@ get_optim(dens.ob)
 Using an object from the vegdistmod::dens_obj() function. Create a single density object (i.e., like that produced by vegdistmod::densform()) where the probability curves correspond to the probability density function of ALL taxa/species from the original set occurring.
 }
 \examples{
+\dontrun{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");
 #OR:
 data(distr);
@@ -24,5 +25,6 @@ and <- and_fun(dens.list.raw);
 addplot(and, names(climondbioclim[[1]]), col ='black');
 optim.and <- get_optim(and);
 abline(v=optim.and$means[paste(names(climondbioclim[[1]]), 'mean', sep = ".") ])
+}
 }
 

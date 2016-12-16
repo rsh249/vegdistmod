@@ -28,12 +28,14 @@ function will return the same table with statistical outliers
 removed according to the alpha-confidence interval of the multivariate likelihoods.
 }
 \examples{
+\dontrun{
 
 data(abies);
 ext.abies = extraction(abies, climondbioclim, schema='raw');
 dens.abies = densform(ext.abies, climondbioclim);
 f <- 
- filter_dist(ext.abies, dens.abies, climondbioclim, alpha = 0.01, type = '.kde')
-
+ filter_dist(ext.abies, dens.abies, 
+ climondbioclim, alpha = 0.01, type = '.kde')
+}
 }
 

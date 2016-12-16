@@ -15,6 +15,7 @@ and_fun(dens.oblist, w = FALSE)
 Using an object from the vegdistmod::dens_obj() function. Create a single density object (i.e., like that produced by vegdistmod::densform()) where the probability curves correspond to the probability density function of ALL taxa/species from the original set occurring.
 }
 \examples{
+\dontrun{
 #distr <- read.table('test_mat.txt', head=T, sep ="\\t");
 #OR:
 data(distr);
@@ -26,5 +27,6 @@ or <- or_fun(dens.list.raw);
 addplot(or, names(climondbioclim[[1]]), col ='black');
 and <- and_fun(dens.list.raw);
 addplot(and, names(climondbioclim[[1]]), col ='black');
+}
 }
 
