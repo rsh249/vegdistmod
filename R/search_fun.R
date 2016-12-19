@@ -314,34 +314,32 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
 #filter_dist <- compiler::cmpfun(filter_dist);
 
 
-#HIdden function to find the distance between two points
+#Hidden function to find the distance between two points
 .distance <- function(lon1, lat1, lon2, lat2) {
-  R = 6737
-  pi = 3.14159265359;
+  R = 6378.137
+  #pideg = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989;
+
+ # lon1 = as.numeric(as.character(lon1));
+ # lon2 = as.numeric(as.character(lon2));
+#  lat1 = as.numeric(as.character(lat1));
+ # lat2 = as.numeric(as.character(lat2));
+  #cat(lon1, ", ", lat1, ", ", lon2, ", ", lat2, "\n")
+  toRad = pi/180;
+  lon1 = lon1 * toRad
   
-  lon1 = as.numeric(as.character(lon1));
-  lon2 = as.numeric(as.character(lon2));
-  lat1 = as.numeric(as.character(lat1));
-  lat2 = as.numeric(as.character(lat2));
+  lon2 = lon2 * toRad
   
-  lon1 = lon1 * pi / 180
+  lat1 = lat1 * toRad
   
-  lon2 = lon2 * pi / 180
-  
-  lat1 = lat1 * pi / 180
-  
-  lat2 = lat2 * pi / 180
+  lat2 = lat2 * toRad
   
   dlon = lon2 - lon1
   
   dlat = lat2 - lat1
   
-  a = (sin(dlat / 2)) ^ 2 + cos(lat1) * cos(lat2) * (sin(dlon / 2)) ^ 2
+  a = (sin(dlat / 2) ^2) + (cos(lat1) * cos(lat2) * (sin(dlon / 2) ^2))
   
-  c = 2 * atan2(sqrt(a), sqrt(1 - a))
-  
-  d = R * c
-  
+  d = 2 * atan2(sqrt(a), sqrt(1 - a)) * R
   return(d)
   
 }
@@ -351,13 +349,13 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
 
 #Hidden function to get coordinates given a direction and bearing from start point.
 .findcoord <- function(lon, lat, dist, brng) {
-  R = 6737
-  pi = 3.14159265359;
+  R = 6737.137
+ # pi = 3.14159265359;
   
-  lon = as.numeric(as.character(lon));
-  lat = as.numeric(as.character(lat));
-  dist = as.numeric(as.character(dist));
-  brng = as.numeric(as.character(brng));
+  #lon = as.numeric(as.character(lon));
+  #lat = as.numeric(as.character(lat));
+  #dist = as.numeric(as.character(dist));
+  #brng = as.numeric(as.character(brng));
   # print(c(lon, lat));
   brng = brng * (pi / 180)
   #print(brng);

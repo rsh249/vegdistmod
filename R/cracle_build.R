@@ -255,7 +255,7 @@ densform <- function(ex, clim,
         x = extr.larr[,names(phytoclim[[i]])]
         
         #For the gaussian PDF estimates use the weighted mean and sd:
-        mean <- stats::weighted.mean(as.numeric(x), as.numeric(o.vec[,2]));
+        mean <- stats::weighted.mean(as.numeric(o.vec[,1]), as.numeric(o.vec[,2]));
         sd <- sqrt(sum(weights * (x - mean)^2))
         rn <- length(extr.larr[,names(phytoclim[[i]])]);
         
