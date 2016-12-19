@@ -163,7 +163,7 @@ extraction <- function(data, clim, schema = "raw", factor = 0, rm.outlier = FALS
 #' data(climondbioclim);
 #' extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
 #' extr.sub = subset(extr.raw, extr.raw$tax == extr.raw[5,'tax']);
-#' dens.sub = densform(extr.sub, clim = climondbioclim, bw = 'nrd0', n = 128);
+#' dens.sub = densform(extr.sub, clim = climondbioclim, bw = 'nrd0', n = 128, bg.n=25);
 #' densplot(dens.sub, names(climondbioclim[[1]]));
 #' }
 
