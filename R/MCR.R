@@ -73,8 +73,14 @@ MCR <- function(ext, method="unweight", plot = FALSE, file = 'mcr_plot'){
 						#optimatr[[x]] = c;
 						##Get optimal range here:
 						#return(c);
-						range = subset(c, c[,2] == max(c[,2]));
-						optim[,x] = rbind(min(range[,1]), max(range[,1]));
+						if(max(c[,2]) < ntax){
+						  optim[,x] = rbind('NA', 'NA');
+						  print(paste("INCONGRUENCE in variable:", x, " of ", nvars, ". NO MUTUAL RANGE...", sep = ''))
+						} else {
+  						range = subset(c, c[,2] == max(c[,2]));
+						
+						  optim[,x] = rbind(min(range[,1]), max(range[,1]));
+						}
 						if(plot==TRUE){
 							grDevices::png(paste(file, colnames(ext)[head+x], '.png', sep=''), height = 4, width = 4, res = 400, unit='in');
 							graphics::par(mai=c(0.8, 0.8, 0.2, 0.2))
