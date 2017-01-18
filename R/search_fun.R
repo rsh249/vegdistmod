@@ -1361,13 +1361,13 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend
       res = 400
     )
   }
-  graphics::par(mai = c(0.5, 0.5, 0.5, 0), bg = 'darkgrey')
+  graphics::par(mai = c(0.5, 0.5, 0.5, 0))
   
   raster::plot(
     clim,
     #main = names(clim),
     #col = rev(rainbow(1000, start = 0, end = 0.7))
-    col = (grDevices::topo.colors(1000)),
+    col = (grDevices::topo.colors(1000)), colNA = 'black',
     
     breaks = seq(raster::minValue(clim), raster::maxValue(clim), length.out = 1000),
     legend = F,
