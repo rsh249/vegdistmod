@@ -1,7 +1,7 @@
 
 
 
-.gbif_local <- function(taxon, limit){
+.gbif_local <- function(taxon, limit=10000000000000){
   #this will only work on Cuvier
   if(!is.null(grep(" ", taxon))){
     split <- strsplit( taxon, ' ');
@@ -13,6 +13,6 @@
   }
   
   con = DBI::dbConnect(RMySQL::MySQL(), dbname='rh_div_amnh', username='rharbert', host = 'localhost');
-  get = DBI::dbGetQuery(con, "SELECT div_id, genus, species, lat, lon from div_base where genus =", genus, " and species =", species, " LIMIT =", limit, sep='');
+  get = DBI::dbGetQuery(con, paste("SELECT div_id, genus, species, lat, lon from div_base where genus =", genus, " and species =", species, " LIMIT =", limit, sep=''));
   return(get)
 }
