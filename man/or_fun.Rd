@@ -25,4 +25,3 @@ or <- or_fun(dens.list.raw);
 addplot(or, names(climondbioclim[[1]]), col ='black');
 }
 }
-

@@ -35,4 +35,3 @@ data(distr); data(climondbioclim);
 #addplot(and, names(climondbioclim[[1]]), col ='black');
 }
 }
-

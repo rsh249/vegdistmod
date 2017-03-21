@@ -24,4 +24,3 @@ data(distr);
 bg.ext <- rad_bg(distr[,4:3], climondbioclim, radius=100, n = 100)
 }
 }
-

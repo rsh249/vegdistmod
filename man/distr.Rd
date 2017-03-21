@@ -13,4 +13,3 @@ data(distr)
 A sample of GBIF point locality occurrence data for species co-occurring at a vegetation plot in SW Virginia
 }
 \keyword{datasests}
-

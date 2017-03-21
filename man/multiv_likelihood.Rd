@@ -30,9 +30,8 @@ dens.abies = densform(ext.abies, climondbioclim);
 for(i in 1:length(ext.abies[,1])){
   m = multiv_likelihood(ext.abies[i,6:length(ext.abies[1,])],
      climondbioclim, dens.abies, type = '.kde');
-   ext.abies[i, 'prob'] = m;
+   ext.abies[i, 'prob'] = m[[1]];
 }
 print(ext.abies$prob)
 }
 }
-

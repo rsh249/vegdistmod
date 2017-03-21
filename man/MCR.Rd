@@ -19,10 +19,11 @@ MCR(ext, method = "unweight", plot = FALSE, file = "mcr_plot")
 The Mutual Climatic Range method (see especially: Thompson et al 2012) and the Coexistence Approach are fundamentally similar methods implemented in this function to find the minimum interval of coexistence of a list of taxa. This function implements the MCR in both the weighted and unweighted form using a data.frame of climate data attached to species locality information.
 }
 \examples{
+\dontrun{
 data(distr);
 data(climondbioclim);
 extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
 mcr = MCR(extr.raw, method = 'unweight', plot=FALSE);
 mcrw = MCR(extr.raw, method = 'weight', plot=TRUE, file = 'mcr_plot');
 }
-
+}

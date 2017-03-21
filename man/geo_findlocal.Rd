@@ -62,4 +62,3 @@ sea <- geo_findlocal(ext.abies, climondbioclim,
  plot_clim(sea, climondbioclim[[5]])
  }
 }
-

@@ -33,4 +33,3 @@ dens.abies = densform(ext.abies, climondbioclim);
 n <- near2(ext.abies, climondbioclim, dens.abies, type = '.kde');
 }
 }
-

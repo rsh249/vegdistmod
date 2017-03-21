@@ -38,4 +38,3 @@ f <-
  climondbioclim, alpha = 0.01, type = '.kde')
 }
 }
-

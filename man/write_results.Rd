@@ -35,4 +35,3 @@ optima <- get_optim(and);
 write_results(optima, clim = climondbioclim, method = 'conintkde', file = 'raw')
 }
 }
-

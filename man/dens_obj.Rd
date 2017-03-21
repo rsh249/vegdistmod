@@ -44,4 +44,3 @@ dens.list.raw <- dens_obj(extr.raw, clim = climondbioclim,
 multiplot(dens.list.raw, names(climondbioclim[[1]]));
 }
 }
-

@@ -27,4 +27,3 @@ optim.and <- get_optim(and);
 abline(v=optim.and$means[paste(names(climondbioclim[[1]]), 'mean', sep = ".") ])
 }
 }
-

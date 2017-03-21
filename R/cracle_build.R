@@ -18,7 +18,7 @@ NULL
 #' @param alpha Confidence level (i.e., 0.05) for clipping out outlier records.
 #' @param nmin Minimum number of records allowed. Taxa or groups with fewer records will not be returned.
 #' @export
-#' @examples \dontrun{
+#' @examples
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
 #' #OR:
 #' data(distr);

@@ -13,4 +13,3 @@ data(abies)
 A sample of GBIF point locality occurrence data for the genus Abies for illustrating findlocal and geo_findlocal routines
 }
 \keyword{datasests}
-

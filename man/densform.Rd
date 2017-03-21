@@ -44,4 +44,3 @@ dens.sub = densform(extr.sub, clim = climondbioclim, bw = 'nrd0', n = 128, bg.n=
 densplot(dens.sub, names(climondbioclim[[1]]));
 }
 }
-

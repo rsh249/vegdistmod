@@ -15,4 +15,3 @@ data(climondbioclim)
 A dataset of climate model output for 19 bioclimatic variables. Original data (AND MORE) can be found here (Account required but free): https://www.climond.org
 }
 \keyword{datasests}
-

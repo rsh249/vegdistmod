@@ -25,15 +25,3 @@ extraction(data, clim, schema = "raw", factor = 0, rm.outlier = FALSE,
 \description{
 This function is a feature-added wrapper for raster::extract();
 }
-\examples{
-\dontrun{
-#distr <- read.table('test_mat.txt', head=T, sep ="\\t");
-#OR:
-data(distr);
-data(climondbioclim);
-extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
-extr.flat = extraction(data=distr, clim= climondbioclim, schema='flat');
-extr.spec = extraction(data=distr, clim= climondbioclim, schema='species');
-}
-}
-

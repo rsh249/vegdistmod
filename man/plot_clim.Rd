@@ -33,4 +33,3 @@ plot_clim(ext.abies, climondbioclim[[5]]);
 }
 
 }
-

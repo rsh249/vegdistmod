@@ -33,4 +33,3 @@ tax.list <- unique(subset(extr.raw, extr.raw$tax != 'SITECOORD')$tax);
 write_headfile(site.coord=site.coord, tax.list=tax.list, filename = "headfile.try.hdr")
 }
 }
-

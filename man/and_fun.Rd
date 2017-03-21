@@ -29,4 +29,3 @@ and <- and_fun(dens.list.raw);
 addplot(and, names(climondbioclim[[1]]), col ='black');
 }
 }
-

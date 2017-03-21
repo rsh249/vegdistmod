@@ -15,7 +15,7 @@ NULL
 # abies.fraseri <- get_gbif_cloud('abies_fraseri') 
 
 
-.get_gbif_cloud <- function(taxon, user, pw) {
+.get_gbif_cloud <- function(taxon) {
   #curl_string = paste("curl --user ", user, ":", pw, " http://cloud.diversityoflife.org/cgi-div/tmp_mat_get.pl?taxon=", sep = '');
   curl_string = paste("curl http://cloud.diversityoflife.org/docs/tmp_mat_get.pl?taxon=", sep = '');
   curl_string = paste(curl_string, taxon, sep = '')
@@ -135,7 +135,7 @@ NULL
 #' for(i in 1:length(ext.abies[,1])){
 #'   m = multiv_likelihood(ext.abies[i,6:length(ext.abies[1,])],
 #'      climondbioclim, dens.abies, type = '.kde');
-#'    ext.abies[i, 'prob'] = m;
+#'    ext.abies[i, 'prob'] = m[[1]];
 #' }
 #' print(ext.abies$prob)
 #' }
@@ -887,7 +887,7 @@ findlocal <-
       pnew <- mean(vporig)
       
       iter = iter + 1
-      cat('Like: ', pnew, ' ', mean(bep), '\n')
+      cat('Like: pnew', pnew, ' vs. pprimary', mean(bep), '\n')
       if (is.na(pnew)) {
        # return(currdist)
         break;
@@ -904,7 +904,7 @@ findlocal <-
         bc = bc + 1
         #return(list(best, best.dens));
       } else {
-        turbo = TRUE;
+        turbo = TRUE; #Allow user to set in function
         if(turbo == TRUE){
           sim <- subset(currdist, currdist[,1] == '0000');
           sub <- subset(currdist, currdist[,1] != '0000')

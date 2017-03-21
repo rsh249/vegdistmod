@@ -11,13 +11,13 @@
 #' @param plot Boolean (T or F) to indicate whether coexistence interval plots should be generated for each variable.
 #' @param file If plot=T then provide a file name stub (prefix) to identify the plots to be generated. To this stub each variable name and the file extension will be appended.
 #' @export
-#' @examples
-
+#' @examples \dontrun{
 #' data(distr);
 #' data(climondbioclim);
 #' extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
 #' mcr = MCR(extr.raw, method = 'unweight', plot=FALSE);
 #' mcrw = MCR(extr.raw, method = 'weight', plot=TRUE, file = 'mcr_plot');
+#' }
 
 MCR <- function(ext, method="unweight", plot = FALSE, file = 'mcr_plot'){
 	head = which(colnames(ext) %in% 'cells');

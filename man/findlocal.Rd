@@ -54,4 +54,3 @@ sea <- findlocal(
  plot_clim(sea[[1]], climondbioclim[[5]])
  }
 }
-
