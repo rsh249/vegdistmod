@@ -11,7 +11,7 @@
       species = "%%";
     }
   #} 
-  query = paste("SELECT div_id, genus, species, lat, lon from div_base where genus = \'", genus, "\' and species = \'", species, "\' LIMIT ", sprintf("%i", limit), sep='');
+  query = paste("SELECT SQL_NO_CACHE div_id, genus, species, lat, lon from div_base where genus = \'", genus, "\' and species = \'", species, "\' LIMIT ", sprintf("%i", limit), sep='');
   #return(query)
   con = DBI::dbConnect(RMySQL::MySQL(), dbname=db, username=u, host = h, password = pass);
   get = DBI::dbGetQuery(con, query);
