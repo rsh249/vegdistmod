@@ -17,19 +17,20 @@ gbif_get <- function(taxon, maxrec=Inf) {
   round = 0;
   hold = list();
   offset=0;
+  taxon = urltools::url_encode(taxon)
+  
   while(n < 1){
 
     
-    taxon = urltools::url_encode(taxon)
     html_str = paste("https://api.gbif.org/v1/occurrence/search?scientificName=", taxon, "&limit=300&offset=", offset, sep = ''); 
-    jsonget = jsonlite::fromJSON(html_str);
+    jsonget = jsonlite::fromJSON(html_str); 
     round = round+1;
     if(is.null(nrow(jsonget$results))){ print("ERR: 11");return(jsonget)} else {
       hold[[round]] = jsonget$results;
     }  
     
     if(jsonget$endOfRecords == TRUE){
-      n=1;
+      n=1; 
     } else {
       offset = offset+300;
     }
@@ -43,7 +44,7 @@ gbif_get <- function(taxon, maxrec=Inf) {
   }
   df = hold[[1]][,c('key', 'genus', 'specificEpithet', 'decimalLongitude', 'decimalLatitude')]
   for (n in 2:length(hold)){
-    print(n);
+   # print(n);
     nex = hold[[n]][,c('key', 'genus', 'specificEpithet', 'decimalLongitude', 'decimalLatitude')]
     df = rbind(df, nex)
     
