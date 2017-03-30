@@ -120,11 +120,9 @@ get_worldclim <- function(period = 'cur', model = '', version = '1_4', varset = 
     #return(list)
     if(length(grep(list, pattern = '*.bil'))>0){
       r= raster::stack(list[grep(list, pattern='*.bil')])
-    } 
-    if (length(grep(list, pattern = '*.tif'))>0){
+    } else if (length(grep(list, pattern = '*.tif'))>0){
       r= raster::stack(list[grep(list, pattern='*.tif')])
-      
-    }else {
+    } else {
       r = raster::stack(list);
     }
     raster::rasterOptions(maxmemory=1500000000) ##Set max ram for raster to 15GB
