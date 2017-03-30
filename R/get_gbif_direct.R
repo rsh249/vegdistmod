@@ -43,11 +43,13 @@ gbif_get <- function(taxon, maxrec=200000) {
 
   }
   df = hold[[1]][,c('key', 'genus', 'specificEpithet', 'decimalLongitude', 'decimalLatitude')]
+  if(length(hold)>1){
   for (n in 2:length(hold)){
    # print(n);
     nex = hold[[n]][,c('key', 'genus', 'specificEpithet', 'decimalLongitude', 'decimalLatitude')]
     df = rbind(df, nex)
     
+  }
   }
   return(df)
 }
