@@ -4,12 +4,15 @@
 \alias{get_worldclim}
 \title{Download WorldClim data for modern or paleo models.}
 \usage{
-get_worldclim(period = "cur", model = "", varset = "bio", res = 2.5)
+get_worldclim(period = "cur", model = "", version = "1_4",
+  varset = "bio", res = 2.5)
 }
 \arguments{
 \item{period}{A string. Either 'cur', 'midholo', or 'lgm'.}
 
 \item{model}{For paleo models. Which to use (i.e., 'ccsm4'). See http://worldclim.org/paleo-climate1 for options.}
+
+\item{version}{Either '1_4', or '2.0'}
 
 \item{varset}{Either 'bio', 'tmean', 'tmin', 'tmax', or 'prec'.}
 

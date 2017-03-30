@@ -4,7 +4,7 @@
 \alias{gbif_get}
 \title{Download distribution data directly from GBIF API}
 \usage{
-gbif_get(taxon, maxrec = Inf)
+gbif_get(taxon, maxrec = 2e+05)
 }
 \arguments{
 \item{taxon}{A string of the form 'genus species' or 'genus'.}

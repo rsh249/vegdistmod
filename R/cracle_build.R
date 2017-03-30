@@ -172,7 +172,7 @@ densform <- function(ex, clim,
                      
                      manip = 'condi', n = 1024, 
                      from = 0, to = 0, clip = 0,
-                     bg.n = 100){
+                     bg.n = 10){
 #  kern = 'gaussian'
   cut = 0;
  # adjust = (512*60)/n;

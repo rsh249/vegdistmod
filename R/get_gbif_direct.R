@@ -9,7 +9,7 @@
 #' abies <- gbif_get('Abies');
 #' }
 
-gbif_get <- function(taxon, maxrec=Inf) { 
+gbif_get <- function(taxon, maxrec=200000) { 
   
  # require('jsonlite');
   #require('urltools')

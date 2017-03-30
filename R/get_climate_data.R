@@ -6,6 +6,7 @@
 #' @param period A string. Either 'cur', 'midholo', or 'lgm'.
 #' @param model For paleo models. Which to use (i.e., 'ccsm4'). See http://worldclim.org/paleo-climate1 for options.
 #' @param varset Either 'bio', 'tmean', 'tmin', 'tmax', or 'prec'.
+#' @param version Either '1_4', or '2.0'
 #' @param res What spatial resolution? '10', '2.5' arcmin, or '30' seconds. (options are '10', '2.5', '30').
 #' @export
 #' @examples \dontrun{
@@ -13,17 +14,16 @@
 #'
 #' abies <- get_worldclim(period='cur', varset = 'tmean', res=10); 
 #' }
-get_worldclim <- function(period = 'cur', model = '', varset = 'bio', res = 2.5) {
-  
-  
+get_worldclim <- function(period = 'cur', model = '', version = '1_4', varset = 'bio', res = 2.5) {
+ 
   # period = 'cur';
   bs = '';
-  spacer='';
+  spacer='climate/';
   modelstub = '';
   if(period == 'cur'){
     overhead = 'cur';
     bs = '_bil';
-    spacer = 'worldclim/1_4/grid/';
+    spacer = paste('climate/worldclim/', version, '/grid/', sep = '');
   }
   if(period == 'midholo'){
     overhead = 'cmip5/mid';
@@ -81,13 +81,31 @@ get_worldclim <- function(period = 'cur', model = '', varset = 'bio', res = 2.5)
     res=chartr('.', '-', res)
     res = paste(res, 'm', sep ='');
   }
-  varset = paste(modelstub, varset, sep = '');
-  res = paste(res, bs, sep = '');
-  var = paste(varset, res, sep = "_");
+  if(version != 2 | version != "2.0"){
+    varset = paste(modelstub, varset, sep = '');
+    res = paste(res, bs, sep = '');
+    var = paste(varset, res, sep = "_");
+    http_str = 
+      paste("http://biogeo.ucdavis.edu/data/", spacer, overhead, "/", var, ".zip", sep = '');
+    
+  }
   
-  http_str = 
-    paste("http://biogeo.ucdavis.edu/data/climate/", spacer, overhead, "/", var, ".zip", sep = '');
+  if(version == 2 | version == "2.0"){
+    spacer = 'worldclim/v2.0/tif/base/wc2.0_';
+    overhead = res;
+    overhead = gsub('_bil', '', overhead)
+    
+    var = paste("_", varset, sep = '');
+    http_str = 
+      paste("http://biogeo.ucdavis.edu/data/", spacer, overhead, var, ".zip", sep = '');
+    
+  }
   
+  
+  #Version 2.0
+  #http://biogeo.ucdavis.edu/data/worldclim/v2.0/tif/base/wc2.0_10m_vapr.zip
+  
+
   
   ##NOTE: TO SAVE TIME ON LARGE DOWNLOADS CHECK CURRENT DIRECTORY FOR FILES
   
@@ -102,7 +120,11 @@ get_worldclim <- function(period = 'cur', model = '', varset = 'bio', res = 2.5)
     #return(list)
     if(length(grep(list, pattern = '*.bil'))>0){
       r= raster::stack(list[grep(list, pattern='*.bil')])
-    } else {
+    } 
+    if (length(grep(list, pattern = '*.tif'))>0){
+      r= raster::stack(list[grep(list, pattern='*.tif')])
+      
+    }else {
       r = raster::stack(list);
     }
     raster::rasterOptions(maxmemory=1500000000) ##Set max ram for raster to 15GB
