@@ -53,7 +53,7 @@ extraction <- function(data, clim, schema = "raw", factor = 0, rm.outlier = FALS
 		
 		
 	}
-#	extr.larr <- stats::na.omit(extr.larr)
+	extr.larr <- stats::na.omit(extr.larr)
 	if(schema == "raw"){
 		holder <- data.frame();
 		tlist <- unique(extr.larr$tax);

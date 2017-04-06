@@ -16,6 +16,12 @@
   con = DBI::dbConnect(RMySQL::MySQL(), dbname=db, username=u, host = h, password = pass);
   get = DBI::dbGetQuery(con, query);
   DBI::dbDisconnect(con);
+  
+  
+  get[,2] = paste(get[,2], get[,3]);
+  get = get[,-3];
+  
+  colnames(get) = c('ind_id', 'tax', 'lat', 'lon')
   return(get)
 }
 
