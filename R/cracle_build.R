@@ -37,10 +37,10 @@ extraction <- function(data, clim, schema = "raw", factor = 0, rm.outlier = FALS
 	#nclon <- which(colnames(mat.larr)=='lon');
 		
 	extr.larr <- raster::extract(phytoclim, cbind(mat.larr$lon, mat.larr$lat), cellnumbers=T);
-	if(nrow(stats::na.omit(extr.larr))<5){
-	  cat("ERR: Records out of study area\n")
-	  return(NA)
-	}
+	#if(nrow(stats::na.omit(extr.larr))<5){
+	 # cat("ERR: Records out of study area\n")
+	 # return(NA)
+	#}
 	extr.larr <- cbind(mat.larr, extr.larr);
 	if(schema != 'raw'){
 		if(factor == 0){} else {

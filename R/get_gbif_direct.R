@@ -116,19 +116,19 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE) {
   
   
   #GET BIEN DATA
-  # bien = cbind(1,1,1,1);
-  # tryCatch({
-  # bien <-
-  #   BIEN::BIEN_occurrence_species(
-  #     species = taxon,
-  #     native.status = TRUE,
-  #     only.new.world = TRUE
-  #   )
-  # },
-  # error = function(cond) {
-  #   message(cond)
-  #   return(NA)
-  # })
+  bien = cbind(1,1,1,1);
+  tryCatch({
+  bien <-
+    BIEN::BIEN_occurrence_species(
+      species = taxon,
+      native.status = TRUE,
+      only.new.world = TRUE
+    )
+  },
+  error = function(cond) {
+    message(cond)
+    return(NA)
+  })
   
   #get bison data
   bison = cbind(1,1,1,1)
@@ -183,15 +183,15 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE) {
     gbif = NA
   }
   
-  # if (nrow(bien) > 5) {
-  #   bien = bien[, c('datasource_id',
-  #                   'scrubbed_species_binomial',
-  #                   'latitude',
-  #                   'longitude')]
-  #   colnames(bien) = cnames
-  # } else {
-  #   bien = NA
-  # }
+  if (nrow(bien) > 5) {
+    bien = bien[, c('datasource_id',
+                    'scrubbed_species_binomial',
+                    'latitude',
+                    'longitude')]
+    colnames(bien) = cnames
+  } else {
+    bien = NA
+  }
   data <- rbind(inatr, bison, gbif, bien)
   
   data$lat <- as.numeric(as.character(data$lat))
