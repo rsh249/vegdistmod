@@ -14,7 +14,7 @@
 #' }
 
 
-get_bison <- function(taxon, maxrec = Inf) {
+get_bison <- function(taxon, maxrec = 10000) {
   #require('jsonlite');
   #require('urltools')
   taxon = urltools::url_encode(taxon)
@@ -22,6 +22,12 @@ get_bison <- function(taxon, maxrec = Inf) {
   #return(html_str); 
   jsonget = jsonlite::fromJSON(html_str); 
   #return(jsonget)
-  return(jsonget$data)
+  dat = jsonget$data;
+  dat = subset(dat, dat$geo != "No");
+  if(class(dat)=='list'){
+    stop('no data from bison\n')
+    return(NA)
+  }
+  return(dat)
 }  
   

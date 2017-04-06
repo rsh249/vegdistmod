@@ -4,7 +4,7 @@
 \alias{get_bison}
 \title{Download distribution data from BISON (https://bison.usgs.gov)}
 \usage{
-get_bison(taxon, maxrec = Inf)
+get_bison(taxon, maxrec = 10000)
 }
 \arguments{
 \item{taxon}{A string of the form 'genus species'.}

@@ -142,3 +142,87 @@ get_worldclim <- function(period = 'cur', model = '', version = '1_4', varset = 
    # raster::writeRaster(rr);
     return(rr);
 }
+
+
+#' Download ENVIREM topographical data set(s)
+#' 
+#' This function requests raster layers from the envirem dataset (Bemmels, et al. 2017, Ecography)
+#' downloads the zip archive, reads files into R and disposes of the originals because you should 
+#' save the layers in an R ready raster object using raster::writeRaster().
+#' 
+#' @export
+#' @examples \dontrun{
+#' #get 2.5 arcmin grid for North America (only option currently.
+#' envir <- get_envirem_elev(); 
+#' }
+get_envirem_elev <- function() {
+  #https://deepblue.lib.umich.edu/data/downloads/4b29b610g
+  http_str = list();
+  http_str = 'https://deepblue.lib.umich.edu/data/downloads/sj139204g' #new world elev params
+ # http_str = 'https://deepblue.lib.umich.edu/data/downloads/02870v92t' #new world climat 2.5 arcmin
+#  for(zz in 1:length(http_str)){
+    temp = tempfile()
+    td = tempdir();
+    utils::download.file(http_str[[1]], temp)
+    list <- utils::unzip(temp, exdir=td);
+    #return(list)
+    if(length(grep(list, pattern = '*.bil'))>0){
+      r = raster::stack(list[grep(list, pattern='*.bil$')])
+    } else if (length(grep(list, pattern = '*.tif'))>0){
+      r = raster::stack(list[grep(list, pattern='*.tif')])
+    } else {
+      r  = raster::stack(list);
+    }
+    raster::rasterOptions(maxmemory=1500000000) ##Set max ram for raster to 15GB
+    r=raster::brick(r); #should be able to brick to memory now
+    
+    #unlink(temp)
+    system(paste('rm ', temp));
+    for(n in 1:length(list)){
+      system(paste('rm ', list[[n]]))
+    }
+
+  return(r);
+}
+
+#' Download ENVIREM climate data set(s)
+#' 
+#' This function requests raster layers from the envirem dataset (Bemmels, et al. 2017, Ecography)
+#' downloads the zip archive, reads files into R and disposes of the originals because you should 
+#' save the layers in an R ready raster object using raster::writeRaster().
+#' 
+#' @export
+#' @examples \dontrun{
+#' #get 2.5 arcmin grid for North America (only option currently.
+#' envir <- get_envirem; 
+#' }
+get_envirem_clim <- function() {
+  #https://deepblue.lib.umich.edu/data/downloads/4b29b610g
+  http_str = list();
+  #http_str = 'https://deepblue.lib.umich.edu/data/downloads/sj139204g' #new world elev params
+   http_str = 'https://deepblue.lib.umich.edu/data/downloads/02870v92t' #new world climat 2.5 arcmin
+  #  for(zz in 1:length(http_str)){
+  temp = tempfile()
+  td = tempdir();
+  utils::download.file(http_str[[1]], temp)
+  list <- utils::unzip(temp, exdir=td);
+  #return(list)
+  if(length(grep(list, pattern = '*.bil'))>0){
+    r = raster::stack(list[grep(list, pattern='*.bil$')])
+  } else if (length(grep(list, pattern = '*.tif'))>0){
+    r = raster::stack(list[grep(list, pattern='*.tif')])
+  } else {
+    r  = raster::stack(list);
+  }
+  raster::rasterOptions(maxmemory=1500000000) ##Set max ram for raster to 15GB
+  r=raster::brick(r); #should be able to brick to memory now
+  
+  #unlink(temp)
+  system(paste('rm ', temp));
+  for(n in 1:length(list)){
+    system(paste('rm ', list[[n]]))
+  }
+  
+  return(r);
+}
+

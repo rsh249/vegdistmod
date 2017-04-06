@@ -29,7 +29,7 @@ NULL
 #' }
 extraction <- function(data, clim, schema = "raw", factor = 0, rm.outlier = FALSE,  alpha = 0.01, nmin = 5){
 
-	if(length(data[,1]) < 5){cat('ERR: Too few records\n'); return();}
+	if(length(data[,1]) < 5){cat('ERR: Too few records\n'); return(NA);}
 
 	mat.larr <- data;
 	phytoclim <- clim;
@@ -37,6 +37,10 @@ extraction <- function(data, clim, schema = "raw", factor = 0, rm.outlier = FALS
 	#nclon <- which(colnames(mat.larr)=='lon');
 		
 	extr.larr <- raster::extract(phytoclim, cbind(mat.larr$lon, mat.larr$lat), cellnumbers=T);
+	if(nrow(stats::na.omit(extr.larr))<5){
+	  cat("ERR: Records out of study area\n")
+	  return(NA)
+	}
 	extr.larr <- cbind(mat.larr, extr.larr);
 	if(schema != 'raw'){
 		if(factor == 0){} else {
