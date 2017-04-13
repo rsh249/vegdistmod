@@ -151,7 +151,7 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
   #source("~/Desktop/cracle_testing/development_files/rInat.R")
   inatr = cbind(1,1,1,1);
   tryCatch({
-    inatr = vegdistmod::inat(taxon)
+    inatr = vegdistmod::inat(taxon, maxrec = maxrec)
   }, 
   error = function(cond) {
     message(cond)

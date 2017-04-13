@@ -12,6 +12,6 @@
 
 inat <- function(taxon, maxrec = 10000){
   #require(rinat);
-  di = rinat::get_inat_obs(taxon=taxon, maxresults=maxrec)
+  di = rinat::get_inat_obs(taxon_name=taxon, maxresults=maxrec)
   return(di);
 }
