@@ -4,7 +4,8 @@
 \alias{get_dist_all}
 \title{Download distribution data from BIEN, GBIF, Inaturalist,}
 \usage{
-get_dist_all(taxon, maxrec = 19999, local = FALSE)
+get_dist_all(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0,
+  u = 0, pass = 0)
 }
 \arguments{
 \item{taxon}{A string of the form 'genus species' or 'genus'.}
@@ -12,6 +13,14 @@ get_dist_all(taxon, maxrec = 19999, local = FALSE)
 \item{maxrec}{Maximum number of records to download.}
 
 \item{local}{TRUE or FALSE. To use the GBIF API use FALSE}
+
+\item{db}{SQL database. ONLY FOR LOCAL GBIF INSALLATION}
+
+\item{h}{SQL host}
+
+\item{u}{SQL user}
+
+\item{pass}{SQL password}
 }
 \description{
 This function requests data from the GBIF database for a single taxon using the GBIF callback API.

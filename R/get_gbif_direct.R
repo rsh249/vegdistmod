@@ -92,11 +92,15 @@ gbif_get <- function(taxon, maxrec = 200000) {
 #' @param taxon A string of the form 'genus species' or 'genus'.
 #' @param maxrec Maximum number of records to download.
 #' @param local TRUE or FALSE. To use the GBIF API use FALSE
+#' @param db SQL database. ONLY FOR LOCAL GBIF INSALLATION
+#' @param h SQL host
+#' @param u SQL user
+#' @param pass SQL password
 #' @export
 #' @examples \dontrun{
 #' abies <- gbif_dist_all('Abies', maxrec = 1000, local = FALSE);
 #' }
-get_dist_all <- function(taxon, maxrec = 19999, local = FALSE) {
+get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u = 0, pass = 0) {
   ###GET DATA
   #GET GBIF DATA direct
   library(vegdistmod)
@@ -104,7 +108,9 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE) {
   tryCatch({
     if(local == FALSE){
       gbif <- gbif_get(taxon, maxrec = 199999)
-    } else {}
+    } else {
+      gbif <- .gbif_local(taxon, limit = maxrec, db = db, h = h, u = u, pass = pass)
+    }
   },
   error = function(cond) {
     message(cond)
@@ -142,7 +148,7 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE) {
   })
   
   #get inaturalist data
-  source("~/Desktop/cracle_testing/development_files/rInat.R")
+  #source("~/Desktop/cracle_testing/development_files/rInat.R")
   inatr = cbind(1,1,1,1);
   tryCatch({
     inatr = vegdistmod::inat(taxon)
