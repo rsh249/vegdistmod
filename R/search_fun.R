@@ -762,7 +762,7 @@ findlocal <-
     
     currdist = subset(currdist, currdist$prob >= origmin);
     
-    dens <- densform(currdist, r, manip = manip)
+    dens <- densform(currdist, r, manip = manip, n=n)
     vporig <- vector()
     currdist <- stats::na.omit(currdist)
     for (i in 1:length(currdist[, 1])) {
@@ -848,7 +848,7 @@ findlocal <-
       
       currdist <- rbind(sub, sim)
       
-      dens = densform(currdist, r,  manip = manip)
+      dens = densform(currdist, r,  manip = manip, n=n)
       for (i in 1:length(currdist[, 1])) {
         vporig[i] <-
           (multiv_likelihood(currdist[i, 6:length(sub[1, ])],

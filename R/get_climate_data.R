@@ -194,7 +194,7 @@ get_envirem_elev <- function() {
 #' @export
 #' @examples \dontrun{
 #' #get 2.5 arcmin grid for North America (only option currently.
-#' envir <- get_envirem; 
+#' envir <- get_envirem_clim();
 #' }
 get_envirem_clim <- function() {
   #https://deepblue.lib.umich.edu/data/downloads/4b29b610g

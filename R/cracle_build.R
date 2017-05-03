@@ -160,6 +160,7 @@ extraction <- function(data, clim, schema = "raw", factor = 0, rm.outlier = FALS
 #' @param to vector of ending points by variable. Default is the variable layer maximum.
 #' @param clip A character string of value "range" or "95conf" or "99conf". Should the probability functions be clipped to either the empirical range or the 95 or 99 percent confidence interval? 
 #' @param bg.n If manip = 'condi'. How many background points PER OCCURRENCE record should be sampled. Default is 1000.
+#' @param bg Optionally send a matrix of an extraction object to use as the background sample.
 #' @export
 #' @examples \dontrun{
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
@@ -176,7 +177,7 @@ densform <- function(ex, clim,
                      
                      manip = 'condi', n = 1024, 
                      from = 0, to = 0, clip = 0,
-                     bg.n = 10){
+                     bg.n = 10, bg=NULL){
 #  kern = 'gaussian'
   cut = 0;
  # adjust = (512*60)/n;
@@ -207,10 +208,10 @@ densform <- function(ex, clim,
 	dmatrix = matrix(ncol = ncoords,
 	                 nrow = ncoords);
 	#  print("Getting distance matrix");
-	
+	if(!is.null(bg)){
 	for(xx in 1:ncoords){
 	  for(yy in xx:ncoords){
-	    dmatrix[xx,yy] <- .distance(extr.larr$lon[xx], extr.larr$lat[xx], 
+	    dmatrix[xx,yy] <- vegdistmod:::.distance(extr.larr$lon[xx], extr.larr$lat[xx], 
 	                                extr.larr$lon[yy], extr.larr$lat[yy]);
 	    
 	    
@@ -226,6 +227,9 @@ densform <- function(ex, clim,
 	                phytoclim, 
 	                radius = bg.rad, 
 	                n = bg.n)
+	} else {
+	  bg.ex = bg;
+	}
 	#	 print("after")
 	}
 	
@@ -254,7 +258,7 @@ densform <- function(ex, clim,
 			                        n = n, kernel = kern, 
 			                        from = fr,  to = t, weights = o.vec[,2],
 			                        bw = bw, na.rm = TRUE);
-		  	bg.mean <- mean(bg.ex[,names(phytoclim[[i]])]);
+		  	bg.mean <- mean(as.numeric(bg.ex[,names(phytoclim[[i]])]));
 		  	bg.sd <- stats::sd(bg.ex[,names(phytoclim[[i]])]);
         x = extr.larr[,names(phytoclim[[i]])]
         
@@ -414,7 +418,7 @@ rad_bg <- function(coords, clim, radius, n){
      # print(paste('zz', zz))
       dir = sample(1:360, 1)
       dist = sample(1:radius, 1);
-      bg.mat[(i*zz),1:2] = .findcoord(extr[i,1], extr[i,2], dist, dir)
+      bg.mat[(i*zz),1:2] = vegdistmod:::.findcoord(extr[i,1], extr[i,2], dist, dir)
       
     }
   }

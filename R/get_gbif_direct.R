@@ -19,7 +19,7 @@ gbif_get <- function(taxon, maxrec = 200000) {
   hold = list()
   
   offset = 0
-  
+  tori = taxon;
   taxon = urltools::url_encode(taxon)
   
   while (n < 1) {
@@ -82,6 +82,7 @@ gbif_get <- function(taxon, maxrec = 200000) {
   df = df[,-3];
   
   colnames(df) = c('ind_id', 'tax', 'lat', 'lon')
+  df$tax = rep(tori, nrow(df));
   return(df)
 }
 
