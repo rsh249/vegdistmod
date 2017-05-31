@@ -1428,14 +1428,14 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend
 #' data(abies);
 #' ext.abies = extraction(abies, climondbioclim, schema='raw', factor=16, rm.outlier=TRUE, alpha = 0.005);
 #' dens <- densform(ext.abies, climondbioclim, manip = 'condi', kern = 'gaussian', n = 128, bg.n = 1000)
-#' h = heat_up(climondbioclim, dens, parallel=FALSE, type = '.kde', nclus =4)
-#' plot(h)
-#' points(ext.abies[,4:3])
+#' h = heat_up(climondbioclim, dens, parallel=TRUE, type = '.kde', nclus =4)
 #' hs = sum(h)
 #' ex.h = raster::extract(hs, ext.abies[,4:3])
-#' plot(hs>sort(ex.h)[ceiling(0.1*length(ex.h))])
+#' plot(hs>sort(ex.h)[ceiling(0.01*length(ex.h))])
 #' points(ext.abies[,4:3], col ='green')
 #' }
+
+
 heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = FALSE){
   #whole = .get_bg(clim);
   whole.ex=raster::extract(clim,raster::extent(clim),cellnumbers=T,df=T) #climate values for climate raster
