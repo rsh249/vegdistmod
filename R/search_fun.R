@@ -1426,10 +1426,14 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend
 #' @export
 #' @examples \dontrun{
 #' data(abies);
-#' ext.abies = extraction(abies, climondbioclim, schema='raw');
-#' den <- densform(ext.abies, cl)
-#' h = heat_up(cl, den)
+#' ext.abies = extraction(abies, climondbioclim, schema='raw', factor=8, rm.outlier=TRUE, alpha = 0.001);
+#' dens <- densform(ext.abies, climondbioclim, manip = 'condi', kern = 'gaussian', n = 128, bg.n = 1000)
+#' h = heat_up(climondbioclim, dens, parallel=TRUE, nclus =4)
 #' plot(h)
+#' points(ext.abies[,4:3])
+#' ex.h = raster::extract(h, ext.abies[,4:3])
+#' plot(h>sort(ex.h)[ceiling(0.05*length(ex.h))])
+#' points(ext.abies[,4:3], col ='green')
 #' }
 heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = FALSE){
   #whole = .get_bg(clim);
@@ -1441,29 +1445,33 @@ heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = F
     
     cl <- parallel::makeCluster(nclus, type = "SOCK")
     doSNOW::registerDoSNOW(cl);
-    
+    npart = ceiling(length(whole.ex[,1])/nclus)
     lvec <-
-      foreach::foreach(i = 1:ceiling(0.1*length(whole.ex[,1])),
+      foreach::foreach(i = 1:nclus,
               .packages = 'vegdistmod'
                     ) %dopar% {
-        #Add to line above: .packages = 'vegdistmod'
+        #Add to line above: .pacfkages = 'vegdistmod'
        # source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
-        m = multiv_likelihood(whole.ex[(((i-1)*10)+1):(i*10),3:length(whole.ex[1,])], clim, dens, type = type, w=w);
-        m = (m[[1]]);
-        if(length(m) < 10){
-          m = rep(-Inf, 10)
+        subv = vector();
+        x=0;
+        for(n in (((i-1)*npart)+1):(i*npart)){
+          x=x+1;
+          m = multiv_likelihood(whole.ex[n,3:length(whole.ex[1,])], clim, dens, type = type, w=w);
+          subv[[x]] = (m[[1]]);
+          
         }
-        for(n in 1:length(m)){
-                if(m[[n]] == 0 | m[[n]] == -Inf){m[[n]]=NA;}
-        }
-        return(as.numeric(m));
+        
+        return(as.numeric(subv));
       }
     parallel::stopCluster(cl)
+    
+    
     lvec = unlist(lvec);
     #return(lvec)
   } else {
     lvec = vector();
     for(i in 1:length(whole.ex[,1])){
+      #print(i);
       m = multiv_likelihood(whole.ex[i,3:length(whole.ex[1,])], clim, dens, type = type, w=w);
       if(m[[1]] == 0 | m[[1]] == -Inf){m=NA;}
       lvec[[i]] = m[[1]];

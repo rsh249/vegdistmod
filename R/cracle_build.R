@@ -204,11 +204,11 @@ densform <- function(ex, clim,
 		eval <- data.frame();
 		bg.eval = data.frame();
 	  ncoords = length(extr.larr$lon);
-	if(condi==TRUE){
+	if(condi==TRUE){ 
 	dmatrix = matrix(ncol = ncoords,
 	                 nrow = ncoords);
 	#  print("Getting distance matrix");
-	if(!is.null(bg)){
+	if(is.null(bg)){
 	for(xx in 1:ncoords){
 	  for(yy in xx:ncoords){
 	    dmatrix[xx,yy] <- vegdistmod:::.distance(extr.larr$lon[xx], extr.larr$lat[xx], 
@@ -222,7 +222,9 @@ densform <- function(ex, clim,
 	#record within 5x the mean distance between all points in the sample.
 	#This threshold is arbitrary and needs to be empirically tested, but does seem to work.
 	bg.rad = 5*mean(stats::na.omit(dmatrix));
-	#	  print("before rad_bg");
+#	print(bg.rad)
+	#  bg.rad = max(stats::na.omit(dmatrix));
+		 # print("before rad_bg");
 	bg.ex <- rad_bg(cbind(extr.larr$lon, extr.larr$lat), 
 	                phytoclim, 
 	                radius = bg.rad, 
