@@ -1426,13 +1426,14 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend
 #' @export
 #' @examples \dontrun{
 #' data(abies);
-#' ext.abies = extraction(abies, climondbioclim, schema='raw', factor=8, rm.outlier=TRUE, alpha = 0.001);
+#' ext.abies = extraction(abies, climondbioclim, schema='raw', factor=16, rm.outlier=TRUE, alpha = 0.005);
 #' dens <- densform(ext.abies, climondbioclim, manip = 'condi', kern = 'gaussian', n = 128, bg.n = 1000)
-#' h = heat_up(climondbioclim, dens, parallel=TRUE, nclus =4)
+#' h = heat_up(climondbioclim, dens, parallel=FALSE, type = '.kde', nclus =4)
 #' plot(h)
 #' points(ext.abies[,4:3])
-#' ex.h = raster::extract(h, ext.abies[,4:3])
-#' plot(h>sort(ex.h)[ceiling(0.05*length(ex.h))])
+#' hs = sum(h)
+#' ex.h = raster::extract(hs, ext.abies[,4:3])
+#' plot(hs>sort(ex.h)[ceiling(0.1*length(ex.h))])
 #' points(ext.abies[,4:3], col ='green')
 #' }
 heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = FALSE){
@@ -1445,50 +1446,55 @@ heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = F
     
     cl <- parallel::makeCluster(nclus, type = "SOCK")
     doSNOW::registerDoSNOW(cl);
-    npart = ceiling(length(whole.ex[,1])/nclus)
+    npart = ceiling(nlayers(clim)/nclus)
     lvec <-
-      foreach::foreach(i = 1:nclus,
-              .packages = 'vegdistmod'
+      foreach::foreach(i = 1:nlayers(clim),
+              .packages = 'vegdistmod', .combine='cbind'
                     ) %dopar% {
-        #Add to line above: .pacfkages = 'vegdistmod'
-       # source('~/Desktop/cracle_testing/vegdistmod/R/search_fun.R')
-        subv = vector();
-        x=0;
-        for(n in (((i-1)*npart)+1):(i*npart)){
-          x=x+1;
-          m = multiv_likelihood(whole.ex[n,3:length(whole.ex[1,])], clim, dens, type = type, w=w);
-          subv[[x]] = (m[[1]]);
+#        source('~/Desktop/cracle_testing/vegdistmod/R/cracle_build.R')
+        vp = vegdistmod:::.vecprob(whole.ex[,i+2],
+                      dens[paste(names(clim[[i]]), 'x', sep = ".")][[1]], 
+                      dens[paste(names(clim[[i]]), type, sep ='')][[1]])
+            whole.ex[,i+2] = (vp); #replace values with probabilities
           
-        }
-        
-        return(as.numeric(subv));
+        return(as.numeric(whole.ex[,i+2]));
       }
     parallel::stopCluster(cl)
     
+    whole.ex = lvec;
+    for(z in 1:nlayers(clim)){
+      r=raster::raster(nrows=nrow(clim),ncol=ncol(clim), crs="+proj=longlat +datum=WGS84",ext=raster::extent(clim)) #make raster of same extent and dimensions as original climate raster
+      r=raster::setValues(r,values=log(whole.ex[,z])) #set the values as the new probability values
+      clim[[z]] = r; #replace raster layers from clim with prob layers.
+    }
+    names(clim) = colnames(whole.ex)
+    return(clim)
     
-    lvec = unlist(lvec);
+   # lvec = unlist(lvec);
     #return(lvec)
   } else {
-    lvec = vector();
-    for(i in 1:length(whole.ex[,1])){
-      #print(i);
-      m = multiv_likelihood(whole.ex[i,3:length(whole.ex[1,])], clim, dens, type = type, w=w);
-      if(m[[1]] == 0 | m[[1]] == -Inf){m=NA;}
-      lvec[[i]] = m[[1]];
+    
+    for(i in 3:ncol(whole.ex)){
+      m = vegdistmod:::.vecprob(whole.ex[,i], 
+                            dens[paste(names(clim[[i-2]]), 'x', sep = ".")][[1]], 
+                            dens[paste(names(clim[[i-2]]), type, sep ='')][[1]])
+      whole.ex[,i] = m; #replace values with probabilities
     }
-  }
+  
   
   ###extract all cells from raster
   
   # get multiv_likelihood for each cell
   
   # Write vector of likelihoods to raster of same extent:
-  r=raster::raster(nrows=nrow(clim),ncol=ncol(clim),crs="+proj=longlat +datum=WGS84",ext=raster::extent(clim)) #make raster of same extent and dimensions as original climate raster
-  r=raster::setValues(r,values=lvec) #set the values as the new probability values
-  
-  
-  return(r)
-  
+  for(z in 1:nlayers(clim)){
+    r=raster::raster(nrows=nrow(clim),ncol=ncol(clim), crs="+proj=longlat +datum=WGS84",ext=raster::extent(clim)) #make raster of same extent and dimensions as original climate raster
+    r=raster::setValues(r,values=log(whole.ex[,z+2])) #set the values as the new probability values
+    clim[[z]] = r; #replace raster layers from clim with prob layers.
+  }
+  names(clim) = colnames(whole.ex[,3:ncol(whole.ex)])
+  return(clim)
+  }
   
 }
 

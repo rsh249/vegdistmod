@@ -380,17 +380,29 @@ densform <- function(ex, clim,
 #densform = compiler::cmpfun(densform);
 
 .vecprob <- function(search, x,y){
-  to <- max(x);
+  to <- max(x); 
   from <- min(x);
   num <- length(x);
-  by = (to - from)/num;
-  bin = floor((search - from) / by) + 1;
-  if(length(bin)>1){} else{
-    if (bin <= 0){bin =0;}
-    if (bin > length(x)){bin = length(x)}
+  by = (to - from)/num; 
+  bin = floor((search - from) / by)+1; 
+  
+  if(length(bin)>1){
+    for(nn in 1:length(bin)){
+      if (is.na(bin[[nn]])) { bin[[nn]] = 1; }
+      if (bin[[nn]] <= 1) { bin[[nn]] = 1; }
+      if (bin[[nn]] > num) { bin[[nn]] = num; }
+    }
+  } else{
+    if (bin <= 1){bin =1;}
+    if (bin > num){
+      bin = num
+    }
   }
   ret = y[bin]*by;
-  ret[ret == NA] <- min(stats::na.omit(ret));
+
+ # ret[ret == NA] <- min(stats::na.omit(ret));
+  ret[ret== -Inf] <- NA;
+  ret[is.na(search)] = NA;
   return(ret);
 }
 
