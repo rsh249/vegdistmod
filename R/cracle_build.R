@@ -570,6 +570,7 @@ dens_obj <- function(ex, clim, manip = 'condi', bw = "nrd0", kern='optcosine',
 #' 
 #' Using an object from the vegdistmod::dens_obj() function. Create a single density object (i.e., like that produced by vegdistmod::densform()) where the probability curves correspond to the probability density function of any one taxon/species from the original set occurring. This is not actually used in the implementation of finding the maximum joint likelihood in a CRACLE analysis, but is a good companion to the vegdistmod::and_fun() function.
 #' @param dens.oblist An object derived from the vegdistmod::dens_ob() function.
+#' @export
 #' @examples \dontrun{
 #' #distr <- read.table('test_mat.txt', head=T, sep ="\t");
 

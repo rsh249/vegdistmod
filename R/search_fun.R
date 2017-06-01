@@ -1426,13 +1426,44 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend
 #' @export
 #' @examples \dontrun{
 #' data(abies);
-#' ext.abies = extraction(abies, climondbioclim, schema='raw', factor=16, rm.outlier=TRUE, alpha = 0.005);
+#' data(climondbioclim);
+#' ext.abies = extraction(abies, climondbioclim, schema='raw', rm.outlier=TRUE, alpha = 0.005);
 #' dens <- densform(ext.abies, climondbioclim, manip = 'condi', kern = 'gaussian', n = 128, bg.n = 1000)
-#' h = heat_up(climondbioclim, dens, parallel=TRUE, type = '.kde', nclus =4)
+#' h = heat_up(climondbioclim, dens, parallel=FALSE, type = '.kde', nclus =4)
 #' hs = sum(h)
 #' ex.h = raster::extract(hs, ext.abies[,4:3])
 #' plot(hs>sort(ex.h)[ceiling(0.01*length(ex.h))])
 #' points(ext.abies[,4:3], col ='green')
+#'  
+#' ##Bootstrap: With train/test subsetting and model evaluation
+#'
+#' binary = list();
+#' for (i in 1:100){
+#' data.ex = extraction(abies, climondbioclim, schema='flat', factor =2, rm.outlier=TRUE, alpha = 0.001)
+#' pick = as.numeric(sample(data.ex[,1], 0.5*length(data.ex[,1]), replace =F));
+#' train = data.ex[which(data.ex[,1] %in% pick),]
+#' test = data.ex[-which(data.ex[,1] %in% pick),]
+#' d.train <- densform(train, climondbioclim, 
+#'      manip = 'condi', kern = 'gaussian', n = 128, bg.n = 1000)
+#' h.t = heat_up(climondbioclim, d.train, parallel=TRUE, type = '.kde', nclus =4)
+#' hs.t = sum(h.t)
+#' ex.h = raster::extract(hs.t, test[,4:3])
+#' binary[[i]] = hs.t>sort(ex.h)[ceiling(0.1*length(ex.h))];
+#' plot(binary[[i]])
+#' points(test[,4:3], col ='purple', pch = 20)
+#' 
+#' bg <- rad_bg(test[,4:3], climondbioclim[[1]], radius = 2000, n = 200)
+#' bg.e <- raster::extract(hs.t, bg[,4:3]);
+#' ev <- evaluate(ex.h, bg.e)
+#' print(ev)
+#' 
+#' bg.bin <- raster::extract(binary[[i]], bg[,4:3]);
+#' ex.bin <- raster::extract(binary[[i]], test[,4:3]);
+#' ev.bin <- evaluate(ex.bin, bg.bin)
+#' print(ev.bin)
+#' bin.auc[[i]] = ev.bin@auc
+#' }
+#' 
 #' }
 
 
