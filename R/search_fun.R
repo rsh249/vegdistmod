@@ -1438,8 +1438,10 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend
 #' ##Bootstrap: With train/test subsetting and model evaluation
 #'
 #' binary = list();
+#' bin.auc = list();
+#' ev.auc = list();
+#' data.ex = extraction(abies, climondbioclim, schema='flat', factor =2, rm.outlier=TRUE, alpha = 0.01)
 #' for (i in 1:100){
-#' data.ex = extraction(abies, climondbioclim, schema='flat', factor =2, rm.outlier=TRUE, alpha = 0.001)
 #' pick = as.numeric(sample(data.ex[,1], 0.5*length(data.ex[,1]), replace =F));
 #' train = data.ex[which(data.ex[,1] %in% pick),]
 #' test = data.ex[-which(data.ex[,1] %in% pick),]
@@ -1456,6 +1458,7 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend
 #' bg.e <- raster::extract(hs.t, bg[,4:3]);
 #' ev <- evaluate(ex.h, bg.e)
 #' print(ev)
+#' ev.auc[[i]] = ev@auc;
 #' 
 #' bg.bin <- raster::extract(binary[[i]], bg[,4:3]);
 #' ex.bin <- raster::extract(binary[[i]], test[,4:3]);
@@ -1463,6 +1466,13 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend
 #' print(ev.bin)
 #' bin.auc[[i]] = ev.bin@auc
 #' }
+#' bin.stack = stack(unlist(binary))
+#' bin.sum = sum(bin.stack)
+#' bin.weightave = sum(bin.stack * unlist(bin.auc))/sum(unlist(bin.auc))
+#' plot(bin.sum>50); #bootstrap consensus
+#' plot(bin.weightave>0.5); #weighted (bin.auc) consensus
+#' points(data.ex[,4:3], pch = 20, cex =0.5)
+#' 
 #' 
 #' }
 

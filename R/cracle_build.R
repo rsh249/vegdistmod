@@ -221,7 +221,7 @@ densform <- function(ex, clim,
 	#NOTE: The background is selected from a radius around each occurrence
 	#record within 5x the mean distance between all points in the sample.
 	#This threshold is arbitrary and needs to be empirically tested, but does seem to work.
-	bg.rad = 5*mean(stats::na.omit(dmatrix));
+	bg.rad = 3*max(stats::na.omit(dmatrix));
 #	print(bg.rad)
 	#  bg.rad = max(stats::na.omit(dmatrix));
 		 # print("before rad_bg");
@@ -257,7 +257,7 @@ densform <- function(ex, clim,
         
         #For the KDE PDF use the weights option in the stats::density function to estimate the conditional probability
 			  den <- stats::density(o.vec[,1], 
-			                        n = n, kernel = kern, 
+			                        n = n, kernel = kern, adjust = 1.2,
 			                        from = fr,  to = t, weights = o.vec[,2],
 			                        bw = bw, na.rm = TRUE);
 		  	bg.mean <- mean(as.numeric(bg.ex[,names(phytoclim[[i]])]));
