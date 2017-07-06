@@ -114,7 +114,7 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
     }
   },
   error = function(cond) {
-    message(cond)
+    message(paste("GBIF", cond))
     return(NA)
   })
   ##Use .gbif_sql()
@@ -133,7 +133,7 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
     )
   },
   error = function(cond) {
-    message(cond)
+    message(paste("BIEN", cond))
     return(NA)
   })
   
@@ -144,7 +144,7 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
     
   },
   error = function(cond) {
-    message(cond)
+    message(paste("BISON", cond))
     return(NA)
   })
   
@@ -155,7 +155,7 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
     inatr = vegdistmod::inat(taxon, maxrec = maxrec)
   }, 
   error = function(cond) {
-    message(cond)
+    message(paste("inat", cond))
     return(NA)
   })
   
