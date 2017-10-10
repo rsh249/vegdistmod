@@ -19,6 +19,7 @@ get_worldclim <- function(period = 'cur', model = '', version = '1_4', varset = 
   # period = 'cur';
   bs = '';
   spacer='climate/';
+  version=version;
   modelstub = '';
   if(period == 'cur'){
     overhead = 'cur';
@@ -26,6 +27,11 @@ get_worldclim <- function(period = 'cur', model = '', version = '1_4', varset = 
     spacer = paste('climate/worldclim/', version, '/grid/', sep = '');
   }
   if(period == 'midholo'){
+    if(varset=='bio'){varset='bi'}
+    if(varset=='tmin'){varset='tn'}
+    if(varset=='tmax'){varset='tx'}
+    if(varset=='tmean'){print("ERR: Variable not available in this model");return(0);}
+    if(varset=='prec'){varset='pr'}
     overhead = 'cmip5/mid';
     if(model == 'ccsm4'){
       modelstub = 'ccmid';
@@ -58,7 +64,11 @@ get_worldclim <- function(period = 'cur', model = '', version = '1_4', varset = 
   
   if(period == 'lgm'){
     overhead = 'cmip5/lgm';
-    
+    if(varset=='bio'){varset='bi'}
+    if(varset=='tmin'){varset='tn'}
+    if(varset=='tmax'){varset='tx'}
+    if(varset=='tmean'){print("ERR: Variable not available in this model");return(0);}
+    if(varset=='prec'){varset='pr'}
     if(model == 'ccsm4'){
       modelstub = 'cclgm';
     }
@@ -105,7 +115,7 @@ get_worldclim <- function(period = 'cur', model = '', version = '1_4', varset = 
   #Version 2.0
   #http://biogeo.ucdavis.edu/data/worldclim/v2.0/tif/base/wc2.0_10m_vapr.zip
   
-
+  #return(http_str)
   
   ##NOTE: TO SAVE TIME ON LARGE DOWNLOADS CHECK CURRENT DIRECTORY FOR FILES
   
@@ -149,18 +159,28 @@ get_worldclim <- function(period = 'cur', model = '', version = '1_4', varset = 
 #' This function requests raster layers from the envirem dataset (Bemmels, et al. 2017, Ecography)
 #' downloads the zip archive, reads files into R and disposes of the originals because you should 
 #' save the layers in an R ready raster object using raster::writeRaster().
-#' 
+#' @param period A string for time period to get. Either 'cur', 'midholo', or 'lgm'.
 #' @export
 #' @examples \dontrun{
-#' #get 2.5 arcmin grid for North America (only option currently.
-#' envir <- get_envirem_elev(); 
+#' #get 2.5 arcmin grid. 
+#' envir <- get_envirem_elev(period='cur'); 
 #' }
-get_envirem_elev <- function() {
-  #https://deepblue.lib.umich.edu/data/downloads/4b29b610g
-  http_str = list();
-  http_str = 'https://deepblue.lib.umich.edu/data/downloads/sj139204g' #new world elev params
- # http_str = 'https://deepblue.lib.umich.edu/data/downloads/02870v92t' #new world climat 2.5 arcmin
-#  for(zz in 1:length(http_str)){
+get_envirem_elev <- function(period = 'cur') {
+  period = period;
+  ##res is assumed to be 2.5 arcmin. need to add this as an option and pick according url.
+  http_str = '';
+  if(period == 'cur'){
+    http_str = 'https://deepblue.lib.umich.edu/data/downloads/05741r787?locale=en' #new world elev params
+  }
+  if(period == 'midholo'){
+      http_str = 'https://deepblue.lib.umich.edu/data/downloads/s4655g713?locale=en'
+  }
+  if(period == 'lgm'){
+      http_str = 'https://deepblue.lib.umich.edu/data/downloads/8910jt72z?locale=en'
+  }
+  
+  
+    if(http_str == ''){print("ERR: Invalid http string. Check model and period selections."); return(0);}
     temp = tempfile()
     td = tempdir();
     utils::download.file(http_str[[1]], temp)
@@ -174,6 +194,7 @@ get_envirem_elev <- function() {
       r  = raster::stack(list);
     }
     raster::rasterOptions(maxmemory=1500000000) ##Set max ram for raster to 15GB
+    #consider commenting out the next line, but it does make it temp.file safe.
     r=raster::brick(r); #should be able to brick to memory now
     
     #unlink(temp)
@@ -181,7 +202,13 @@ get_envirem_elev <- function() {
     for(n in 1:length(list)){
       system(paste('rm ', list[[n]]))
     }
-
+    ##update layer names
+    n.arr = strsplit(names(r),'arcmin_')
+    for (i in 1:length(n.arr)){
+      n.arr[[i]] = n.arr[[i]][2]
+    }
+    n.arr=unlist(n.arr);
+    names(r) = n.arr;
   return(r);
 }
 
@@ -190,18 +217,44 @@ get_envirem_elev <- function() {
 #' This function requests raster layers from the envirem dataset (Bemmels, et al. 2017, Ecography)
 #' downloads the zip archive, reads files into R and disposes of the originals because you should 
 #' save the layers in an R ready raster object using raster::writeRaster().
-#' 
+#' @param period A string for time period to get. Either 'cur', 'midholo', or 'lgm'.
+#' @param model A string for which model to use. Either 'ccsm4', 'miroc-esm', or 'mpi-esm'.
 #' @export
 #' @examples \dontrun{
 #' #get 2.5 arcmin grid for North America (only option currently.
-#' envir <- get_envirem_clim();
+#' envir <- get_envirem_clim(period='cur', model='');
 #' }
-get_envirem_clim <- function() {
-  #https://deepblue.lib.umich.edu/data/downloads/4b29b610g
-  http_str = list();
-  #http_str = 'https://deepblue.lib.umich.edu/data/downloads/sj139204g' #new world elev params
-   http_str = 'https://deepblue.lib.umich.edu/data/downloads/02870v92t' #new world climat 2.5 arcmin
-  #  for(zz in 1:length(http_str)){
+get_envirem_clim <- function(period='cur', model='') {
+  model = model;
+  period = period;
+  ##res is assumed to be 2.5 arcmin. need to add this as an option and pick according url.
+  http_str = '';
+  if(period == 'cur'){
+    http_str = 'https://deepblue.lib.umich.edu/data/downloads/sj139204g' #new world elev params
+  }
+  if(period == 'midholo'){
+    if(model == 'ccsm4') {
+      http_str = 'https://deepblue.lib.umich.edu/data/downloads/70795779p?locale=en'
+    }
+    if(model == 'miroc-esm'){
+      http_str = 'https://deepblue.lib.umich.edu/data/downloads/v118rd682?locale=en'
+    }
+    if(model == 'mpi-esm'){
+      http_str='https://deepblue.lib.umich.edu/data/downloads/z029p4825?locale=en'
+    }
+  }
+  if(period == 'lgm'){
+    if(model == 'ccsm4') {
+      http_str = 'https://deepblue.lib.umich.edu/data/downloads/9593tv32k?locale=en'
+    }
+    if(model == 'miroc-esm'){
+      http_str = 'https://deepblue.lib.umich.edu/data/downloads/tm70mv28r?locale=en'
+    }
+    if(model == 'mpi-esm'){
+      http_str='https://deepblue.lib.umich.edu/data/downloads/6969z089x?locale=en'
+    }
+  }
+  
   temp = tempfile()
   td = tempdir();
   utils::download.file(http_str[[1]], temp)
@@ -222,7 +275,13 @@ get_envirem_clim <- function() {
   for(n in 1:length(list)){
     system(paste('rm ', list[[n]]))
   }
-  
+  ##update layer names
+  n.arr = strsplit(names(r),'arcmin_')
+  for (i in 1:length(n.arr)){
+    n.arr[[i]] = n.arr[[i]][2]
+  }
+  n.arr=unlist(n.arr);
+  names(r) = n.arr;
   return(r);
 }
 

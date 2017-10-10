@@ -4,7 +4,12 @@
 \alias{get_envirem_clim}
 \title{Download ENVIREM climate data set(s)}
 \usage{
-get_envirem_clim()
+get_envirem_clim(period = "cur", model = "")
+}
+\arguments{
+\item{period}{A string for time period to get. Either 'cur', 'midholo', or 'lgm'.}
+
+\item{model}{A string for which model to use. Either 'ccsm4', 'miroc-esm', or 'mpi-esm'.}
 }
 \description{
 This function requests raster layers from the envirem dataset (Bemmels, et al. 2017, Ecography)
@@ -14,6 +19,6 @@ save the layers in an R ready raster object using raster::writeRaster().
 \examples{
 \dontrun{
 #get 2.5 arcmin grid for North America (only option currently.
-envir <- get_envirem; 
+envir <- get_envirem_clim(period='cur', model='');
 }
 }

@@ -4,7 +4,10 @@
 \alias{get_envirem_elev}
 \title{Download ENVIREM topographical data set(s)}
 \usage{
-get_envirem_elev()
+get_envirem_elev(period = "cur")
+}
+\arguments{
+\item{period}{A string for time period to get. Either 'cur', 'midholo', or 'lgm'.}
 }
 \description{
 This function requests raster layers from the envirem dataset (Bemmels, et al. 2017, Ecography)
@@ -13,7 +16,7 @@ save the layers in an R ready raster object using raster::writeRaster().
 }
 \examples{
 \dontrun{
-#get 2.5 arcmin grid for North America (only option currently.
-envir <- get_envirem_elev(); 
+#get 2.5 arcmin grid. 
+envir <- get_envirem_elev(period='cur'); 
 }
 }
