@@ -230,7 +230,7 @@ get_envirem_clim <- function(period='cur', model='') {
   ##res is assumed to be 2.5 arcmin. need to add this as an option and pick according url.
   http_str = '';
   if(period == 'cur'){
-    http_str = 'https://deepblue.lib.umich.edu/data/downloads/sj139204g' #new world elev params
+    http_str = 'https://deepblue.lib.umich.edu/data/downloads/12579s441?locale=en';
   }
   if(period == 'midholo'){
     if(model == 'ccsm4') {
