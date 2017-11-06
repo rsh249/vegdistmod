@@ -50,7 +50,7 @@ extraction <- function(data, clim, schema = "raw", factor = 0, rm.outlier = FALS
         foreach::foreach(i = 1:nclus,
             .packages = 'vegdistmod',
             .combine = 'rbind') %dopar% {
-                subs = mat.larr[i:(i+bloc),];
+                subs = mat.larr[i:(1+i+bloc),];
                 e = raster::extract(phytoclim, cbind(subs$lon, subs$lat), cellnumbers=T);
                 return(e);
             }
