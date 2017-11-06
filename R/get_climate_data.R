@@ -160,23 +160,39 @@ get_worldclim <- function(period = 'cur', model = '', version = '1_4', varset = 
 #' downloads the zip archive, reads files into R and disposes of the originals because you should 
 #' save the layers in an R ready raster object using raster::writeRaster().
 #' @param period A string for time period to get. Either 'cur', 'midholo', or 'lgm'.
+#' @param res Spatial Resolution in arcminutes. eg, 2.5
 #' @export
 #' @examples \dontrun{
 #' #get 2.5 arcmin grid. 
 #' envir <- get_envirem_elev(period='cur'); 
 #' }
-get_envirem_elev <- function(period = 'cur') {
+get_envirem_elev <- function(period = 'cur', res=2.5) {
+  res=res; if(res == ''){print("ERR: No resolution chosen"); return(0);}
   period = period;
   ##res is assumed to be 2.5 arcmin. need to add this as an option and pick according url.
   http_str = '';
-  if(period == 'cur'){
-    http_str = 'https://deepblue.lib.umich.edu/data/downloads/05741r787?locale=en' #new world elev params
-  }
-  if(period == 'midholo'){
+  if(res == '2.5'){
+    if(period == 'cur'){
+      http_str = 'https://deepblue.lib.umich.edu/data/downloads/05741r787?locale=en' #new world elev params
+    }
+    if(period == 'midholo'){
       http_str = 'https://deepblue.lib.umich.edu/data/downloads/s4655g713?locale=en'
-  }
-  if(period == 'lgm'){
+    }
+    if(period == 'lgm'){
       http_str = 'https://deepblue.lib.umich.edu/data/downloads/8910jt72z?locale=en'
+    }
+  } 
+  if(res == '30'){
+    if(period == 'cur'){
+      http_str = 'https://deepblue.lib.umich.edu/data/downloads/44558d44j?locale=en' #new world elev params
+    }
+    if(period == 'midholo'){
+      http_str = '' ##Not available
+    }
+    if(period == 'lgm'){
+      http_str = '' ##Not available
+    }
+    
   }
   
   

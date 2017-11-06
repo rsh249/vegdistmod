@@ -4,10 +4,12 @@
 \alias{get_envirem_elev}
 \title{Download ENVIREM topographical data set(s)}
 \usage{
-get_envirem_elev(period = "cur")
+get_envirem_elev(period = "cur", res = 2.5)
 }
 \arguments{
 \item{period}{A string for time period to get. Either 'cur', 'midholo', or 'lgm'.}
+
+\item{res}{Spatial Resolution in arcminutes. eg, 2.5}
 }
 \description{
 This function requests raster layers from the envirem dataset (Bemmels, et al. 2017, Ecography)
