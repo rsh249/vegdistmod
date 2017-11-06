@@ -47,7 +47,7 @@ extraction <- function(data, clim, schema = "raw", factor = 0, rm.outlier = FALS
         doSNOW::registerDoSNOW(cl);
         
         extr.larr <-
-        foreach::foreach(i = 1:length(tax.list),
+        foreach::foreach(i = 1:nclus,
             .packages = 'vegdistmod',
             .combine = 'rbind') %dopar% {
                 subs = mat.larr[i:(i+bloc),];
