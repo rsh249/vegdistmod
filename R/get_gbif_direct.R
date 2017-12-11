@@ -59,22 +59,22 @@ gbif_get <- function(taxon, maxrec = 200000) {
     
     
   }
-  df = hold[[1]][, c('key',
-                     'genus',
-                     'specificEpithet',
-                     'decimalLatitude',
-                     'decimalLongitude'
-                     )]
+  cols = c('key',
+  'genus',
+  'specificEpithet',
+  'decimalLatitude',
+  'decimalLongitude');
+  
+  
+  df = hold[[1]][, c(cols )]
   if (length(hold) > 1) {
     for (n in 2:length(hold)) {
       # print(n);
-      nex = hold[[n]][, c('key',
-                          'genus',
-                          'specificEpithet',
-                          'decimalLatitude',
-                          'decimalLongitude'
-                          )]
+      if(sum(cols %in% colnames(hold[[n]]))==4){
+      
+      nex = hold[[n]][, c(cols)]
       df = rbind(df, nex)
+      } else {next;}
       
     }
   }
@@ -82,7 +82,7 @@ gbif_get <- function(taxon, maxrec = 200000) {
   df = df[,-3];
   
   colnames(df) = c('ind_id', 'tax', 'lat', 'lon')
-  df$tax = rep(tori, nrow(df));
+  #df$tax = rep(tori, nrow(df));
   return(df)
 }
 
