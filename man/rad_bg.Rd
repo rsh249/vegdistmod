@@ -21,6 +21,6 @@ This function generates a sample of background coordinates that are within n kil
 \examples{
 \dontrun{
 data(distr);
-bg.ext <- rad_bg(distr[,4:3], climondbioclim, radius=100, n = 100)
+bg.ext <- rad_bg(distr[,4:3], climondbioclim, radius=100, n = 50)
 }
 }

@@ -234,9 +234,10 @@ densform <- function(ex, clim,
 	if(is.null(bg)){
 	for(xx in 1:ncoords){
 	  for(yy in xx:ncoords){
-	    dmatrix[xx,yy] <- vegdistmod:::.distance(extr.larr$lon[xx], extr.larr$lat[xx], 
-	                                extr.larr$lon[yy], extr.larr$lat[yy]);
-	    
+	   # dmatrix[xx,yy] <- vegdistmod:::.distance(extr.larr$lon[xx], extr.larr$lat[xx], 
+	       #                         extr.larr$lon[yy], extr.larr$lat[yy]);
+	    dmatrix[xx,yy] <- distance(extr.larr$lon[xx], extr.larr$lat[xx], 
+	                                                                  extr.larr$lon[yy], extr.larr$lat[yy]);
 	    
 	    
 	  }
@@ -439,7 +440,7 @@ densform <- function(ex, clim,
 #' @export
 #' @examples \dontrun{
 #' data(distr);
-#' bg.ext <- rad_bg(distr[,4:3], climondbioclim, radius=100, n = 100)
+#' bg.ext <- rad_bg(distr[,4:3], climondbioclim, radius=100, n = 50)
 #' }
 
 rad_bg <- function(coords, clim, radius, n){
@@ -455,7 +456,7 @@ rad_bg <- function(coords, clim, radius, n){
      # print(paste('zz', zz))
       dir = sample(1:360, 1)
       dist = sample(1:radius, 1);
-      bg.mat[(i*zz),1:2] = vegdistmod:::.findcoord(extr[i,1], extr[i,2], dist, dir)
+      bg.mat[(i*zz),1:2] = findcoord(extr[i,1], extr[i,2], dist, dir)
       
     }
   }

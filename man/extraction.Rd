@@ -5,7 +5,7 @@
 \title{Extract environmental data}
 \usage{
 extraction(data, clim, schema = "raw", factor = 0, rm.outlier = FALSE,
-  alpha = 0.01, nmin = 5, parallel = FALSE, nclus = 4)
+  alpha = 0.01, nmin = 5)
 }
 \arguments{
 \item{data}{Distribution data. A data.frame that should include (at least) a column for species/taxon name named 'tax', latitude named 'lat', longitude named 'lon', and an optional column 'sub' if it is necessary to define subgroups (i.e., if 'tax' corresponds to genera but sampling needs to know which records belong to which species. See param 'schema' below).}
@@ -21,10 +21,6 @@ extraction(data, clim, schema = "raw", factor = 0, rm.outlier = FALSE,
 \item{alpha}{Confidence level (i.e., 0.05) for clipping out outlier records.}
 
 \item{nmin}{Minimum number of records allowed. Taxa or groups with fewer records will not be returned.}
-
-\item{parallel}{Run in parallel on multicore systems.}
-
-\item{nclus}{Number of cores to use in parallel calculations.}
 }
 \description{
 This function is a feature-added wrapper for raster::extract();

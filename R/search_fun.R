@@ -315,64 +315,129 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
 
 
 #Hidden function to find the distance between two points
-.distance <- function(lon1, lat1, lon2, lat2) {
-  R = 6378.137
-  #pideg = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989;
-
- # lon1 = as.numeric(as.character(lon1));
- # lon2 = as.numeric(as.character(lon2));
-#  lat1 = as.numeric(as.character(lat1));
- # lat2 = as.numeric(as.character(lat2));
-  #cat(lon1, ", ", lat1, ", ", lon2, ", ", lat2, "\n")
-  toRad = pi/180;
-  lon1 = lon1 * toRad
-  
-  lon2 = lon2 * toRad
-  
-  lat1 = lat1 * toRad
-  
-  lat2 = lat2 * toRad
-  
-  dlon = lon2 - lon1
-  
-  dlat = lat2 - lat1
-  
-  a = (sin(dlat / 2) ^2) + (cos(lat1) * cos(lat2) * (sin(dlon / 2) ^2))
-  
-  d = 2 * atan2(sqrt(a), sqrt(1 - a)) * R
-  return(d)
-  
-}
+# .distance <- function(lon1, lat1, lon2, lat2) {
+#   R = 6378.137
+#   #pideg = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989;
+# 
+#  # lon1 = as.numeric(as.character(lon1));
+#  # lon2 = as.numeric(as.character(lon2));
+# #  lat1 = as.numeric(as.character(lat1));
+#  # lat2 = as.numeric(as.character(lat2));
+#   #cat(lon1, ", ", lat1, ", ", lon2, ", ", lat2, "\n")
+#   toRad = pi/180;
+#   lon1 = lon1 * toRad
+#   
+#   lon2 = lon2 * toRad
+#   
+#   lat1 = lat1 * toRad
+#   
+#   lat2 = lat2 * toRad
+#   
+#   dlon = lon2 - lon1
+#   
+#   dlat = lat2 - lat1
+#   
+#   a = (sin(dlat / 2) ^2) + (cos(lat1) * cos(lat2) * (sin(dlon / 2) ^2))
+#   
+#   d = 2 * atan2(sqrt(a), sqrt(1 - a)) * R
+#   return(d)
+#   
+# }
 
 #.distance = compiler::cmpfun(.distance);
 
 
-#Hidden function to get coordinates given a direction and bearing from start point.
-.findcoord <- function(lon, lat, dist, brng) {
-  R = 6737.137
- # pi = 3.14159265359;
+Rcpp_code <- "
+#include<iostream> 
+#include<cmath> 
+#include <Rcpp.h>
+using namespace std;
+// [[Rcpp::export]]
+
+float distance(double lon1, double lat1, double lon2, double lat2) 
+{
+  float R = 6378.137;
   
-  #lon = as.numeric(as.character(lon));
-  #lat = as.numeric(as.character(lat));
-  #dist = as.numeric(as.character(dist));
-  #brng = as.numeric(as.character(brng));
-  # print(c(lon, lat));
-  brng = brng * (pi / 180)
-  #print(brng);
-  lat <- lat * pi / 180
+  float toRad = 3.14159/180;
+  lon1 = lon1 * toRad;
+  lon2 = lon2 * toRad;
+  lat1 = lat1 * toRad;
+  lat2 = lat2 * toRad;
+  float dlon = lon2 - lon1;
+  float dlat = lat2 - lat1;
   
-  lon <- lon * pi / 180
+  double a = pow(sin(dlat / 2), 2) + (cos(lat1) * cos(lat2) * pow(sin(dlon / 2),2));
   
-  lat2 = asin(sin(lat) * cos(dist / R) + cos(lat) * sin(dist / R) * cos(brng))
-  lon2 = lon + atan2(sin(brng) * sin(dist / R) * cos(lat),
-                     cos(dist / R) - sin(lat) * sin(lat2))
-  lat2 = lat2 / pi * 180
+  double d = 2 * atan2(sqrt(a), sqrt(1 - a)) * R;
   
-  lon2 = lon2 / pi * 180
-  return(c(lon2, lat2))
-  
-  
+  return d ;
 }
+
+"
+     
+  Rcpp::sourceCpp(code=Rcpp_code)
+ # .distance = distance;
+  
+Rcpp_code2 <- "
+  #include<iostream> 
+  #include<cmath> 
+  #include <Rcpp.h>
+  using namespace std;
+  // [[Rcpp::export]]
+  
+  Rcpp::NumericVector findcoord(double lon, double lat, double dist, double brng) 
+  {
+  float R = 6378.137;
+  float pi = 3.14159;
+  brng = brng * (pi / 180);
+  lat = lat * pi / 180;
+  lon = lon * pi / 180;
+  
+  float lat2 = asin(sin(lat) * cos(dist / R) + cos(lat) * sin(dist / R) * cos(brng));
+  float lon2 = lon + atan2(sin(brng) * sin(dist / R) * cos(lat), cos(dist / R) - sin(lat) * sin(lat2));
+  lat2 = lat2 / pi * 180;
+  lon2 = lon2 / pi * 180;
+//  return lat2;
+
+  Rcpp::NumericVector ll(2);
+   ll[0] = lon2;
+  ll[1] = lat2;
+  return ll ;
+  
+  }
+  "
+  Rcpp::sourceCpp(code=Rcpp_code2)
+  
+  findcoord = findcoord;
+
+  
+  
+#Hidden function to get coordinates given a direction and bearing from start point.
+# .findcoord <- function(lon, lat, dist, brng) {
+#   R = 6737.137
+#  # pi = 3.14159265359;
+#   
+#   #lon = as.numeric(as.character(lon));
+#   #lat = as.numeric(as.character(lat));
+#   #dist = as.numeric(as.character(dist));
+#   #brng = as.numeric(as.character(brng));
+#   # print(c(lon, lat));
+#   brng = brng * (pi / 180)
+#   #print(brng);
+#   lat <- lat * pi / 180
+#   
+#   lon <- lon * pi / 180
+#   
+#   lat2 = asin(sin(lat) * cos(dist / R) + cos(lat) * sin(dist / R) * cos(brng))
+#   lon2 = lon + atan2(sin(brng) * sin(dist / R) * cos(lat),
+#                      cos(dist / R) - sin(lat) * sin(lat2))
+#   lat2 = lat2 / pi * 180
+#   
+#   lon2 = lon2 / pi * 180
+#   return(c(lon2, lat2))
+#   
+#   
+# }
 
 #.findcoord = compiler::cmpfun(.findcoord);
 
@@ -437,7 +502,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
     maxc <-
       cells[[1]][grep(max(cells[[1]]$cells), cells[[1]]$cells), ]
     maxdist <-
-      .distance(minc[1, 'lon'], minc[1, 'lat'], maxc[1, 'lon'], maxc[1, 'lat'])
+      distance(minc[1, 'lon'], minc[1, 'lat'], maxc[1, 'lon'], maxc[1, 'lat'])
     maxdist = 2*maxdist; #Consider calculating the actual distance matrix and selecting the maximum...
     newrecord= list();
     for(a in 1:length(cells)){
@@ -451,7 +516,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
     maxc <-
       cells[grep(max(cells$cells), cells$cells), ]
     maxdist <-
-      .distance(minc[1, 'lon'], minc[1, 'lat'], maxc[1, 'lon'], maxc[1, 'lat'])
+      distance(minc[1, 'lon'], minc[1, 'lat'], maxc[1, 'lon'], maxc[1, 'lat'])
     count = length(cells[,1]);
     #newrecord = matrix(nrow = 100 * nrow(cells), ncol = ncol(cells))
   }
@@ -473,7 +538,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
                    prob = dist.p); #get "random" distance.
     new = 0;
     if (class(cells) == "list") {
-      new = .findcoord(cells[[1]][it, 'lon'], cells[[1]][it, 'lat'], dist =
+      new = findcoord(cells[[1]][it, 'lon'], cells[[1]][it, 'lat'], dist =
                          dist, brng = dir)
       pold = vector();
       pnew = vector();
@@ -563,7 +628,7 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
       }
       }
     } else {
-      new = .findcoord(cells[it, 'lon'], cells[it, 'lat'], dist =
+      new = findcoord(cells[it, 'lon'], cells[it, 'lat'], dist =
                          dist, brng = dir)
       newextr <- raster::extract(ras, cbind(new[1], new[2]), cellnumbers = T)
       newer <- cbind("0000", name, new[2], new[1], newextr)
@@ -1428,7 +1493,8 @@ plot_clim <- function(ext_ob, clim, boundaries ='', file='', col = 'red', legend
 #' data(abies);
 #' data(climondbioclim);
 #' ext.abies = extraction(abies, climondbioclim, schema='raw', rm.outlier=TRUE, alpha = 0.005);
-#' dens <- densform(ext.abies, climondbioclim, manip = 'condi', kern = 'gaussian', n = 128, bg.n = 1000)
+#' dens <- densform(ext.abies, climondbioclim, manip = 'condi', 
+#'                  kern = 'gaussian', n = 128, bg.n = 1000)
 #' h = heat_up(climondbioclim, dens, parallel=FALSE, type = '.kde', nclus =4)
 #' hs = sum(h)
 #' ex.h = raster::extract(hs, ext.abies[,4:3])
@@ -1493,7 +1559,7 @@ heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = F
               .packages = 'vegdistmod', .combine='cbind'
                     ) %dopar% {
 #        source('~/Desktop/cracle_testing/vegdistmod/R/cracle_build.R')
-        vp = vegdistmod:::.vecprob(whole.ex[,i+2],
+        vp = .vecprob(whole.ex[,i+2],
                       dens[paste(names(clim[[i]]), 'x', sep = ".")][[1]], 
                       dens[paste(names(clim[[i]]), type, sep ='')][[1]])
             whole.ex[,i+2] = (vp); #replace values with probabilities
@@ -1516,7 +1582,7 @@ heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = F
   } else {
     
     for(i in 3:ncol(whole.ex)){
-      m = vegdistmod:::.vecprob(whole.ex[,i], 
+      m = .vecprob(whole.ex[,i], 
                             dens[paste(names(clim[[i-2]]), 'x', sep = ".")][[1]], 
                             dens[paste(names(clim[[i-2]]), type, sep ='')][[1]])
       whole.ex[,i] = m; #replace values with probabilities

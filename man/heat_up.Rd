@@ -29,7 +29,8 @@ This is not an ENM. What it does do is provides a geographic representation of t
 data(abies);
 data(climondbioclim);
 ext.abies = extraction(abies, climondbioclim, schema='raw', rm.outlier=TRUE, alpha = 0.005);
-dens <- densform(ext.abies, climondbioclim, manip = 'condi', kern = 'gaussian', n = 128, bg.n = 1000)
+dens <- densform(ext.abies, climondbioclim, manip = 'condi', 
+                 kern = 'gaussian', n = 128, bg.n = 1000)
 h = heat_up(climondbioclim, dens, parallel=FALSE, type = '.kde', nclus =4)
 hs = sum(h)
 ex.h = raster::extract(hs, ext.abies[,4:3])
