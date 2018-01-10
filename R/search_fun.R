@@ -1,6 +1,8 @@
 #' @import classInt
 #' @import grDevices
 #' @import doParallel
+#' @useDynLib vegdistmod
+#' @importFrom Rcpp sourceCpp
 NULL
 
 # A function for retrieving data from cloud.diversityoflife.org
@@ -378,44 +380,44 @@ filter_dist <- function(ext_ob, dens_ob, clim, min = 0, alpha = 0.01, type = '.k
 #  Rcpp::sourceCpp(code=Rcpp_code)
  # .distance = distance;
   
-Rcpp_code2 <- "
-  #include<iostream> 
-  #include<cmath> 
-  #include <Rcpp.h>
-  using namespace std;
-  //' Multiply a number by two
-  //'
-  //' @param lon1 Starting point longitute.
-  //' @param lat1 Starting point latitute.
-  //' @param lon2 Ending point longitute.
-  //' @param lat2 Ending point latitute.
-  //' @export
-  // [[Rcpp::export]]
+#Rcpp_code2 <- "
+#  #include<iostream>
+#  #include<cmath>
+#  #include <Rcpp.h>
+#  using namespace std;
+#  //' Multiply a number by two
+#  //'
+#  //' @param lon1 Starting point longitute.
+#  //' @param lat1 Starting point latitute.
+#  //' @param lon2 Ending point longitute.
+#  //' @param lat2 Ending point latitute.
+#  //' @export
+# // [[Rcpp::export]]
   
-  Rcpp::NumericVector findcoord(double lon, double lat, double dist, double brng) 
-  {
-  float R = 6378.137;
-  float pi = 3.14159;
-  brng = brng * (pi / 180);
-  lat = lat * pi / 180;
-  lon = lon * pi / 180;
+# Rcpp::NumericVector findcoord(double lon, double lat, double dist, double brng)
+#{
+      #float R = 6378.137;
+  #float pi = 3.14159;
+  #brng = brng * (pi / 180);
+  #lat = lat * pi / 180;
+  #lon = lon * pi / 180;
   
-  float lat2 = asin(sin(lat) * cos(dist / R) + cos(lat) * sin(dist / R) * cos(brng));
-  float lon2 = lon + atan2(sin(brng) * sin(dist / R) * cos(lat), cos(dist / R) - sin(lat) * sin(lat2));
-  lat2 = lat2 / pi * 180;
-  lon2 = lon2 / pi * 180;
-//  return lat2;
+  #float lat2 = asin(sin(lat) * cos(dist / R) + cos(lat) * sin(dist / R) * cos(brng));
+  #float lon2 = lon + atan2(sin(brng) * sin(dist / R) * cos(lat), cos(dist / R) - sin(lat) * sin(lat2));
+  #  lat2 = lat2 / pi * 180;
+  #lon2 = lon2 / pi * 180;
+  #//  return lat2;
 
-  Rcpp::NumericVector ll(2);
-   ll[0] = lon2;
-  ll[1] = lat2;
-  return ll ;
+#Rcpp::NumericVector ll(2);
+  #  ll[0] = lon2;
+   # ll[1] = lat2;
+  # return ll ;
   
-  }
-  "
-  Rcpp::sourceCpp(code=Rcpp_code2)
+  # }
+#  "
+#  Rcpp::sourceCpp(code=Rcpp_code2)
   
-  findcoord = findcoord;
+#  findcoord = findcoord;
 
   
   
