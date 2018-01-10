@@ -383,6 +383,13 @@ Rcpp_code2 <- "
   #include<cmath> 
   #include <Rcpp.h>
   using namespace std;
+  //' Multiply a number by two
+  //'
+  //' @param lon1 Starting point longitute.
+  //' @param lat1 Starting point latitute.
+  //' @param lon2 Ending point longitute.
+  //' @param lat2 Ending point latitute.
+  //' @export
   // [[Rcpp::export]]
   
   Rcpp::NumericVector findcoord(double lon, double lat, double dist, double brng) 
