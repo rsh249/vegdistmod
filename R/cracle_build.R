@@ -26,7 +26,6 @@ NULL
 #' extr.raw = extraction(data=distr, clim= climondbioclim, schema='raw');
 #' extr.flat = extraction(data=distr, clim= climondbioclim, schema='flat');
 #' extr.spec = extraction(data=distr, clim= climondbioclim, schema='species');
-#' }
 extraction <- function(data, clim, schema = "raw", factor = 0, rm.outlier = FALSE,  alpha = 0.01, nmin = 5){
 
 	if(length(data[,1]) < 5){cat('ERR: Too few records\n'); return(NA);}
