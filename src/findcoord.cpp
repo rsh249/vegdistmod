@@ -1,10 +1,3 @@
-//
-//  findcoord.cpp
-//  
-//
-//  Created by Robert on 1/10/18.
-//
-
 #include<iostream>
 #include<cmath>
 #include <Rcpp.h>

@@ -1,18 +1,13 @@
-//
-//  distance.cpp
-//  
-//
-//  Created by Robert on 1/10/18.
-//
-
 #include<iostream>
 #include<cmath>
 #include <Rcpp.h>
 using namespace std;
 // [[Rcpp::export]]
 
+
 float distance(double lon1, double lat1, double lon2, double lat2)
 {
+    //Haversine distance method
     float R = 6378.137;
     
     float toRad = 3.14159/180;
