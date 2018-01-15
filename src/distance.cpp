@@ -4,13 +4,13 @@
 using namespace std;
 // [[Rcpp::export]]
 
-Rcpp::NumericVector distance(Rcpp::NumericMatrix start, Rcpp::NumericMatrix end)
+Rcpp::NumericMatrix distance(Rcpp::NumericMatrix start, Rcpp::NumericMatrix end)
 {
     //Haversine distance method
     float R = 6378.137;
     float toRad = 3.14159/180;
     int nn = (start.size()/2) * (end.size()/2);
-    Rcpp::NumericVector out(nn);
+    Rcpp::NumericMatrix out((start.size()/2), (end.size()/2));
     int zz = 0;
     for(int i = 0; i < (start.size()/2); ++i) {
         for(int n = 0; n < (end.size()/2); ++n){
@@ -29,7 +29,7 @@ Rcpp::NumericVector distance(Rcpp::NumericMatrix start, Rcpp::NumericMatrix end)
             
             double a = pow(sin(dlat / 2), 2) + (cos(lat1) * cos(lat2) * pow(sin(dlon / 2),2));
             double d = 2 * atan2(sqrt(a), sqrt(1 - a)) * R;
-            out[zz] = d;
+            out(i,n) = d;
             ++zz;
         }
     }

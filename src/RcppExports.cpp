@@ -6,7 +6,7 @@
 using namespace Rcpp;
 
 // distance
-Rcpp::NumericVector distance(Rcpp::NumericMatrix start, Rcpp::NumericMatrix end);
+Rcpp::NumericMatrix distance(Rcpp::NumericMatrix start, Rcpp::NumericMatrix end);
 RcppExport SEXP _vegdistmod_distance(SEXP startSEXP, SEXP endSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
