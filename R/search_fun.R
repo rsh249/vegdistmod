@@ -538,8 +538,11 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
       cells[[1]][grep(min(cells[[1]]$cells), cells[[1]]$cells), ]
     maxc <-
       cells[[1]][grep(max(cells[[1]]$cells), cells[[1]]$cells), ]
-    maxdist <-
-      distance(minc[1, 'lon'], minc[1, 'lat'], maxc[1, 'lon'], maxc[1, 'lat'])
+    #maxdist <-
+      #distance(minc[1, 'lon'], minc[1, 'lat'], maxc[1, 'lon'], maxc[1, 'lat'])
+    maxdist = distance(as.matrix(minc[1,c('lon', 'lat')]), 
+                       as.matrix(maxc[1,c('lon', 'lat')]))
+    
     maxdist = 2*maxdist; #Consider calculating the actual distance matrix and selecting the maximum...
     newrecord= list();
     for(a in 1:length(cells)){
@@ -552,8 +555,11 @@ near2 <- function(ext_ob, clim, dens_ob, type, name = 'NULL', w=FALSE) {
     minc <- cells[grep(min(cells$cells), cells$cells), ]
     maxc <-
       cells[grep(max(cells$cells), cells$cells), ]
-    maxdist <-
-      distance(minc[1, 'lon'], minc[1, 'lat'], maxc[1, 'lon'], maxc[1, 'lat'])
+   # maxdist <-
+     # distance(minc[1, 'lon'], minc[1, 'lat'], maxc[1, 'lon'], maxc[1, 'lat'])
+    maxdist = distance(as.matrix(minc[1,c('lon', 'lat')]), 
+                       as.matrix(maxc[1,c('lon', 'lat')]))
+    
     count = length(cells[,1]);
     #newrecord = matrix(nrow = 100 * nrow(cells), ncol = ncol(cells))
   }

@@ -231,16 +231,20 @@ densform <- function(ex, clim,
 	                 nrow = ncoords);
 	#  print("Getting distance matrix");
 	if(is.null(bg)){
-	for(xx in 1:ncoords){
-	  for(yy in xx:ncoords){
+	##for(xx in 1:ncoords){
+	##  for(yy in xx:ncoords){
 	   # dmatrix[xx,yy] <- vegdistmod:::.distance(extr.larr$lon[xx], extr.larr$lat[xx], 
 	       #                         extr.larr$lon[yy], extr.larr$lat[yy]);
-	    dmatrix[xx,yy] <- distance(extr.larr$lon[xx], extr.larr$lat[xx], 
-	                                                                  extr.larr$lon[yy], extr.larr$lat[yy]);
+	##    dmatrix[xx,yy] <- distance(extr.larr$lon[xx], extr.larr$lat[xx], 
+	  #                                                                extr.larr$lon[yy], extr.larr$lat[yy]);
 	    
 	    
-	  }
-	}
+	##  }
+	##}
+
+  dmatrix = distance(as.matrix(extr.larr[,c('lon', 'lat')]), 
+                     as.matrix(extr.larr[,c('lon', 'lat')]));
+	
 	#NOTE: The background is selected from a radius around each occurrence
 	#record within 5x the mean distance between all points in the sample.
 	#This threshold is arbitrary and needs to be empirically tested, but does seem to work.
