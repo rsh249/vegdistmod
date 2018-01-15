@@ -33,10 +33,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// latlonfromcell
+Rcpp::NumericMatrix latlonfromcell(Rcpp::NumericVector cells, Rcpp::NumericVector extent, int nrow, int ncol);
+RcppExport SEXP _vegdistmod_latlonfromcell(SEXP cellsSEXP, SEXP extentSEXP, SEXP nrowSEXP, SEXP ncolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type cells(cellsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type extent(extentSEXP);
+    Rcpp::traits::input_parameter< int >::type nrow(nrowSEXP);
+    Rcpp::traits::input_parameter< int >::type ncol(ncolSEXP);
+    rcpp_result_gen = Rcpp::wrap(latlonfromcell(cells, extent, nrow, ncol));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_vegdistmod_distance", (DL_FUNC) &_vegdistmod_distance, 4},
     {"_vegdistmod_findcoord", (DL_FUNC) &_vegdistmod_findcoord, 4},
+    {"_vegdistmod_latlonfromcell", (DL_FUNC) &_vegdistmod_latlonfromcell, 4},
     {NULL, NULL, 0}
 };
 

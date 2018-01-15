@@ -38,41 +38,71 @@ NULL
   return(df)
 }
 
+# Rcpp_code <- "
+# #include<iostream>
+# #include<cmath>
+# #include <Rcpp.h>
+# using namespace std;
+# 
+# // [[Rcpp::export]]
+# Rcpp::NumericMatrix latlonfromcell(Rcpp::NumericVector cells, Rcpp::NumericVector extent, int nrow, int ncol)
+# {
+#   float uplon = extent[0];
+#   float uplat = extent[3];
+#   float xres = (extent[1] - extent[0])/ncol;
+#   float yres = (extent[3] - extent[2])/nrow;
+#   Rcpp::NumericMatrix m(cells.size(), 2);
+#   for(int i = 0; i < cells.size(); ++i) {
+#     int row = ceil(cells[i] / ncol);
+#     int col = cells[i] - ((row - 1) * ncol);
+#     float lat = uplat - (row * yres) + (0.5 * yres);
+#     float lon = uplon + (col * xres) - (0.5 * xres);
+#     m(i,0) = lat;
+#     m(i,1) = lon;
+#   
+#   }
+# 
+# 
+#   return m ;
+# }
+# 
+# "
+# 
+# Rcpp::sourceCpp(code=Rcpp_code)
 
-.latlonfromcell <- function(cells, clim){
-  #assumes square (in degrees) cells
-  #returns lat/lon coordinates from the center of each cell
-  d <- dim(clim)
-  e <- raster::extent(clim)
-  uplon <- e[1]
-  uplat <- e[4]
-  nrow = d[1]
-  ncol = d[2]
-  xres = (e[2] - e[1])/ncol;
-  yres = (e[4] - e[3])/nrow;
-  
-
-  r <- raster::res(clim)
-  m <- matrix(nrow = length(cells), ncol = 4);
-  for(i in 1:length(cells)){
-   # print(cells[[i]])
-    row = ceiling(cells[[i]]/ncol); #round up so it is 1 : nrow. not 0 : nrow-1
-    col = cells[[i]] - ((row-1)*ncol);
-    
-    lat = uplat - (row * yres) + (0.5 * yres)
-    lon = uplon + (col * xres) - (0.5 * xres)
-   # print(row); print(col); print(lat); print(lon);
-    m[i,] = c("1111", "bg", lat, lon)
-    
-  }
-  df = data.frame(m)
-  df[,1] = as.numeric(as.character(df[,1]))
-  df[,3] = as.numeric(as.character(df[,3]))
-  df[,4] = as.numeric(as.character(df[,4]))
-  
-  return(df)
-  
-}
+# .latlonfromcell <- function(cells, clim){
+#   #returns lat/lon coordinates from the center of each cell
+#   d <- dim(clim)
+#   e <- raster::extent(clim)
+#   uplon <- e[1]
+#   uplat <- e[4]
+#   nrow = d[1]
+#   ncol = d[2]
+#   xres = (e[2] - e[1])/ncol;
+#   yres = (e[4] - e[3])/nrow;
+#   
+# 
+#   r <- raster::res(clim)
+#   m <- matrix(nrow = length(cells), ncol = 4);
+#   for(i in 1:length(cells)){
+#    # print(cells[[i]])
+#     row = ceiling(cells[[i]]/ncol); #round up so it is 1 : nrow. not 0 : nrow-1
+#     col = cells[[i]] - ((row-1)*ncol);
+#     
+#     lat = uplat - (row * yres) + (0.5 * yres)
+#     lon = uplon + (col * xres) - (0.5 * xres)
+#    # print(row); print(col); print(lat); print(lon);
+#     m[i,] = c("1111", "bg", lat, lon)
+#     
+#   }
+#   df = data.frame(m)
+#   df[,1] = as.numeric(as.character(df[,1]))
+#   df[,3] = as.numeric(as.character(df[,3]))
+#   df[,4] = as.numeric(as.character(df[,4]))
+#   
+#   return(df)
+#   
+# }
 ##Hidden function that is called under several others to get background data points.
 # call with .get_bg()
 
@@ -86,7 +116,8 @@ NULL
       d = dim(r);
       l = d[1] * d[2]
       v = seq(1:l);
-      m[[a]] = .latlonfromcell(v, r);
+      #m[[a]] = latlonfromcell(v, r);
+      m[[a]] = latlonfromcell(v, raster::extent(r)[1:4], raster::nrow(r), raster::ncol(r));
       colnames(m[[a]]) = c('ind_id', 'tax', 'lat','lon');
       #bg <- randomPoints(r[[a]], n)
    #   bg <- cbind(rep('0000', length(bg[,1])), rep('bg', length(bg[,1])), bg[,2], bg[,1])
@@ -105,13 +136,10 @@ NULL
     d = dim(r);
     l = d[1] * d[2]
     v = seq(1:l);
-    m = .latlonfromcell(v, r);
+    #m = .latlonfromcell(v, r);
+    m = latlonfromcell(v, raster::extent(r)[1:4], raster::nrow(r), raster::ncol(r));
     colnames(m) = c('ind_id', 'tax', 'lat','lon');
-    
     return(m)
-    
-    
- 
   }
 }
 

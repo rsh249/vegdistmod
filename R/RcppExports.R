@@ -9,3 +9,7 @@ findcoord <- function(lon, lat, dist, brng) {
     .Call('_vegdistmod_findcoord', PACKAGE = 'vegdistmod', lon, lat, dist, brng)
 }
 
+latlonfromcell <- function(cells, extent, nrow, ncol) {
+    .Call('_vegdistmod_latlonfromcell', PACKAGE = 'vegdistmod', cells, extent, nrow, ncol)
+}
+
