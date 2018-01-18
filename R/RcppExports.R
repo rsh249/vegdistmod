@@ -13,3 +13,7 @@ latlonfromcell <- function(cells, extent, nrow, ncol) {
     .Call('_vegdistmod_latlonfromcell', PACKAGE = 'vegdistmod', cells, extent, nrow, ncol)
 }
 
+pythagorean <- function(start, end) {
+    .Call('_vegdistmod_pythagorean', PACKAGE = 'vegdistmod', start, end)
+}
+

@@ -9,7 +9,6 @@ Rcpp::NumericMatrix distance(Rcpp::NumericMatrix start, Rcpp::NumericMatrix end)
     //Haversine distance method
     float R = 6378.137;
     float toRad = 3.14159/180;
-    int nn = (start.size()/2) * (end.size()/2);
     Rcpp::NumericMatrix out((start.size()/2), (end.size()/2));
     int zz = 0;
     for(int i = 0; i < (start.size()/2); ++i) {
