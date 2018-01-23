@@ -37,7 +37,7 @@ gbif_get <- function(taxon, maxrec = 200000) {
     
     if (is.null(nrow(jsonget$results))) {
       print("ERR: 11")
-      return(jsonget)
+      return(NULL)
     } else {
       hold[[round]] = jsonget$results
       
