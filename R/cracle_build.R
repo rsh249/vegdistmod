@@ -61,7 +61,7 @@ extraction <- function(data, clim, schema = "raw", factor = 0, rm.outlier = FALS
     ##
     if(nrow(stats::na.omit(extr.larr))<5){
 	  cat("ERR: Records out of study area\n")
-	  return(NA)
+	  return(NULL)
 	}
 	extr.larr <- cbind(mat.larr, extr.larr);
 	if(schema != 'raw'){
