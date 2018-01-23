@@ -65,19 +65,21 @@ gbif_get <- function(taxon, maxrec = 200000) {
   'decimalLatitude',
   'decimalLongitude');
   
-  
-  df = hold[[1]][, c(cols )]
-  if (length(hold) > 1) {
-    for (n in 2:length(hold)) {
-      # print(n);
-      if(sum(cols %in% colnames(hold[[n]]))==4){
+  if(cols %in% names(hold[[1]])){
+    df = hold[[1]][, c(cols )]
+    if (length(hold) > 1) {
+      for (n in 2:length(hold)) {
+        # print(n);
+        if(sum(cols %in% colnames(hold[[n]]))==4){
       
-      nex = hold[[n]][, c(cols)]
-      df = rbind(df, nex)
+        nex = hold[[n]][, c(cols)]
+        df = rbind(df, nex)
       } else {next;}
       
     }
-  }
+
+  } else { return(NULL) }
+  
   df[,2] = paste(df[,2], df[,3]);
   df = df[,-3];
   
