@@ -1647,6 +1647,3 @@ heat_up <- function(clim, dens, parallel = FALSE, nclus =4, type = '.kde', w = F
   }
   
 }
-
-#heat_up <- compiler::cmpfun(heat_up);
-

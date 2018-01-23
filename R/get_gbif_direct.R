@@ -65,7 +65,7 @@ gbif_get <- function(taxon, maxrec = 200000) {
   'decimalLatitude',
   'decimalLongitude');
   
-  if(cols %in% names(hold[[1]])){
+  if(cols %in% names(hold[[1]])) {
     df = hold[[1]][, c(cols )]
     if (length(hold) > 1) {
       for (n in 2:length(hold)) {
@@ -78,7 +78,7 @@ gbif_get <- function(taxon, maxrec = 200000) {
       
     }
 
-  } else { return(NULL) }
+  } 
   
   df[,2] = paste(df[,2], df[,3]);
   df = df[,-3];
@@ -86,6 +86,7 @@ gbif_get <- function(taxon, maxrec = 200000) {
   colnames(df) = c('ind_id', 'tax', 'lat', 'lon')
   #df$tax = rep(tori, nrow(df));
   return(df)
+  } else { return(NULL); }
 }
 
 #' Download distribution data from BIEN, GBIF, Inaturalist,
