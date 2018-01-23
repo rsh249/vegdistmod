@@ -86,7 +86,8 @@ gbif_get <- function(taxon, maxrec = 200000) {
   colnames(df) = c('ind_id', 'tax', 'lat', 'lon')
   #df$tax = rep(tori, nrow(df));
   return(df)
-  } else { print("0"); return(NULL); 
+  } else { 
+    return(NULL); 
     }
 }
 
