@@ -146,21 +146,22 @@ extraction <- function(data, clim, schema = "raw", factor = 0, rm.outlier = FALS
   t.list = unique(extr.larr$tax);
   
   if(length(t.list)>1){
-  hold = data.frame();
+  hold = data.frame(extr.larr[1,]);
 
   for(zz in 1:length(t.list)){
     sub <- subset(extr.larr, extr.larr$tax == t.list[[zz]]);
-    if(nrow(sub) < nmin){
-      
-    } else {
-      hold = rbind(hold, sub);
-    }
+      if(nrow(sub) < nmin){
+        
+      } else {
+       hold = rbind(hold, sub);
+     }
   }
   colnames(hold) = colnames(extr.larr);
   } else {
     hold = extr.larr;
   }
-	
+	hold = hold[-1,]
+	if(nrow(hold) == 0){return(NULL)}
 	return(hold);
 };
 
