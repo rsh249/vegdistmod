@@ -149,7 +149,6 @@ get_worldclim <- function(period = 'cur', model = '', version = '1_4', varset = 
       rr = r;
     }
   }
-   # raster::writeRaster(rr);
     return(rr);
 }
 
