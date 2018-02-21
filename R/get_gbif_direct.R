@@ -313,9 +313,11 @@ getextr = function(x, clim = clim, maxrec=500, schema= 'flat',
     extr = parallel::parLapply(cl, splits, subfun);
     parallel::stopCluster(cl);
     
-    extall = rbind(extr[[1]]);
+    extall = rbind(extr[[1]]); ##Need to check that this object is OK as below.
+    
+    
     for(k in 2:length(extr)){
-      if(length(extr[[k]]) == 0){next;} else {}
+      if(length(extr[[k]]) == 0 | length(ncol(extr[[k]])) == 0){next;} else {}
       if(is.null(extr[[k]])){next;} else {
         if(ncol(extr[[k]])==1){next;} else {
           extall=rbind(extall, extr[[k]]);
