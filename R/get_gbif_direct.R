@@ -315,8 +315,9 @@ getextr = function(x, clim = clim, maxrec=500, schema= 'flat',
     
     extall = rbind(extr[[1]]);
     for(k in 2:length(extr)){
-      if(is.null(extr[[k]])){} else {
-        if(ncol(extr[[k]])==1){} else {
+      if(length(extr[[k]]) == 0){} else {next;}
+      if(is.null(extr[[k]])){next;} else {
+        if(ncol(extr[[k]])==1){next;} else {
           extall=rbind(extall, extr[[k]]);
         }
       }
