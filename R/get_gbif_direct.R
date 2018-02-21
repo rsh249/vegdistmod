@@ -241,11 +241,19 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
 #' alpha=0.01, factor = 2, nmin = 5, parallel=FALSE, nclus = 4));
 #' }
 #' 
-getextr = function(x, clim = clim, 
-                   maxrec=500, schema= 'flat', 
+getextr = function(x, clim = clim, maxrec=500, schema= 'flat', 
                    rm.outlier = TRUE, alpha=0.01, 
                    factor = 2, nmin = 5, parallel=FALSE, nclus = 4){
   
+  clim = clim;
+  maxrec = maxrec;
+  schema = schema;
+  rm.outlier = rm.outlier;
+  alpha = alpha;
+  factor = factor;
+  nmin = nmin;
+  parallel = parallel;
+  nclus = nclus;
   
   
   subfun = function(x){
@@ -288,19 +296,28 @@ getextr = function(x, clim = clim,
   if(parallel==FALSE){
     return(subfun(x));
   } else {
-    print('parallel option under development')
+    clim = clim;
+    maxrec = maxrec;
+    schema = schema;
+    rm.outlier = rm.outlier;
+    alpha = alpha;
+    factor = factor;
+    nmin = nmin;
+    parallel = parallel;
     nclus = nclus;
+    
     cl = parallel::makeCluster(nclus, type = "SOCK", outfile = '')
-    parallel::clusterExport(cl, c('clim', 'nmin', 'maxrec', 'schema', 'rm.outlier', 'alpha', 'factor' ))
+    
+    parallel::clusterExport(cl, varlist = c('clim',  'maxrec', 'nmin', 'schema', 'rm.outlier', 'alpha', 'factor' ), envir = environment())
     splits = parallel::clusterSplit(cl, x);
     extr = parallel::parLapply(cl, splits, subfun);
     parallel::stopCluster(cl);
     
-    extall = rbind(extr[[1]][[1]]);
+    extall = rbind(extr[[1]]);
     for(k in 2:length(extr)){
       if(is.null(extr[[k]])){} else {
-        if(ncol(extr[[k]][[1]])==1){} else {
-          extall=rbind(extall, extr[[k]][[1]]);
+        if(ncol(extr[[k]])==1){} else {
+          extall=rbind(extall, extr[[k]]);
         }
       }
     }
