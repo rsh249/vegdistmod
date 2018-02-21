@@ -212,3 +212,99 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
   data = stats::na.omit(data)
   return(data)
 }
+
+#' Download distribution data, filter, and merge with climate or environmental
+#'
+#' getextr is a function that gets GBIF data and extracts climate or environmental 
+#' data for each occurrence. This is a whole workflow for distribution 
+#' data acquisition and value addition that draws on several other functions in vegdistmod
+#' including gbif_get and extraction. Parallel option is useful for speeding up data collection for
+#' many species when computational resources are available.
+#' 
+#' @param x A taxon name or list of taxon names. It is sometimes good to 
+#' test these on the vegdistmod::get_gbif() function first.
+#' @param maxrec Maximum number of records to download.
+#' @param clim A raster object of climate or other environmental data to extract from.
+#' @param schema To be passed to vegdistmod::extraction
+#' @param rm.outlier To be passed to vegdistmod::extraction
+#' @param factor To be passed to vegdistmod::extraction
+#' @param alpha To be passed to vegdistmod::extraction
+#' @param nmin To be passed to vegdistmod::extraction
+#' @param parallel TRUE or FALSE. Should this be executed in parallel.
+#' @param nclus If parallel == TRUE then how many cores should be used? Default is 4.
+#' 
+#' @export
+#' @examples \dontrun{
+#' abies <- getextr('Abies fraseri', 
+#' clim = clim, maxrec=500, 
+#' schema= 'flat', rm.outlier = TRUE, 
+#' alpha=0.01, factor = 2, nmin = 5, parallel=FALSE, nclus = 4));
+#' }
+#' 
+getextr = function(x, clim = clim, 
+                   maxrec=500, schema= 'flat', 
+                   rm.outlier = TRUE, alpha=0.01, 
+                   factor = 2, nmin = 5, parallel=FALSE, nclus = 4){
+  
+  
+  
+  subfun = function(x){
+    ex = list();
+    for(i in 1:length(x)){
+      print(x[i]);
+      ex[[i]] = NULL;
+      dat2 = vegdistmod::gbif_get(x[i], maxrec = maxrec)
+      if(is.null(dat2)){ ex[[i]]=NULL; next; }
+      dat2 = stats::na.omit(dat2);
+      if(any(is.na(dat2))){ ex[[i]]=NULL; next;}
+      if(nrow(dat2)<nmin){ ex[[i]]=NULL; next; }
+      ex.hold = vegdistmod::extraction(dat2, clim, 
+                                       schema = schema, 
+                                       rm.outlier = rm.outlier, 
+                                       alpha = alpha, 
+                                       factor = factor, 
+                                       nmin = nmin);
+      if(length(ex.hold) == 0){ ex[[i]] = NA;} else {
+        ex.hold$tax = rep(x[i], nrow(ex.hold))
+        ex[[i]] = ex.hold;
+      }
+    }
+    
+    ex = stats::na.omit(ex);
+    #	if(any(is.null(ex))){ return(NULL); }
+    if(length(ex) == 0) { return(NULL); }
+    
+    ex2 = rbind(ex[[1]]);
+    if(length(ex)>1){
+      for(k in 2:length(ex)){
+        ex2 = rbind(ex2, ex[[k]]);
+      }
+    } else { return(ex); }
+    
+    return(ex2);
+  }
+  
+  
+  if(parallel==FALSE){
+    return(subfun(x));
+  } else {
+    print('parallel option under development')
+    nclus = nclus;
+    cl = parallel::makeCluster(nclus, type = "SOCK", outfile = '')
+    parallel::clusterExport(cl, c('clim', 'nmin', 'maxrec', 'schema', 'rm.outlier', 'alpha', 'factor' ))
+    splits = parallel::clusterSplit(cl, x);
+    extr = parallel::parLapply(cl, splits, subfun);
+    parallel::stopCluster(cl);
+    
+    extall = rbind(extr[[1]][[1]]);
+    for(k in 2:length(extr)){
+      if(is.null(extr[[k]])){} else {
+        if(ncol(extr[[k]][[1]])==1){} else {
+          extall=rbind(extall, extr[[k]][[1]]);
+        }
+      }
+    }
+    return(extall);
+    
+  }
+}
