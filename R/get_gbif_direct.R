@@ -315,7 +315,6 @@ getextr = function(x, clim = clim, maxrec=500, schema= 'flat',
     
     extall = rbind(extr[[1]][[1]]); ##Need to check that this object is OK as below.
     
-    return(extr);
     for(k in 2:length(extr)){
       
       if(is.null(extr[[k]])){} else {
