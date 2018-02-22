@@ -272,7 +272,7 @@ getextr = function(x, clim = clim, maxrec=500, schema= 'flat',
                                        alpha = alpha, 
                                        factor = factor, 
                                        nmin = nmin);
-      if(length(ex.hold) == 0){ ex[[i]] = NA;} else {
+      if(length(ex.hold) == 0){ ex[[i]] = NA;next;} else {
         ex.hold$tax = rep(x[i], nrow(ex.hold))
         ex[[i]] = ex.hold;
       }
@@ -313,14 +313,14 @@ getextr = function(x, clim = clim, maxrec=500, schema= 'flat',
     extr = parallel::parLapply(cl, splits, subfun);
     parallel::stopCluster(cl);
     
-    extall = rbind(extr[[1]]); ##Need to check that this object is OK as below.
+    extall = rbind(extr[[1]][[1]]); ##Need to check that this object is OK as below.
     
-    
+    return(extr);
     for(k in 2:length(extr)){
-      if(length(extr[[k]]) == 0 | length(ncol(extr[[k]])) == 0){next;} else {}
-      if(is.null(extr[[k]])){next;} else {
-        if(ncol(extr[[k]])==1){next;} else {
-          extall=rbind(extall, extr[[k]]);
+      
+      if(is.null(extr[[k]])){} else {
+        if(ncol(extr[[k]][[1]])==1){} else {
+          extall=rbind(extall, extr[[k]][[1]]);
         }
       }
     }
