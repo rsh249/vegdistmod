@@ -306,8 +306,9 @@ getextr = function(x, clim = clim, maxrec=500, schema= 'flat',
     parallel = parallel;
     nclus = nclus;
     
-    cl = parallel::makeCluster(nclus, type = "FORK", outfile = '')
+  #  cl = parallel::makeCluster(nclus, type = "SOCK", outfile = '')
     #parallel::clusterExport(cl, varlist = c('clim',  'maxrec', 'nmin', 'schema', 'rm.outlier', 'alpha', 'factor' ), envir = environment())
+    cl = parallel::makeCluster(nclus, type = "FORK")
     splits = parallel::clusterSplit(cl, x);
     extr = parallel::parLapply(cl, splits, subfun);
     parallel::stopCluster(cl);
