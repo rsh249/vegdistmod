@@ -287,7 +287,7 @@ getextr = function(x, clim = clim, maxrec=500, schema= 'flat',
       for(k in 2:length(ex)){
         ex2 = rbind(ex2, ex[[k]]);
       }
-    } else { return(ex); }
+    } else { return(ex[[1]]); }
     
     return(ex2);
   }
