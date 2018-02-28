@@ -314,13 +314,13 @@ getextr = function(x, clim = clim, maxrec=500, schema= 'flat',
     #return(extr);
     
     ##code below here not executed and problematic::
-    extall = rbind(extr[[1]]); ##Need to check that this object is OK as below.
+    extall = plyr::rbind.fill(extr[[1]]); ##Need to check that this object is OK as below.
     
     for(k in 2:length(extr)){
       
       if(is.null(extr[[k]])){} else {
         if(length(ncol(extr[[k]]))==0){} else {
-          extall=rbind(extall, extr[[k]]);
+          extall=plyr::rbind.fill(extall, extr[[k]]);
         }
       }
     }

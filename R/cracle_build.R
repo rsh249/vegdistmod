@@ -5,6 +5,7 @@
 #' @import iterators
 #' @import doSNOW
 #' @import raster
+#' @import plyr
 NULL
 
 #' Extract environmental data
