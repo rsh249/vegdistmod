@@ -235,10 +235,10 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
 #' 
 #' @export
 #' @examples \dontrun{
-#' abies <- getextr('Abies fraseri', 
+#' abies <- getextr(c('Abies fraseri', 'Abies lasiocarpa', 'Pinus strobus'), 
 #' clim = clim, maxrec=500, 
 #' schema= 'flat', rm.outlier = TRUE, 
-#' alpha=0.01, factor = 2, nmin = 5, parallel=FALSE, nclus = 4));
+#' alpha=0.01, factor = 2, nmin = 5, parallel=FALSE, nclus = 4);
 #' }
 #' 
 getextr = function(x, clim = clim, maxrec=500, schema= 'flat', 
@@ -282,10 +282,10 @@ getextr = function(x, clim = clim, maxrec=500, schema= 'flat',
     #	if(any(is.null(ex))){ return(NULL); }
     if(length(ex) == 0) { return(NULL); }
     
-    ex2 = rbind(ex[[1]]);
+    ex2 = plyr::rbind.fill(ex[[1]]);
     if(length(ex)>1){
       for(k in 2:length(ex)){
-        ex2 = rbind(ex2, ex[[k]]);
+        ex2 = plyr::rbind.fill(ex2, ex[[k]]);
       }
     } else { return(ex[[1]]); }
     
@@ -328,3 +328,8 @@ getextr = function(x, clim = clim, maxrec=500, schema= 'flat',
     
   }
 }
+
+
+##Add summary stats function calling stats::aggregate
+#sum.stats = stats::aggregate(g$annualPET, by = list(g$tax), median); #for example
+
