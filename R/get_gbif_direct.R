@@ -55,22 +55,54 @@ gbif_get <- function(taxon, maxrec = 200000) {
       
     }
     
+    ##DO filtering step:
+    #exclude fossils
+    #return(hold[[1]])
+    foss = grep('FOSSIL_', hold[[round]]$basisOfRecord, ignore.case=TRUE);
+    cult = grep('cultivat', hold[[round]]$locality, ignore.case=TRUE);
+    gard = grep('gard', hold[[round]]$locality, ignore.case=TRUE);
+    botan = grep('botan', hold[[round]]$locality, ignore.case=TRUE)
+    if(length(foss) != 0){
+  #    print(1)
+      hold[[round]] = hold[[round]][-foss,]
+    }
+    if(length(cult) != 0){
+    #  print(2)
+      
+      hold[[round]] = hold[[round]][-cult,]
+    }
+    if(length(gard) != 0){
+     # print(3)
+      
+      hold[[round]] = hold[[round]][-gard,]
+    }
+    if(length(botan) != 0){
+      #print(4)
+      
+      hold[[round]] = hold[[round]][-botan,]
+      
+    }
     
     
     
   }
+  #return(hold)
+  
+  
   cols = c('key',
   'genus',
   'specificEpithet',
   'decimalLatitude',
   'decimalLongitude');
   
+  
+  
   if(sum(cols %in% names(hold[[1]]))==length(cols)) {
     df = hold[[1]][, c(cols )]
     if (length(hold) > 1) {
       for (n in 2:length(hold)) {
         # print(n);
-        if(sum(cols %in% colnames(hold[[n]]))==4){
+        if(sum(cols %in% colnames(hold[[n]]))==length(cols)){
       
         nex = hold[[n]][, c(cols)]
         df = rbind(df, nex)
@@ -91,7 +123,7 @@ gbif_get <- function(taxon, maxrec = 200000) {
     }
 }
 
-#' Download distribution data from BIEN, GBIF, Inaturalist,
+#' Download distribution data from BIEN, GBIF, Inaturalist, and ...?
 #'
 #' This function requests data from the GBIF database for a single taxon using the GBIF callback API.
 #'
@@ -120,7 +152,7 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
   },
   error = function(cond) {
     message(paste("GBIF", cond))
-    return(NA)
+    return(NULL)
   })
   ##Use .gbif_sql()
   ##set flag: if(nrow(ab.cgbd)>200000){print 'taxon' to file}
@@ -139,7 +171,7 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
   },
   error = function(cond) {
     message(paste("BIEN", cond))
-    return(NA)
+    return(NULL)
   })
   
   #get bison data
@@ -150,7 +182,7 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
   },
   error = function(cond) {
     message(paste("BISON", cond))
-    return(NA)
+    return(NULL)
   })
   
   #get inaturalist data
@@ -161,7 +193,7 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
   }, 
   error = function(cond) {
     message(paste("inat", cond))
-    return(NA)
+    return(NULL)
   })
   
   
@@ -204,7 +236,7 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
   } else {
     bien = NA
   }
-  data <- rbind(inatr, bison, gbif, bien)
+  data <- rbind(inatr, bison, gbif, bien) ## Consider using plyr::rbind.fill here
   
   data$lat <- as.numeric(as.character(data$lat))
   data$lon <- as.numeric(as.character(data$lon))
@@ -242,8 +274,8 @@ get_dist_all <- function(taxon, maxrec = 19999, local = FALSE, db = 0, h = 0, u 
 #' }
 #' 
 getextr = function(x, clim = clim, maxrec=500, schema= 'flat', 
-                   rm.outlier = TRUE, alpha=0.01, 
-                   factor = 2, nmin = 5, parallel=FALSE, nclus = 4){
+                   rm.outlier = FALSE, alpha=0.01, 
+                   factor = 4, nmin = 5, parallel=FALSE, nclus = 4){
   
   clim = clim;
   maxrec = maxrec;
