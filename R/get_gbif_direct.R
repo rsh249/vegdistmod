@@ -304,7 +304,7 @@ getextr = function(x, clim = clim, maxrec=500, schema= 'flat',
                                        alpha = alpha, 
                                        factor = factor, 
                                        nmin = nmin);
-      if(length(ex.hold) == 0){ ex[[i]] = NA;next;} else {
+      if(length(ex.hold) == 0){ ex[[i]] = NULL;next;} else {
         ex.hold$tax = rep(x[i], nrow(ex.hold))
         ex[[i]] = ex.hold;
       }
