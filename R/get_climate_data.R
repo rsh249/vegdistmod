@@ -84,7 +84,7 @@ get_worldclim <- function(period = 'cur', model = '', version = '1_4', varset = 
   # res = '10'; #10, 5, 2-5, 30s*caveat that the 30s bioclim variables come in to sets 1-9 and 10-19
   if(res == 30){
     res = paste(res, 's', sep ='');
-    if(varset == 'bio'){
+    if(varset == 'bio' && version == "1_4"){
       varset = c('bio1-9', 'bio10-19');
     }
   } else {
