@@ -12,7 +12,7 @@
 #' @examples \dontrun{
 #' #get 10 minute mean monthly temperature grids.
 #'
-#' abies <- get_worldclim(period='cur', varset = 'tmean', res=10); 
+#' c10 <- get_worldclim(period='cur', varset = 'tmean', res=10); 
 #' }
 get_worldclim <- function(period = 'cur', model = '', version = '1_4', varset = 'bio', res = 2.5) {
  
